@@ -52,7 +52,7 @@ The SDK uses pytest for testing. To run the tests:
 pytest
 
 # Run specific tests
-pytest tests/test_client.py
+pytest tests/test_langbase.py
 
 # Run with coverage
 pytest --cov=langbase
@@ -173,17 +173,19 @@ The project follows this structure:
 langbase-python/
 ├── langbase/                   # Main package
 │   ├── __init__.py             # Package initialization
-│   ├── client.py               # Main client implementation
+│   ├── langbase.py             # Main client implementation
 │   ├── request.py              # HTTP request handling
 │   ├── errors.py               # Error classes
-│   ├── types.py                # Type definitions
+│   ├── types.py                # Type definitions (not used)
 │   └── utils.py                # Utility functions
+│   └── workflow.py             # Workflow implementation
 ├── tests/                      # Test package
 │   ├── __init__.py             # Test package initialization
 │   ├── test_client.py          # Tests for the client
 │   ├── test_request.py         # Tests for request handling
 │   ├── test_errors.py          # Tests for error classes
 │   └── test_utils.py           # Tests for utility functions
+│   └── test_workflow.py        # Tests for workflow
 ├── examples/                   # Example scripts
 ├── setup.py                    # Package setup script
 ├── pyproject.toml              # Project configuration
