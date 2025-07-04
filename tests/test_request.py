@@ -100,7 +100,7 @@ class TestRequest(unittest.TestCase):
         mock_response.status_code = 400
         mock_response.reason = "Bad Request"
         mock_response.headers = {}
-        mock_response.json.side_effect = ValueError
+        mock_response.json.side_effect = requests.exceptions.JSONDecodeError("msg", "doc", 0)
         mock_response.text = "Bad request error"
 
         with self.assertRaises(BadRequestError):
@@ -130,15 +130,15 @@ class TestRequest(unittest.TestCase):
         result = self.request.handle_run_response_stream(mock_response)
         self.assertEqual(result["thread_id"], "thread_123")
         self.assertEqual(list(result["stream"]), [b"chunk1", b"chunk2"])
-        self.assertNotIn("raw_response", result)
+        self.assertNotIn("rawResponse", result)
 
         # Test with raw_response
         result = self.request.handle_run_response_stream(mock_response, raw_response=True)
         self.assertEqual(result["thread_id"], "thread_123")
         self.assertEqual(list(result["stream"]), [b"chunk1", b"chunk2"])
-        self.assertIn("raw_response", result)
+        self.assertIn("rawResponse", result)
         self.assertEqual(
-            result["raw_response"]["headers"],
+            result["rawResponse"]["headers"],
             {"lb-thread-id": "thread_123", "content-type": "text/event-stream"}
         )
 
@@ -151,16 +151,16 @@ class TestRequest(unittest.TestCase):
         # Test with thread_id, without raw_response
         result = self.request.handle_run_response(mock_response, "thread_123")
         self.assertEqual(result["completion"], "Hello, world!")
-        self.assertEqual(result["thread_id"], "thread_123")
-        self.assertNotIn("raw_response", result)
+        self.assertEqual(result["threadId"], "thread_123")
+        self.assertNotIn("rawResponse", result)
 
         # Test with thread_id and raw_response
         result = self.request.handle_run_response(mock_response, "thread_123", True)
         self.assertEqual(result["completion"], "Hello, world!")
-        self.assertEqual(result["thread_id"], "thread_123")
-        self.assertIn("raw_response", result)
+        self.assertEqual(result["threadId"], "thread_123")
+        self.assertIn("rawResponse", result)
         self.assertEqual(
-            result["raw_response"]["headers"],
+            result["rawResponse"]["headers"],
             {"lb-thread-id": "thread_123"}
         )
 
@@ -173,7 +173,7 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(result["completion"], "Hello, world!")
         self.assertEqual(result["id"], "123")
         self.assertEqual(result["model"], "test-model")
-        self.assertEqual(result["thread_id"], "thread_123")
+        self.assertEqual(result["threadId"], "thread_123")
 
     @patch.object(Request, "make_request")
     @patch.object(Request, "build_url")
@@ -198,7 +198,8 @@ class TestRequest(unittest.TestCase):
             "GET",
             {"Authorization": "Bearer test-api-key"},
             None,
-            False
+            False,
+            None
         )
         self.assertEqual(result, {"result": "success"})
 
@@ -206,14 +207,14 @@ class TestRequest(unittest.TestCase):
         mock_response.headers = {"lb-thread-id": "thread_123"}
         mock_build_url.return_value = "https://api.langbase.com/v1/pipes/run"
         result = self.request.send("/v1/pipes/run", "POST", body={"messages": []})
-        self.assertEqual(result["thread_id"], "thread_123")
+        self.assertEqual(result["threadId"], "thread_123")
 
     @patch.object(Request, "send")
     def test_post(self, mock_send):
         """Test post method."""
         mock_send.return_value = {"result": "success"}
         result = self.request.post("/test", {"key": "value"}, {"X-Custom": "Value"})
-        mock_send.assert_called_with("/test", "POST", {"X-Custom": "Value"}, {"key": "value"}, False)
+        mock_send.assert_called_with("/test", "POST", {"X-Custom": "Value"}, {"key": "value"}, False, None)
         self.assertEqual(result, {"result": "success"})
 
     @patch.object(Request, "send")
@@ -229,7 +230,7 @@ class TestRequest(unittest.TestCase):
         """Test put method."""
         mock_send.return_value = {"result": "success"}
         result = self.request.put("/test", {"key": "value"}, {"X-Custom": "Value"})
-        mock_send.assert_called_with("/test", "PUT", {"X-Custom": "Value"}, {"key": "value"})
+        mock_send.assert_called_with("/test", "PUT", {"X-Custom": "Value"}, {"key": "value"}, files=None)
         self.assertEqual(result, {"result": "success"})
 
     @patch.object(Request, "send")

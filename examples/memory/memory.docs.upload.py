@@ -3,6 +3,9 @@ Example demonstrating how to upload a document to a memory in Langbase.
 """
 import os
 from langbase import Langbase
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Get API key from environment variable
 langbase_api_key = os.getenv("LANGBASE_API_KEY")

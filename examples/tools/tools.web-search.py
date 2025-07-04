@@ -3,6 +3,9 @@ Example demonstrating how to use the web search tool in Langbase.
 """
 import os
 from langbase import Langbase
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Get API key from environment variable
 langbase_api_key = os.getenv("LANGBASE_API_KEY")
@@ -17,7 +20,7 @@ lb = Langbase(api_key=langbase_api_key)
 search_query = "latest advancements in quantum computing 2025"
 
 # Optional: restrict to specific domains
-domains = ["arxiv.org", "nature.com", "science.org", "research.google.com"]
+domains = ["arxiv.org", "nature.com", "science.org"]
 
 # Perform the web search
 try:

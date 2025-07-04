@@ -3,6 +3,10 @@ Example demonstrating how to delete a document from memory in Langbase.
 """
 import os
 from langbase import Langbase
+from dotenv import load_dotenv
+import json
+
+load_dotenv()
 
 # Get API key from environment variable
 langbase_api_key = os.getenv("LANGBASE_API_KEY")

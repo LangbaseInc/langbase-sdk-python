@@ -6,6 +6,9 @@ Get your API key from: https://spider.cloud/docs/quickstart
 """
 import os
 from langbase import Langbase
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Get API keys from environment variables
 langbase_api_key = os.getenv("LANGBASE_API_KEY")

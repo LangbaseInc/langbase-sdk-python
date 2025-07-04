@@ -66,12 +66,6 @@ class Langbase:
         self._init_memories()
         self._init_tools()
         self._init_threads()
-        self._init_llm()
-
-        # Deprecated property aliases
-        self.pipe = self.pipes
-        self.memory = self.memories
-        self.tool = self.tools
 
     def _init_pipes(self):
         """Initialize pipes methods."""
@@ -589,52 +583,20 @@ class Langbase:
                     f"/v1/threads/{thread_id}/messages",
                     messages
                 )
-
-        self.threads = Threads(self)
-
-    def _init_llm(self):
-        """Initialize LLM methods."""
-
-        class LLM:
-            def __init__(self, parent):
-                self.parent = parent
-
-            def run(
-                self,
-                messages: List[Dict[str, Any]],
-                model: str,
-                llm_key: str,
-                stream: bool = False,
-                **kwargs
-            ):
+            
+            def list(self, thread_id: str) -> List[ThreadMessagesBaseResponse]:
                 """
-                Run an LLM with the specified parameters.
+                List messages in a thread.
 
                 Args:
-                    messages: List of messages
-                    model: Model identifier
-                    llm_key: API key for the LLM provider
-                    stream: Whether to stream the response
-                    **kwargs: Additional parameters for the model
+                    thread_id: ID of the thread
 
                 Returns:
-                    LLM response or stream
+                    List of messages in the thread
                 """
-                options = {
-                    "messages": messages,
-                    "model": model,
-                    "llm_key": llm_key,
-                    **kwargs
-                }
+                return self.parent.request.get(f"/v1/threads/{thread_id}/messages")
 
-                if stream:
-                    options["stream"] = True
-
-                headers = {"LB-LLM-Key": llm_key}
-
-                return self.parent.request.post("/v1/llm/run", options, headers, stream=stream)
-
-        self.llm = LLM(self)
+        self.threads = Threads(self)
 
     def embed(
         self,
@@ -658,66 +620,40 @@ class Langbase:
 
         return self.request.post("/v1/embed", options)
 
-    def chunk(
+    def chunker(
         self,
-        document: Union[bytes, BytesIO, str, BinaryIO],
-        document_name: str,
-        content_type: ContentType,
-        chunk_max_length: Optional[str] = None,
-        chunk_overlap: Optional[str] = None,
-        separator: Optional[str] = None
+        content: str,
+        chunk_max_length: Optional[int] = None,
+        chunk_overlap: Optional[int] = None
     ) -> List[str]:
         """
-        Split a document into chunks.
+        Split content into chunks.
 
         Args:
-            document: Document content (bytes, file-like object, or path)
-            document_name: Name for the document
-            content_type: MIME type of the document
-            chunk_max_length: Maximum length of each chunk
-            chunk_overlap: Number of characters to overlap between chunks
-            separator: Custom separator for chunking
+            content: The text content to be chunked
+            chunk_max_length: Maximum length for each chunk (1024-30000, default: 1024)
+            chunk_overlap: Number of characters to overlap between chunks (>=256, default: 256)
 
         Returns:
             List of text chunks
 
         Raises:
-            ValueError: If document type is unsupported
             APIError: If chunking fails
         """
-        files = convert_document_to_request_files(document, document_name, content_type)
+        json_data = {
+            "content": content
+        }
 
-        if chunk_max_length:
-            files["chunkMaxLength"] = (None, chunk_max_length)
+        if chunk_max_length is not None:
+            json_data["chunkMaxLength"] = chunk_max_length
 
-        if chunk_overlap:
-            files["chunkOverlap"] = (None, chunk_overlap)
+        if chunk_overlap is not None:
+            json_data["chunkOverlap"] = chunk_overlap
 
-        if separator:
-            files["separator"] = (None, separator)
+        return self.request.post("/v1/chunker", json_data)
 
-        response = requests.post(
-            f"{self.base_url}/v1/chunk",
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            files=files
-        )
 
-        if response.ok:
-            return response.json()
-        else:
-            try:
-                error_body = response.json()
-            except:
-                error_body = response.text
-
-            raise APIError.generate(
-                response.status_code,
-                error_body,
-                response.reason,
-                dict(response.headers)
-            )
-
-    def parse(
+    def parser(
         self,
         document: Union[bytes, BytesIO, str, BinaryIO],
         document_name: str,
@@ -741,22 +677,110 @@ class Langbase:
         files = convert_document_to_request_files(document, document_name, content_type)
 
         response = requests.post(
-            f"{self.base_url}/v1/parse",
+            f"{self.base_url}/v1/parser",
             headers={"Authorization": f"Bearer {self.api_key}"},
-            files=files
+            files=files,
+            timeout=self.timeout
         )
 
-        if response.ok:
-            return response.json()
-        else:
-            try:
-                error_body = response.json()
-            except:
-                error_body = response.text
+        if not response.ok:
+            self.request.handle_error_response(response)
 
-            raise APIError.generate(
-                response.status_code,
-                error_body,
-                response.reason,
-                dict(response.headers)
-            )
+        return response.json()
+
+    def agent_run(
+        self,
+        input: Union[str, List[Dict[str, Any]]],
+        model: str,
+        api_key: str,
+        instructions: Optional[str] = None,
+        top_p: Optional[float] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+        presence_penalty: Optional[float] = None,
+        frequency_penalty: Optional[float] = None,
+        stop: Optional[List[str]] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        tool_choice: Optional[Union[str, Dict[str, Any]]] = None,
+        parallel_tool_calls: Optional[bool] = None,
+        reasoning_effort: Optional[str] = None,
+        max_completion_tokens: Optional[int] = None,
+        response_format: Optional[Dict[str, Any]] = None,
+        custom_model_params: Optional[Dict[str, Any]] = None,
+        mcp_servers: Optional[List[Dict[str, Any]]] = None,
+        stream: bool = False,
+    ) -> Union[Dict[str, Any], requests.Response]:
+        """
+        Run an agent with the specified parameters.
+
+        Args:
+            input: Either a string prompt or a list of messages
+            model: The model to use for the agent
+            api_key: API key for the LLM service
+            instructions: Optional instructions for the agent
+            top_p: Optional top-p sampling parameter
+            max_tokens: Optional maximum tokens to generate
+            temperature: Optional temperature parameter
+            presence_penalty: Optional presence penalty parameter
+            frequency_penalty: Optional frequency penalty parameter
+            stop: Optional list of stop sequences
+            tools: Optional list of tools for the agent
+            tool_choice: Optional tool choice configuration ('auto', 'required', or tool spec)
+            parallel_tool_calls: Optional flag for parallel tool execution
+            reasoning_effort: Optional reasoning effort level
+            max_completion_tokens: Optional maximum completion tokens
+            response_format: Optional response format configuration
+            custom_model_params: Optional custom model parameters
+            mcp_servers: Optional list of MCP (Model Context Protocol) servers
+            stream: Whether to stream the response (default: False)
+
+        Returns:
+            Either a dictionary with the agent's response or a streaming response
+
+        Raises:
+            ValueError: If required parameters are missing
+            APIError: If the API request fails
+        """
+        if not api_key:
+            raise ValueError("LLM API key is required to run this LLM.")
+
+
+        options = {
+            "input": input,
+            "model": model,
+            "apiKey": api_key,
+            "instructions": instructions,
+            "top_p": top_p,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "presence_penalty": presence_penalty,
+            "frequency_penalty": frequency_penalty,
+            "stop": stop,
+            "tools": tools,
+            "tool_choice": tool_choice,
+            "parallel_tool_calls": parallel_tool_calls,
+            "reasoning_effort": reasoning_effort,
+            "max_completion_tokens": max_completion_tokens,
+            "response_format": response_format,
+            "customModelParams": custom_model_params,
+            "mcp_servers": mcp_servers,
+        }
+
+        # Only include stream if it's True
+        if stream:
+            options["stream"] = True
+
+        # Clean null values from options
+        options = clean_null_values(options)
+
+        headers = {
+            "LB-LLM-KEY": api_key
+        }
+
+        return self.request.post(
+            "/v1/agent/run",
+            options,
+            headers=headers,
+            stream=stream
+        )
+

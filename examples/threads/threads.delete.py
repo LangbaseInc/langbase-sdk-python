@@ -3,6 +3,9 @@ Example demonstrating how to delete a thread in Langbase.
 """
 import os
 from langbase import Langbase
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Get API key from environment variable
 langbase_api_key = os.getenv("LANGBASE_API_KEY")
@@ -11,7 +14,7 @@ langbase_api_key = os.getenv("LANGBASE_API_KEY")
 lb = Langbase(api_key=langbase_api_key)
 
 # Thread ID to delete
-thread_id = "thread_123456789"  # Replace with your actual thread ID
+thread_id = "431bac51-929c-4257-8251-baefcd251d3a"  # Replace with your actual thread ID
 
 # Delete the thread
 try:

@@ -25,17 +25,19 @@ print(response["completion"])
 ```
 """
 
-from .client import Langbase
+from .langbase import Langbase
 from .errors import (
     APIError, APIConnectionError, APIConnectionTimeoutError,
     BadRequestError, AuthenticationError, PermissionDeniedError,
     NotFoundError, ConflictError, UnprocessableEntityError,
     RateLimitError, InternalServerError
 )
+from .workflow import Workflow, TimeoutError
 
 __version__ = "0.1.0"
 __all__ = [
     'Langbase',
+    'Workflow',
     'APIError',
     'APIConnectionError',
     'APIConnectionTimeoutError',
@@ -47,4 +49,5 @@ __all__ = [
     'UnprocessableEntityError',
     'RateLimitError',
     'InternalServerError',
+    'TimeoutError',
 ]

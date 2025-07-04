@@ -40,7 +40,7 @@ class TestErrors(unittest.TestCase):
 
         # Message from error.message (dict)
         msg = APIError._make_message(400, {"message": {"detail": "Error"}}, None)
-        self.assertEqual(msg, '400 {"detail": "Error"}')
+        self.assertEqual(msg, "400 {'detail': 'Error'}")
 
         # Message from error (string)
         msg = APIError._make_message(400, "Error message", None)
@@ -48,7 +48,7 @@ class TestErrors(unittest.TestCase):
 
         # Message from error (dict)
         msg = APIError._make_message(400, {"error": "Something went wrong"}, None)
-        self.assertEqual(msg, '400 {"error": "Something went wrong"}')
+        self.assertEqual(msg, "400 {'error': 'Something went wrong'}")
 
         # Message from message parameter
         msg = APIError._make_message(400, None, "Error message")

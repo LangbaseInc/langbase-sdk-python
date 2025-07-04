@@ -249,17 +249,7 @@ class TestLangbase(unittest.TestCase):
         mock_get.assert_called_once_with("/v1/threads/thread_123/messages")
         self.assertEqual(result, [{"id": "msg_123", "content": "Hello"}])
 
-    @patch("langbase.request.Request.post")
-    def test_llm_run(self, mock_post):
-        """Test llm.run method."""
-        mock_post.return_value = {"completion": "Hello, world!"}
-        result = self.lb.llm.run(
-            messages=[{"role": "user", "content": "Hi"}],
-            model="anthropic:claude-3-sonnet",
-            llm_key="llm-api-key"
-        )
-        mock_post.assert_called_once()
-        self.assertEqual(result, {"completion": "Hello, world!"})
+
 
     @patch("langbase.request.Request.post")
     def test_embed(self, mock_post):
@@ -271,26 +261,27 @@ class TestLangbase(unittest.TestCase):
         mock_post.assert_called_once()
         self.assertEqual(result, [[0.1, 0.2, 0.3]])
 
-    @patch("requests.post")
-    def test_chunk(self, mock_post):
-        """Test chunk method."""
-        mock_response = MagicMock()
-        mock_response.ok = True
-        mock_response.json.return_value = ["Chunk 1", "Chunk 2"]
-        mock_post.return_value = mock_response
+    @patch("langbase.request.Request.post")
+    def test_chunker(self, mock_post):
+        """Test chunker method."""
+        mock_post.return_value = ["Chunk 1", "Chunk 2"]
 
-        result = self.lb.chunk(
-            document=b"Test document",
-            document_name="test.txt",
-            content_type="text/plain"
+        result = self.lb.chunker(
+            content="This is a long text document that needs to be chunked into smaller pieces.",
+            chunk_max_length=1024,
+            chunk_overlap=256
         )
 
-        mock_post.assert_called_once()
+        mock_post.assert_called_once_with("/v1/chunker", {
+            "content": "This is a long text document that needs to be chunked into smaller pieces.",
+            "chunkMaxLength": 1024,
+            "chunkOverlap": 256
+        })
         self.assertEqual(result, ["Chunk 1", "Chunk 2"])
 
     @patch("requests.post")
-    def test_parse(self, mock_post):
-        """Test parse method."""
+    def test_parser(self, mock_post):
+        """Test parser method."""
         mock_response = MagicMock()
         mock_response.ok = True
         mock_response.json.return_value = {
@@ -299,7 +290,7 @@ class TestLangbase(unittest.TestCase):
         }
         mock_post.return_value = mock_response
 
-        result = self.lb.parse(
+        result = self.lb.parser(
             document=b"Test document",
             document_name="test.txt",
             content_type="text/plain"
@@ -307,6 +298,7 @@ class TestLangbase(unittest.TestCase):
 
         mock_post.assert_called_once()
         self.assertEqual(result, {"documentName": "test.txt", "content": "Test content"})
+
 
     @patch("langbase.request.Request.get")
     def test_error_handling(self, mock_get):
@@ -317,6 +309,230 @@ class TestLangbase(unittest.TestCase):
 
         with self.assertRaises(NotFoundError):
             self.lb.pipes.list()
+
+    @patch("langbase.request.Request.post")
+    def test_agent_run_basic(self, mock_post):
+        """Test agent.run method with basic parameters."""
+        mock_post.return_value = {
+            "output": "AI Engineer is a person who designs, builds, and maintains AI systems.",
+            "id": "chatcmpl-123",
+            "object": "chat.completion",
+            "created": 1720131129,
+            "model": "gpt-4o-mini",
+            "choices": [{
+                "index": 0,
+                "message": {
+                    "role": "assistant",
+                    "content": "AI Engineer is a person who designs, builds, and maintains AI systems."
+                },
+                "logprobs": None,
+                "finish_reason": "stop"
+            }],
+            "usage": {
+                "prompt_tokens": 28,
+                "completion_tokens": 36,
+                "total_tokens": 64
+            },
+            "system_fingerprint": "fp_123"
+        }
+        
+        result = self.lb.agent_run(
+            input="What is an AI Engineer?",
+            model="openai:gpt-4o-mini",
+            api_key="test-llm-key"
+        )
+        
+        mock_post.assert_called_once()
+        call_args = mock_post.call_args
+        
+        # Check endpoint
+        self.assertEqual(call_args[0][0], "/v1/agent/run")
+        
+        # Check headers
+        self.assertEqual(call_args[1]["headers"]["LB-LLM-KEY"], "test-llm-key")
+        
+        # Check basic parameters in options
+        options = call_args[0][1]
+        self.assertEqual(options["input"], "What is an AI Engineer?")
+        self.assertEqual(options["model"], "openai:gpt-4o-mini")
+        self.assertEqual(options["apiKey"], "test-llm-key")
+        
+        self.assertEqual(result["output"], "AI Engineer is a person who designs, builds, and maintains AI systems.")
+
+    @patch("langbase.request.Request.post")
+    def test_agent_run_with_messages(self, mock_post):
+        """Test agent.run method with message array input."""
+        mock_post.return_value = {"output": "Hello there!"}
+        
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Hello!"}
+        ]
+        
+        result = self.lb.agent_run(
+            input=messages,
+            model="openai:gpt-4o-mini",
+            api_key="test-llm-key"
+        )
+        
+        mock_post.assert_called_once()
+        options = mock_post.call_args[0][1]
+        self.assertEqual(options["input"], messages)
+
+    @patch("langbase.request.Request.post")
+    def test_agent_run_with_streaming(self, mock_post):
+        """Test agent.run method with streaming enabled."""
+        mock_post.return_value = MagicMock()  # Mock streaming response
+        
+        result = self.lb.agent_run(
+            input="Hello!",
+            model="openai:gpt-4o-mini",
+            api_key="test-llm-key",
+            stream=True
+        )
+        
+        mock_post.assert_called_once()
+        call_args = mock_post.call_args
+        
+        # Check that stream parameter is passed
+        options = call_args[0][1]
+        self.assertTrue(options["stream"])
+        
+        # Check that stream=True is passed to the request.post method
+        self.assertTrue(call_args[1]["stream"])
+
+    @patch("langbase.request.Request.post")
+    def test_agent_run_with_tools(self, mock_post):
+        """Test agent.run method with tools configuration."""
+        mock_post.return_value = {"output": "Tool response"}
+        
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_current_weather",
+                    "description": "Get the current weather in a given location",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "location": {
+                                "type": "string",
+                                "description": "The city and state, e.g. San Francisco, CA"
+                            },
+                            "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]}
+                        },
+                        "required": ["location"]
+                    }
+                }
+            }
+        ]
+        
+        result = self.lb.agent_run(
+            input="What's the weather in SF?",
+            model="openai:gpt-4o-mini",
+            api_key="test-llm-key",
+            tools=tools,
+            tool_choice="auto",
+            parallel_tool_calls=True
+        )
+        
+        mock_post.assert_called_once()
+        options = mock_post.call_args[0][1]
+        self.assertEqual(options["tools"], tools)
+        self.assertEqual(options["tool_choice"], "auto")
+        self.assertTrue(options["parallel_tool_calls"])
+
+    @patch("langbase.request.Request.post")
+    def test_agent_run_with_all_parameters(self, mock_post):
+        """Test agent.run method with all optional parameters."""
+        mock_post.return_value = {"output": "Complete response"}
+        
+        mcp_servers = [
+            {
+                "name": "test-server",
+                "type": "url",
+                "url": "https://example.com/mcp",
+                "authorization_token": "token123"
+            }
+        ]
+        
+        result = self.lb.agent_run(
+            input="Test input",
+            model="openai:gpt-4o-mini",
+            api_key="test-llm-key",
+            instructions="You are a helpful assistant.",
+            top_p=0.9,
+            max_tokens=2000,
+            temperature=0.7,
+            presence_penalty=0.1,
+            frequency_penalty=0.2,
+            stop=["END", "STOP"],
+            reasoning_effort="high",
+            max_completion_tokens=1500,
+            response_format={"type": "json_object"},
+            custom_model_params={"logprobs": True},
+            mcp_servers=mcp_servers
+        )
+        
+        mock_post.assert_called_once()
+        options = mock_post.call_args[0][1]
+        
+        # Verify all parameters are passed correctly
+        self.assertEqual(options["instructions"], "You are a helpful assistant.")
+        self.assertEqual(options["top_p"], 0.9)
+        self.assertEqual(options["max_tokens"], 2000)
+        self.assertEqual(options["temperature"], 0.7)
+        self.assertEqual(options["presence_penalty"], 0.1)
+        self.assertEqual(options["frequency_penalty"], 0.2)
+        self.assertEqual(options["stop"], ["END", "STOP"])
+        self.assertEqual(options["reasoning_effort"], "high")
+        self.assertEqual(options["max_completion_tokens"], 1500)
+        self.assertEqual(options["response_format"], {"type": "json_object"})
+        self.assertEqual(options["customModelParams"], {"logprobs": True})
+        self.assertEqual(options["mcp_servers"], mcp_servers)
+
+    def test_agent_run_missing_api_key(self):
+        """Test agent.run method with missing API key."""
+        with self.assertRaises(ValueError) as context:
+            self.lb.agent_run(
+                input="Test input",
+                model="openai:gpt-4o-mini",
+                api_key=""
+            )
+        
+        self.assertIn("LLM API key is required", str(context.exception))
+
+    def test_agent_run_missing_api_key_none(self):
+        """Test agent.run method with None API key."""
+        with self.assertRaises(ValueError) as context:
+            self.lb.agent_run(
+                input="Test input",
+                model="openai:gpt-4o-mini",
+                api_key=None
+            )
+        
+        self.assertIn("LLM API key is required", str(context.exception))
+
+    @patch("langbase.request.Request.post")
+    def test_agent_run_stream_false_not_included(self, mock_post):
+        """Test that stream=False doesn't include stream parameter in options."""
+        mock_post.return_value = {"output": "Response"}
+        
+        result = self.lb.agent_run(
+            input="Test input",
+            model="openai:gpt-4o-mini",
+            api_key="test-llm-key",
+            stream=False
+        )
+        
+        mock_post.assert_called_once()
+        options = mock_post.call_args[0][1]
+        
+        # When stream=False, it should not be included in options
+        self.assertNotIn("stream", options)
+        
+        # And stream parameter to request.post should be False
+        self.assertFalse(mock_post.call_args[1]["stream"])
 
 
 if __name__ == "__main__":

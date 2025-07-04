@@ -3,6 +3,9 @@ Example demonstrating how to append messages to a thread in Langbase.
 """
 import os
 from langbase import Langbase
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Get API key from environment variable
 langbase_api_key = os.getenv("LANGBASE_API_KEY")
@@ -16,12 +19,8 @@ thread_id = "thread_123456789"  # Replace with your actual thread ID
 messages = [
     {
         "role": "assistant",
-        "content": "I'm sorry to hear you're having trouble with your Widget Pro 2000. What specific issue are you experiencing?"
+        "content": "Nice to meet you"
     },
-    {
-        "role": "user",
-        "content": "The power button is flashing red and the device won't turn on."
-    }
 ]
 
 # Append messages to the thread

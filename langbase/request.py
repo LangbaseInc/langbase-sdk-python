@@ -183,13 +183,13 @@ class Request:
         }
 
         if raw_response:
-            result["raw_response"] = {
+            result["rawResponse"] = {
                 "headers": dict(response.headers)
             }
 
         return result
 
-    def handle_run_response(self, response, thread_id, raw_response=False):
+    def handle_run_response(self, response, thread_id, raw_response=False, endpoint=None):
         """
         Handle regular responses for run endpoints.
 
@@ -197,15 +197,17 @@ class Request:
             response: Response object
             thread_id: Thread ID from response headers
             raw_response: Whether to include raw response headers
+            endpoint: The API endpoint being called
 
         Returns:
             Processed response dictionary
         """
         generate_response = response.json()
+        is_agent_run = endpoint == '/v1/agent/run' if endpoint else False
 
         build_response = (
             {
-                "completion": generate_response.get("completion"),
+                "output" if is_agent_run else "completion": generate_response.get("output" if is_agent_run else "completion"),
                 **generate_response.get("raw", {})
             }
             if generate_response.get("raw")
@@ -278,7 +280,8 @@ class Request:
                 return self.handle_run_response(
                     response,
                     thread_id=None,
-                    raw_response=body.get("raw_response", False) if body else False
+                    raw_response=body.get("raw_response", False) if body else False,
+                    endpoint=endpoint
                 )
 
             if body.get("stream") and "run" in url:
@@ -286,6 +289,7 @@ class Request:
                     response,
                     raw_response=body.get("raw_response", False)
                 )
+                
 
             if body.get("stream"):
                 return self.handle_stream_response(response)
@@ -293,7 +297,8 @@ class Request:
             return self.handle_run_response(
                 response,
                 thread_id=thread_id,
-                raw_response=body.get("raw_response", False)
+                raw_response=body.get("raw_response", False),
+                endpoint=endpoint
             )
         else:
             # For non-generation endpoints, just return the JSON response
@@ -390,22 +395,3 @@ class Request:
             Processed API response
         """
         return self.send(endpoint, "DELETE", headers)
-
-    def patch(
-        self,
-        endpoint: str,
-        body: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None
-    ) -> Any:
-        """
-        Send a PATCH request to the API.
-
-        Args:
-            endpoint: API endpoint path
-            body: Request body
-            headers: Additional headers
-
-        Returns:
-            Processed API response
-        """
-        return self.send(endpoint, "PATCH", headers, body)

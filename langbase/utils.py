@@ -49,6 +49,7 @@ def convert_document_to_request_files(
     else:
         raise ValueError(f"Unsupported document type: {type(document)}")
 
+    # Add documentName as a separate field (not as a file)
     files['documentName'] = (None, document_name)
     return files
 

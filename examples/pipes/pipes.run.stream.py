@@ -4,6 +4,9 @@ Example demonstrating how to run a pipe with streaming in Langbase.
 import os
 import json
 from langbase import Langbase
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Get API key from environment variable
 langbase_api_key = os.getenv("LANGBASE_API_KEY")

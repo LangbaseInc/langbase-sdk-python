@@ -13,7 +13,7 @@ GENERATION_ENDPOINTS = [
     '/v1/pipes/run',
     '/beta/chat',
     '/beta/generate',
-    '/v1/llm/run',
+    '/v1/agent/run',
 ]
 
 # Role types
@@ -467,3 +467,24 @@ class LangbaseOptions(TypedDict, total=False):
 class FileProtocol(Protocol):
     """Protocol for file-like objects."""
     def read(self, size: int = -1) -> bytes: ...
+
+
+# Workflow types
+class WorkflowContext(TypedDict):
+    """Context for workflow execution containing step outputs."""
+    outputs: Dict[str, Any]
+
+
+class RetryConfig(TypedDict):
+    """Configuration for step retry behavior."""
+    limit: int
+    delay: int
+    backoff: Literal['exponential', 'linear', 'fixed']
+
+
+class StepConfig(TypedDict, total=False):
+    """Configuration for a workflow step."""
+    id: str
+    timeout: Optional[int]
+    retries: Optional[RetryConfig]
+    run: Any  # Callable[[], Awaitable[T]] - using Any for simplicity in TypedDict

@@ -5,6 +5,9 @@ This is useful when document embedding generation has failed or needs to be refr
 """
 import os
 from langbase import Langbase
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Get API key from environment variable
 langbase_api_key = os.getenv("LANGBASE_API_KEY")
