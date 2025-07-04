@@ -249,17 +249,33 @@ class TestLangbase(unittest.TestCase):
         mock_get.assert_called_once_with("/v1/threads/thread_123/messages")
         self.assertEqual(result, [{"id": "msg_123", "content": "Hello"}])
 
-
-
     @patch("langbase.request.Request.post")
     def test_embed(self, mock_post):
         """Test embed method."""
         mock_post.return_value = [[0.1, 0.2, 0.3]]
-        result = self.lb.embed(
+        
+        # Test with embedding model
+        result_with_model = self.lb.embed(
+            chunks=["Test text"],
+            embedding_model="test-model"
+        )
+        
+        mock_post.assert_called_with(
+            "/v1/embed",
+            {"chunks": ["Test text"], "embeddingModel": "test-model"}
+        )
+        self.assertEqual(result_with_model, [[0.1, 0.2, 0.3]])
+
+        # Test without embedding model
+        result_without_model = self.lb.embed(
             chunks=["Test text"]
         )
-        mock_post.assert_called_once()
-        self.assertEqual(result, [[0.1, 0.2, 0.3]])
+        
+        mock_post.assert_called_with(
+            "/v1/embed",
+            {"chunks": ["Test text"]}
+        )
+        self.assertEqual(result_without_model, [[0.1, 0.2, 0.3]])
 
     @patch("langbase.request.Request.post")
     def test_chunker(self, mock_post):

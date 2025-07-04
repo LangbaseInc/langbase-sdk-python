@@ -339,6 +339,14 @@ class ToolWebSearchOptions(TypedDict, total=False):
     domains: List[str]
     api_key: str
 
+class EmbedOptions(TypedDict, total=False):
+    """Options for embedding generation."""
+    chunks: List[str]
+    embedding_model: EmbeddingModel
+
+
+EmbedResponse = List[List[float]]
+
 
 class ToolWebSearchResponse(TypedDict):
     """Response from web search."""
