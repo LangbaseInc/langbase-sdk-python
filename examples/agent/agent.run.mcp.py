@@ -24,7 +24,7 @@ def main():
         exit(1)
     
     # Initialize Langbase client
-    langbase = Langbase(api_key=langbase_api_key, timeout=500)
+    langbase = Langbase(api_key=langbase_api_key)
     
     # Run the agent with MCP server
     response = langbase.agent_run(

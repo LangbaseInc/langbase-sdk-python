@@ -29,12 +29,10 @@ class Request:
             config: Configuration dictionary containing:
                 - api_key: API key for authentication
                 - base_url: Base URL for the API
-                - timeout: Timeout for requests in seconds (default: 30)
         """
         self.config = config
         self.api_key = config.get("api_key", "")
         self.base_url = config.get("base_url", "")
-        self.timeout = config.get("timeout", 30)
 
     def build_url(self, endpoint: str) -> str:
         """
@@ -107,7 +105,6 @@ class Request:
                     url=url,
                     headers={k: v for k, v in headers.items() if k != 'Content-Type'},
                     files=files,
-                    timeout=self.timeout,
                     stream=stream
                 )
             else:
@@ -116,7 +113,6 @@ class Request:
                     url=url,
                     headers=headers,
                     json=body if body else None,
-                    timeout=self.timeout,
                     stream=stream
                 )
             return response

@@ -21,7 +21,6 @@ class TestLangbase(unittest.TestCase):
         """Test initialization with API key parameter."""
         self.assertEqual(self.lb.api_key, self.api_key)
         self.assertEqual(self.lb.base_url, "https://api.langbase.com")
-        self.assertEqual(self.lb.timeout, 30)
 
     @patch.dict(os.environ, {"LANGBASE_API_KEY": "env-api-key"}, clear=True)
     def test_initialization_with_env_var(self):

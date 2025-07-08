@@ -31,8 +31,7 @@ class Langbase:
     def __init__(
         self,
         api_key: Optional[str] = None,
-        base_url: str = "https://api.langbase.com",
-        timeout: int = 30
+        base_url: str = "https://api.langbase.com"
     ):
         """
         Initialize the Langbase client.
@@ -41,7 +40,6 @@ class Langbase:
             api_key: The API key for authentication. If not provided, it will be read
                     from the LANGBASE_API_KEY environment variable.
             base_url: The base URL for the API.
-            timeout: The timeout for API requests in seconds.
 
         Raises:
             ValueError: If no API key is provided and LANGBASE_API_KEY is not set.
@@ -53,12 +51,10 @@ class Langbase:
             )
 
         self.base_url = base_url
-        self.timeout = timeout
 
         self.request = Request({
             "api_key": self.api_key,
-            "base_url": self.base_url,
-            "timeout": self.timeout
+            "base_url": self.base_url
         })
 
         # Initialize properties and methods
@@ -162,8 +158,7 @@ class Langbase:
                 if api_key:
                     request = Request({
                         "api_key": api_key,
-                        "base_url": self.parent.base_url,
-                        "timeout": self.parent.timeout
+                        "base_url": self.parent.base_url
                     })
 
                 headers = {}
@@ -679,8 +674,7 @@ class Langbase:
         response = requests.post(
             f"{self.base_url}/v1/parser",
             headers={"Authorization": f"Bearer {self.api_key}"},
-            files=files,
-            timeout=self.timeout
+            files=files
         )
 
         if not response.ok:

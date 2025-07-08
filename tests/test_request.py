@@ -20,8 +20,7 @@ class TestRequest(unittest.TestCase):
         """Set up test fixtures."""
         self.config = {
             "api_key": "test-api-key",
-            "base_url": "https://api.langbase.com",
-            "timeout": 30
+            "base_url": "https://api.langbase.com"
         }
         self.request = Request(self.config)
 
@@ -29,7 +28,6 @@ class TestRequest(unittest.TestCase):
         """Test initialization."""
         self.assertEqual(self.request.api_key, "test-api-key")
         self.assertEqual(self.request.base_url, "https://api.langbase.com")
-        self.assertEqual(self.request.timeout, 30)
 
     def test_build_url(self):
         """Test build_url method."""
@@ -66,7 +64,6 @@ class TestRequest(unittest.TestCase):
             url="https://api.langbase.com/test",
             headers={"Authorization": "Bearer test-api-key"},
             json=None,
-            timeout=30,
             stream=False
         )
         self.assertEqual(response, mock_response)
