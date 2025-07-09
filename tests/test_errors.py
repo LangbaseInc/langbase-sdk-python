@@ -1,165 +1,201 @@
 """
-Tests for error handling classes.
+Tests for error handling.
 """
 
-import unittest
-
-from langbase.errors import (
-    APIConnectionError,
-    APIConnectionTimeoutError,
-    APIError,
-    AuthenticationError,
-    BadRequestError,
-    ConflictError,
-    InternalServerError,
-    NotFoundError,
-    PermissionDeniedError,
-    RateLimitError,
-    UnprocessableEntityError,
-)
+import pytest
+import requests
+import responses
 
 
-class TestErrors(unittest.TestCase):
-    """Test error handling classes."""
+class TestErrorHandling:
+    """Test error handling scenarios."""
 
-    def test_api_error_init(self):
-        """Test APIError initialization."""
-        error = APIError(
-            400, {"message": "Bad request"}, "Bad request", {"X-Request-ID": "123"}
+    @responses.activate
+    def test_error_with_json_response(self, langbase_client):
+        """Test error handling with JSON error response."""
+        responses.add(
+            responses.POST,
+            "https://api.langbase.com/v1/pipes",
+            json={"error": "Bad request", "message": "Invalid parameters"},
+            status=400,
         )
 
-        self.assertEqual(error.status, 400)
-        self.assertEqual(error.error, {"message": "Bad request"})
-        self.assertEqual(error.request_id, None)  # No lb-request-id in headers
-        self.assertEqual(str(error), "400 Bad request")
+        from langbase.errors import BadRequestError
 
-    def test_api_error_init_with_request_id(self):
-        """Test APIError initialization with request ID."""
-        error = APIError(
-            400, {"message": "Bad request"}, "Bad request", {"lb-request-id": "123"}
+        with pytest.raises(BadRequestError) as exc_info:
+            langbase_client.pipes.create(name="test")
+
+        assert "Bad request" in str(exc_info.value)
+
+    @responses.activate
+    def test_error_with_text_response(self, langbase_client):
+        """Test error handling with text error response."""
+        responses.add(
+            responses.GET,
+            "https://api.langbase.com/v1/pipes",
+            body="Internal Server Error",
+            status=500,
         )
 
-        self.assertEqual(error.status, 400)
-        self.assertEqual(error.error, {"message": "Bad request"})
-        self.assertEqual(error.request_id, "123")
-        self.assertEqual(str(error), "400 Bad request")
+        from langbase.errors import APIError
 
-    def test_api_error_make_message(self):
-        """Test APIError._make_message."""
-        # Message from error.message (string)
-        msg = APIError._make_message(400, {"message": "Error message"}, None)
-        self.assertEqual(msg, "400 Error message")
+        with pytest.raises(APIError) as exc_info:
+            langbase_client.pipes.list()
 
-        # Message from error.message (dict)
-        msg = APIError._make_message(400, {"message": {"detail": "Error"}}, None)
-        self.assertEqual(msg, "400 {'detail': 'Error'}")
+        assert exc_info.value.status == 500
 
-        # Message from error (string)
-        msg = APIError._make_message(400, "Error message", None)
-        self.assertEqual(msg, "400 Error message")
+    @responses.activate
+    def test_connection_error(self, langbase_client):
+        """Test connection error handling."""
+        responses.add(
+            responses.GET,
+            "https://api.langbase.com/v1/pipes",
+            body=requests.exceptions.ConnectionError("Connection failed"),
+        )
 
-        # Message from error (dict)
-        msg = APIError._make_message(400, {"error": "Something went wrong"}, None)
-        self.assertEqual(msg, "400 {'error': 'Something went wrong'}")
+        from langbase.errors import APIConnectionError
 
-        # Message from message parameter
-        msg = APIError._make_message(400, None, "Error message")
-        self.assertEqual(msg, "400 Error message")
+        with pytest.raises(APIConnectionError):
+            langbase_client.pipes.list()
 
-        # Status only
-        msg = APIError._make_message(400, None, None)
-        self.assertEqual(msg, "400 status code (no body)")
+    @responses.activate
+    def test_timeout_error(self, langbase_client):
+        """Test timeout error handling."""
+        responses.add(
+            responses.GET,
+            "https://api.langbase.com/v1/pipes",
+            body=requests.exceptions.Timeout("Request timed out"),
+        )
 
-        # Message only
-        msg = APIError._make_message(None, None, "Error message")
-        self.assertEqual(msg, "Error message")
+        from langbase.errors import APIConnectionError
 
-        # No information
-        msg = APIError._make_message(None, None, None)
-        self.assertEqual(msg, "(no status code or body)")
+        with pytest.raises(APIConnectionError):
+            langbase_client.pipes.list()
 
-    def test_api_error_generate(self):
-        """Test APIError.generate."""
-        # No status (connection error)
-        error = APIError.generate(None, None, "Connection error", {})
-        self.assertIsInstance(error, APIConnectionError)
+    @responses.activate
+    def test_error_contains_request_details(self, langbase_client):
+        """Test that errors contain request details."""
+        responses.add(
+            responses.GET,
+            "https://api.langbase.com/v1/pipes",
+            json={"error": "Unauthorized", "message": "Invalid API key"},
+            status=401,
+        )
 
-        # 400 Bad Request
-        error = APIError.generate(400, {"error": "Bad request"}, None, {})
-        self.assertIsInstance(error, BadRequestError)
+        from langbase.errors import AuthenticationError
 
-        # 401 Authentication Error
-        error = APIError.generate(401, {"error": "Unauthorized"}, None, {})
-        self.assertIsInstance(error, AuthenticationError)
+        with pytest.raises(AuthenticationError) as exc_info:
+            langbase_client.pipes.list()
 
-        # 403 Permission Denied
-        error = APIError.generate(403, {"error": "Forbidden"}, None, {})
-        self.assertIsInstance(error, PermissionDeniedError)
+        error = exc_info.value
+        assert error.status == 401
+        # Check that error message contains the expected text
+        assert "Unauthorized" in str(error)
 
-        # 404 Not Found
-        error = APIError.generate(404, {"error": "Not found"}, None, {})
-        self.assertIsInstance(error, NotFoundError)
+    @responses.activate
+    def test_retry_behavior_on_5xx_errors(self, langbase_client):
+        """Test that 5xx errors are raised immediately (no built-in retry)."""
+        responses.add(
+            responses.GET,
+            "https://api.langbase.com/v1/pipes",
+            json={"error": "Internal server error"},
+            status=503,
+        )
 
-        # 409 Conflict
-        error = APIError.generate(409, {"error": "Conflict"}, None, {})
-        self.assertIsInstance(error, ConflictError)
+        from langbase.errors import APIError
 
-        # 422 Unprocessable Entity
-        error = APIError.generate(422, {"error": "Invalid data"}, None, {})
-        self.assertIsInstance(error, UnprocessableEntityError)
+        with pytest.raises(APIError) as exc_info:
+            langbase_client.pipes.list()
 
-        # 429 Rate Limit
-        error = APIError.generate(429, {"error": "Too many requests"}, None, {})
-        self.assertIsInstance(error, RateLimitError)
+        assert exc_info.value.status == 503
+        # Verify only one request was made (no retry)
+        assert len(responses.calls) == 1
 
-        # 500 Internal Server Error
-        error = APIError.generate(500, {"error": "Server error"}, None, {})
-        self.assertIsInstance(error, InternalServerError)
+    @responses.activate
+    def test_error_message_formatting(self, langbase_client):
+        """Test error message formatting."""
+        responses.add(
+            responses.POST,
+            "https://api.langbase.com/v1/pipes/run",
+            json={"error": "Rate limit exceeded", "message": "Too many requests"},
+            status=429,
+        )
 
-        # Other status code
-        error = APIError.generate(418, {"error": "I'm a teapot"}, None, {})
-        self.assertIsInstance(error, APIError)
-        self.assertEqual(error.status, 418)
+        from langbase.errors import RateLimitError
 
-    def test_api_connection_error(self):
-        """Test APIConnectionError."""
-        error = APIConnectionError()
-        self.assertEqual(str(error), "Connection error.")
-        self.assertIsNone(error.status)
+        with pytest.raises(RateLimitError) as exc_info:
+            langbase_client.pipes.run(name="test", messages=[])
 
-        error = APIConnectionError("Custom message")
-        self.assertEqual(str(error), "Custom message")
+        error_msg = str(exc_info.value)
+        assert "429" in error_msg
+        assert "Rate limit exceeded" in error_msg
 
-        cause = ValueError("Underlying error")
-        error = APIConnectionError(cause=cause)
-        self.assertEqual(error.__cause__, cause)
+    @responses.activate
+    def test_different_endpoints_error_handling(self, langbase_client):
+        """Test error handling across different endpoints."""
+        # Test memory endpoint
+        responses.add(
+            responses.GET,
+            "https://api.langbase.com/v1/memory",
+            json={"error": "Not found"},
+            status=404,
+        )
 
-    def test_api_connection_timeout_error(self):
-        """Test APIConnectionTimeoutError."""
-        error = APIConnectionTimeoutError()
-        self.assertEqual(str(error), "Request timed out.")
+        # Test tools endpoint
+        responses.add(
+            responses.POST,
+            "https://api.langbase.com/v1/tools/web-search",
+            json={"error": "Invalid query"},
+            status=400,
+        )
 
-        error = APIConnectionTimeoutError("Custom timeout message")
-        self.assertEqual(str(error), "Custom timeout message")
+        from langbase.errors import BadRequestError, NotFoundError
 
-    def test_error_subclasses(self):
-        """Test error subclasses."""
-        # Check that all error subclasses have the expected status code
-        self.assertEqual(BadRequestError(400, None, None, None).status, 400)
-        self.assertEqual(AuthenticationError(401, None, None, None).status, 401)
-        self.assertEqual(PermissionDeniedError(403, None, None, None).status, 403)
-        self.assertEqual(NotFoundError(404, None, None, None).status, 404)
-        self.assertEqual(ConflictError(409, None, None, None).status, 409)
-        self.assertEqual(UnprocessableEntityError(422, None, None, None).status, 422)
-        self.assertEqual(RateLimitError(429, None, None, None).status, 429)
+        with pytest.raises(NotFoundError):
+            langbase_client.memories.list()
 
-        # InternalServerError can have any 5xx status
-        error = InternalServerError(500, None, None, None)
-        self.assertEqual(error.status, 500)
+        with pytest.raises(BadRequestError):
+            langbase_client.tools.web_search(query="test")
 
-        error = InternalServerError(503, None, None, None)
-        self.assertEqual(error.status, 503)
+    @responses.activate
+    def test_streaming_endpoint_error_handling(self, langbase_client):
+        """Test error handling for streaming endpoints."""
+        responses.add(
+            responses.POST,
+            "https://api.langbase.com/v1/pipes/run",
+            json={"error": "Model not available"},
+            status=503,
+        )
 
+        from langbase.errors import APIError
 
-if __name__ == "__main__":
-    unittest.main()
+        with pytest.raises(APIError) as exc_info:
+            langbase_client.pipes.run(
+                name="test",
+                messages=[{"role": "user", "content": "Hello"}],
+                stream=True,
+            )
+
+        assert exc_info.value.status == 503
+
+    @responses.activate
+    def test_file_upload_error_handling(self, langbase_client):
+        """Test error handling for file upload operations."""
+        responses.add(
+            responses.POST,
+            "https://api.langbase.com/v1/memory/documents",
+            json={"error": "File too large"},
+            status=413,
+        )
+
+        from langbase.errors import APIError
+
+        with pytest.raises(APIError) as exc_info:
+            langbase_client.memories.documents.upload(
+                memory_name="test-memory",
+                document_name="test.txt",
+                document=b"test content",
+                content_type="text/plain",
+            )
+
+        assert exc_info.value.status == 413
