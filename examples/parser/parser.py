@@ -1,11 +1,14 @@
 """
 Example demonstrating how to parse a document using Langbase.
 """
+
+import json
 import os
 import pathlib
-import json
-from langbase import Langbase
+
 from dotenv import load_dotenv
+
+from langbase import Langbase
 
 load_dotenv()
 
@@ -14,6 +17,7 @@ langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
 # Initialize the client
 lb = Langbase(api_key=langbase_api_key)
+
 
 def main():
     """
@@ -31,7 +35,7 @@ def main():
         results = lb.parser(
             document=document_content,
             document_name="composable-ai.md",
-            content_type="text/markdown"
+            content_type="text/markdown",
         )
 
         # Print the results
@@ -39,6 +43,7 @@ def main():
 
     except Exception as e:
         print(f"Error parsing document: {e}")
+
 
 if __name__ == "__main__":
     main()

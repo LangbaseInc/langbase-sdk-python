@@ -4,20 +4,29 @@ Main client for the Langbase SDK.
 This module provides the Langbase class which is the main entry point
 for interacting with the Langbase API.
 """
+
 import os
-from typing import Dict, List, Optional, Union, Any, BinaryIO, overload
 from io import BytesIO
+from typing import Any, BinaryIO, Dict, List, Optional, Union, overload
+
 import requests
 
 from .errors import APIError
 from .request import Request
-from .utils import convert_document_to_request_files, clean_null_values
 from .types import (
-    EmbeddingModel, ContentType, FileProtocol,
-    MemoryRetrieveResponse, MemoryListDocResponse, MemoryCreateResponse,
-    MemoryListResponse, MemoryDeleteResponse, MemoryDeleteDocResponse,
-    ThreadsBaseResponse, ThreadMessagesBaseResponse
+    ContentType,
+    EmbeddingModel,
+    FileProtocol,
+    MemoryCreateResponse,
+    MemoryDeleteDocResponse,
+    MemoryDeleteResponse,
+    MemoryListDocResponse,
+    MemoryListResponse,
+    MemoryRetrieveResponse,
+    ThreadMessagesBaseResponse,
+    ThreadsBaseResponse,
 )
+from .utils import clean_null_values, convert_document_to_request_files
 
 
 class Langbase:
@@ -29,9 +38,7 @@ class Langbase:
     """
 
     def __init__(
-        self,
-        api_key: Optional[str] = None,
-        base_url: str = "https://api.langbase.com"
+        self, api_key: Optional[str] = None, base_url: str = "https://api.langbase.com"
     ):
         """
         Initialize the Langbase client.
@@ -52,10 +59,7 @@ class Langbase:
 
         self.base_url = base_url
 
-        self.request = Request({
-            "api_key": self.api_key,
-            "base_url": self.base_url
-        })
+        self.request = Request({"api_key": self.api_key, "base_url": self.base_url})
 
         # Initialize properties and methods
         self._init_pipes()
@@ -91,11 +95,7 @@ class Langbase:
                 Returns:
                     Created pipe object
                 """
-                options = {
-                    "name": name,
-                    "description": description,
-                    **kwargs
-                }
+                options = {"name": name, "description": description, **kwargs}
                 return self.parent.request.post("/v1/pipes", clean_null_values(options))
 
             def update(self, name: str, **kwargs):
@@ -109,19 +109,20 @@ class Langbase:
                 Returns:
                     Updated pipe object
                 """
-                options = {
-                    "name": name,
-                    **kwargs
-                }
-                return self.parent.request.post(f"/v1/pipes/{name}", clean_null_values(options))
+                options = {"name": name, **kwargs}
+                return self.parent.request.post(
+                    f"/v1/pipes/{name}", clean_null_values(options)
+                )
 
             def run(
                 self,
                 name: Optional[str] = None,
                 api_key: Optional[str] = None,
                 messages: Optional[List[Dict[str, Any]]] = None,
-                stream: Optional[bool] = None,  # Changed to Optional[bool] with default None
-                **kwargs
+                stream: Optional[
+                    bool
+                ] = None,  # Changed to Optional[bool] with default None
+                **kwargs,
             ):
                 """
                 Run a pipe.
@@ -146,7 +147,7 @@ class Langbase:
                     "name": name,
                     "api_key": api_key,
                     "messages": messages or [],
-                    **kwargs
+                    **kwargs,
                 }
 
                 # Only set stream in options if it's explicitly provided
@@ -156,17 +157,21 @@ class Langbase:
                 # Create a new request instance if API key is provided
                 request = self.parent.request
                 if api_key:
-                    request = Request({
-                        "api_key": api_key,
-                        "base_url": self.parent.base_url
-                    })
+                    request = Request(
+                        {"api_key": api_key, "base_url": self.parent.base_url}
+                    )
 
                 headers = {}
                 if "llm_key" in kwargs:
                     headers["LB-LLM-KEY"] = kwargs.pop("llm_key")
 
                 # Pass the stream parameter to post method (which might be None)
-                return request.post("/v1/pipes/run", clean_null_values(options), headers, stream=stream if stream is not None else False)
+                return request.post(
+                    "/v1/pipes/run",
+                    clean_null_values(options),
+                    headers,
+                    stream=stream if stream is not None else False,
+                )
 
         self.pipes = Pipes(self)
 
@@ -189,7 +194,9 @@ class Langbase:
                 """
                 return self.parent.request.get(f"/v1/memory/{memory_name}/documents")
 
-            def delete(self, memory_name: str, document_name: str) -> MemoryDeleteDocResponse:
+            def delete(
+                self, memory_name: str, document_name: str
+            ) -> MemoryDeleteDocResponse:
                 """
                 Delete a document from memory.
 
@@ -210,7 +217,7 @@ class Langbase:
                 document_name: str,
                 document: Union[bytes, BytesIO, str, BinaryIO],
                 content_type: ContentType,
-                meta: Optional[Dict[str, str]] = None
+                meta: Optional[Dict[str, str]] = None,
             ) -> requests.Response:
                 """
                 Upload a document to memory.
@@ -231,11 +238,14 @@ class Langbase:
                 """
                 try:
                     # Get signed URL for upload
-                    response = self.parent.request.post("/v1/memory/documents", {
-                        "memoryName": memory_name,
-                        "fileName": document_name,
-                        "meta": meta or {}
-                    })
+                    response = self.parent.request.post(
+                        "/v1/memory/documents",
+                        {
+                            "memoryName": memory_name,
+                            "fileName": document_name,
+                            "meta": meta or {},
+                        },
+                    )
 
                     upload_url = response.get("signedUrl")
 
@@ -245,10 +255,10 @@ class Langbase:
                             file_content = f.read()
                     elif isinstance(document, bytes):
                         file_content = document
-                    elif isinstance(document, BytesIO) or hasattr(document, 'read'):
+                    elif isinstance(document, BytesIO) or hasattr(document, "read"):
                         file_content = document.read()
                         # Reset file pointer if possible
-                        if hasattr(document, 'seek'):
+                        if hasattr(document, "seek"):
                             document.seek(0)
                     else:
                         raise ValueError(f"Unsupported document type: {type(document)}")
@@ -258,9 +268,9 @@ class Langbase:
                         upload_url,
                         headers={
                             "Authorization": f"Bearer {self.parent.api_key}",
-                            "Content-Type": content_type
+                            "Content-Type": content_type,
                         },
-                        data=file_content
+                        data=file_content,
                     )
 
                     if not upload_response.ok:
@@ -268,7 +278,7 @@ class Langbase:
                             upload_response.status_code,
                             upload_response.text,
                             "Upload failed",
-                            dict(upload_response.headers)
+                            dict(upload_response.headers),
                         )
 
                     return upload_response
@@ -277,10 +287,7 @@ class Langbase:
                     if isinstance(e, APIError):
                         raise e
                     raise APIError(
-                        None,
-                        str(e),
-                        "Error during document upload",
-                        None
+                        None, str(e), "Error during document upload", None
                     ) from e
 
             class Embeddings:
@@ -315,7 +322,7 @@ class Langbase:
                 self,
                 name: str,
                 description: Optional[str] = None,
-                embedding_model: Optional[EmbeddingModel] = None
+                embedding_model: Optional[EmbeddingModel] = None,
             ) -> MemoryCreateResponse:
                 """
                 Create a new memory.
@@ -331,9 +338,11 @@ class Langbase:
                 options = {
                     "name": name,
                     "description": description,
-                    "embedding_model": embedding_model
+                    "embedding_model": embedding_model,
                 }
-                return self.parent.request.post("/v1/memory", clean_null_values(options))
+                return self.parent.request.post(
+                    "/v1/memory", clean_null_values(options)
+                )
 
             def delete(self, name: str) -> MemoryDeleteResponse:
                 """
@@ -351,7 +360,7 @@ class Langbase:
                 self,
                 query: str,
                 memory: List[Dict[str, Any]],
-                top_k: Optional[int] = None
+                top_k: Optional[int] = None,
             ) -> List[MemoryRetrieveResponse]:
                 """
                 Retrieve content from memory based on query.
@@ -364,10 +373,7 @@ class Langbase:
                 Returns:
                     List of matching content
                 """
-                options = {
-                    "query": query,
-                    "memory": memory
-                }
+                options = {"query": query, "memory": memory}
 
                 if top_k is not None:
                     options["topK"] = top_k
@@ -396,7 +402,7 @@ class Langbase:
                 self,
                 url: List[str],
                 max_pages: Optional[int] = None,
-                api_key: Optional[str] = None
+                api_key: Optional[str] = None,
             ):
                 """
                 Crawl web pages.
@@ -426,7 +432,7 @@ class Langbase:
                 service: str = "exa",
                 total_results: Optional[int] = None,
                 domains: Optional[List[str]] = None,
-                api_key: Optional[str] = None
+                api_key: Optional[str] = None,
             ):
                 """
                 Search the web.
@@ -441,10 +447,7 @@ class Langbase:
                 Returns:
                     List of search results
                 """
-                options = {
-                    "query": query,
-                    "service": service
-                }
+                options = {"query": query, "service": service}
 
                 if total_results is not None:
                     options["totalResults"] = total_results
@@ -456,7 +459,9 @@ class Langbase:
                 if api_key:
                     headers["LB-WEB-SEARCH-KEY"] = api_key
 
-                return self.parent.request.post("/v1/tools/web-search", options, headers)
+                return self.parent.request.post(
+                    "/v1/tools/web-search", options, headers
+                )
 
         self.tools = Tools(self)
 
@@ -488,7 +493,7 @@ class Langbase:
                 self,
                 thread_id: Optional[str] = None,
                 metadata: Optional[Dict[str, str]] = None,
-                messages: Optional[List[Dict[str, Any]]] = None
+                messages: Optional[List[Dict[str, Any]]] = None,
             ) -> ThreadsBaseResponse:
                 """
                 Create a new thread.
@@ -512,12 +517,12 @@ class Langbase:
                 if messages:
                     options["messages"] = messages
 
-                return self.parent.request.post("/v1/threads", clean_null_values(options))
+                return self.parent.request.post(
+                    "/v1/threads", clean_null_values(options)
+                )
 
             def update(
-                self,
-                thread_id: str,
-                metadata: Dict[str, str]
+                self, thread_id: str, metadata: Dict[str, str]
             ) -> ThreadsBaseResponse:
                 """
                 Update thread metadata.
@@ -529,10 +534,7 @@ class Langbase:
                 Returns:
                     Updated thread object
                 """
-                options = {
-                    "threadId": thread_id,
-                    "metadata": metadata
-                }
+                options = {"threadId": thread_id, "metadata": metadata}
                 return self.parent.request.post(f"/v1/threads/{thread_id}", options)
 
             def get(self, thread_id: str) -> ThreadsBaseResponse:
@@ -560,9 +562,7 @@ class Langbase:
                 return self.parent.request.delete(f"/v1/threads/{thread_id}")
 
             def append(
-                self,
-                thread_id: str,
-                messages: List[Dict[str, Any]]
+                self, thread_id: str, messages: List[Dict[str, Any]]
             ) -> List[ThreadMessagesBaseResponse]:
                 """
                 Append messages to a thread.
@@ -575,10 +575,9 @@ class Langbase:
                     List of added messages
                 """
                 return self.parent.request.post(
-                    f"/v1/threads/{thread_id}/messages",
-                    messages
+                    f"/v1/threads/{thread_id}/messages", messages
                 )
-            
+
             def list(self, thread_id: str) -> List[ThreadMessagesBaseResponse]:
                 """
                 List messages in a thread.
@@ -594,9 +593,7 @@ class Langbase:
         self.threads = Threads(self)
 
     def embed(
-        self,
-        chunks: List[str],
-        embedding_model: Optional[EmbeddingModel] = None
+        self, chunks: List[str], embedding_model: Optional[EmbeddingModel] = None
     ) -> List[List[float]]:
         """
         Generate embeddings for text chunks.
@@ -619,7 +616,7 @@ class Langbase:
         self,
         content: str,
         chunk_max_length: Optional[int] = None,
-        chunk_overlap: Optional[int] = None
+        chunk_overlap: Optional[int] = None,
     ) -> List[str]:
         """
         Split content into chunks.
@@ -635,9 +632,7 @@ class Langbase:
         Raises:
             APIError: If chunking fails
         """
-        json_data = {
-            "content": content
-        }
+        json_data = {"content": content}
 
         if chunk_max_length is not None:
             json_data["chunkMaxLength"] = chunk_max_length
@@ -647,12 +642,11 @@ class Langbase:
 
         return self.request.post("/v1/chunker", json_data)
 
-
     def parser(
         self,
         document: Union[bytes, BytesIO, str, BinaryIO],
         document_name: str,
-        content_type: ContentType
+        content_type: ContentType,
     ) -> Dict[str, str]:
         """
         Parse a document to extract its content.
@@ -674,7 +668,7 @@ class Langbase:
         response = requests.post(
             f"{self.base_url}/v1/parser",
             headers={"Authorization": f"Bearer {self.api_key}"},
-            files=files
+            files=files,
         )
 
         if not response.ok:
@@ -738,7 +732,6 @@ class Langbase:
         if not api_key:
             raise ValueError("LLM API key is required to run this LLM.")
 
-
         options = {
             "input": input,
             "model": model,
@@ -767,14 +760,8 @@ class Langbase:
         # Clean null values from options
         options = clean_null_values(options)
 
-        headers = {
-            "LB-LLM-KEY": api_key
-        }
+        headers = {"LB-LLM-KEY": api_key}
 
         return self.request.post(
-            "/v1/agent/run",
-            options,
-            headers=headers,
-            stream=stream
+            "/v1/agent/run", options, headers=headers, stream=stream
         )
-

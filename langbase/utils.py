@@ -4,16 +4,18 @@ Utility functions for the Langbase SDK.
 This module contains helper functions for common tasks like
 document handling and data conversion.
 """
+
 import os
-from typing import Union, Dict, Any, BinaryIO
 from io import BytesIO
+from typing import Any, BinaryIO, Dict, Union
+
 from .types import ContentType, FileProtocol
 
 
 def convert_document_to_request_files(
     document: Union[bytes, BytesIO, str, BinaryIO],
     document_name: str,
-    content_type: ContentType
+    content_type: ContentType,
 ) -> Dict[str, Union[tuple, str]]:
     """
     Convert a document to the format needed for requests library's files parameter.
@@ -35,26 +37,28 @@ def convert_document_to_request_files(
     if isinstance(document, str) and os.path.isfile(document):
         # If it's a file path, open and read the file
         with open(document, "rb") as f:
-            files['document'] = (document_name, f.read(), content_type)
+            files["document"] = (document_name, f.read(), content_type)
     elif isinstance(document, bytes):
         # If it's raw bytes
-        files['document'] = (document_name, document, content_type)
-    elif isinstance(document, BytesIO) or hasattr(document, 'read'):
+        files["document"] = (document_name, document, content_type)
+    elif isinstance(document, BytesIO) or hasattr(document, "read"):
         # If it's a file-like object
         document_content = document.read()
         # Reset the pointer if it's a file-like object that supports seek
-        if hasattr(document, 'seek'):
+        if hasattr(document, "seek"):
             document.seek(0)
-        files['document'] = (document_name, document_content, content_type)
+        files["document"] = (document_name, document_content, content_type)
     else:
         raise ValueError(f"Unsupported document type: {type(document)}")
 
     # Add documentName as a separate field (not as a file)
-    files['documentName'] = (None, document_name)
+    files["documentName"] = (None, document_name)
     return files
 
 
-def prepare_headers(api_key: str, additional_headers: Dict[str, str] = None) -> Dict[str, str]:
+def prepare_headers(
+    api_key: str, additional_headers: Dict[str, str] = None
+) -> Dict[str, str]:
     """
     Prepare headers for API requests.
 
@@ -65,10 +69,7 @@ def prepare_headers(api_key: str, additional_headers: Dict[str, str] = None) -> 
     Returns:
         Dictionary of headers to use in requests
     """
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {api_key}"
-    }
+    headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
 
     if additional_headers:
         headers.update(additional_headers)
@@ -90,7 +91,7 @@ def format_thread_id(thread_id: str) -> str:
     thread_id = thread_id.strip()
 
     # Ensure thread_id has the correct format
-    if not thread_id.startswith('thread_'):
+    if not thread_id.startswith("thread_"):
         thread_id = f"thread_{thread_id}"
 
     return thread_id

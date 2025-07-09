@@ -1,28 +1,33 @@
 """
-Example demonstrating how to list messages in a thread in Langbase.
+Example demonstrating how to list threads in Langbase.
 """
-import os
-from langbase import Langbase
-from datetime import datetime
-from dotenv import load_dotenv
+
 import json
+import os
 
-load_dotenv()
+from dotenv import load_dotenv
 
-# Get API key from environment variable
-langbase_api_key = os.getenv("LANGBASE_API_KEY")
+from langbase import Langbase
 
-# Initialize the client
-lb = Langbase(api_key=langbase_api_key)
 
-# Thread ID to list messages from
-thread_id = "thread_123456789"  # Replace with your actual thread ID
+def main():
+    load_dotenv()
 
-# List messages from the thread
-try:
-    response = lb.threads.messages.list(thread_id=thread_id)
+    # Get API key from environment variable
+    langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-    print(json.dumps(response, indent=2))
+    # Initialize the client
+    lb = Langbase(api_key=langbase_api_key)
 
-except Exception as e:
-    print(f"Error listing messages from thread: {e}")
+    # List all threads
+    try:
+        threads = lb.threads.list()
+
+        print(json.dumps(threads, indent=2))
+
+    except Exception as e:
+        print(f"Error listing threads: {e}")
+
+
+if __name__ == "__main__":
+    main()

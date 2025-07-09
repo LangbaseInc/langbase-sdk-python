@@ -1,13 +1,21 @@
 """
 Tests for error handling classes.
 """
+
 import unittest
 
 from langbase.errors import (
-    APIError, APIConnectionError, APIConnectionTimeoutError,
-    BadRequestError, AuthenticationError, PermissionDeniedError,
-    NotFoundError, ConflictError, UnprocessableEntityError,
-    RateLimitError, InternalServerError
+    APIConnectionError,
+    APIConnectionTimeoutError,
+    APIError,
+    AuthenticationError,
+    BadRequestError,
+    ConflictError,
+    InternalServerError,
+    NotFoundError,
+    PermissionDeniedError,
+    RateLimitError,
+    UnprocessableEntityError,
 )
 
 
@@ -16,7 +24,9 @@ class TestErrors(unittest.TestCase):
 
     def test_api_error_init(self):
         """Test APIError initialization."""
-        error = APIError(400, {"message": "Bad request"}, "Bad request", {"X-Request-ID": "123"})
+        error = APIError(
+            400, {"message": "Bad request"}, "Bad request", {"X-Request-ID": "123"}
+        )
 
         self.assertEqual(error.status, 400)
         self.assertEqual(error.error, {"message": "Bad request"})
@@ -25,7 +35,9 @@ class TestErrors(unittest.TestCase):
 
     def test_api_error_init_with_request_id(self):
         """Test APIError initialization with request ID."""
-        error = APIError(400, {"message": "Bad request"}, "Bad request", {"lb-request-id": "123"})
+        error = APIError(
+            400, {"message": "Bad request"}, "Bad request", {"lb-request-id": "123"}
+        )
 
         self.assertEqual(error.status, 400)
         self.assertEqual(error.error, {"message": "Bad request"})

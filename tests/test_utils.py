@@ -1,16 +1,17 @@
 """
 Tests for utility functions.
 """
+
 import os
 import unittest
 from io import BytesIO
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
 
 from langbase.utils import (
+    clean_null_values,
     convert_document_to_request_files,
-    prepare_headers,
     format_thread_id,
-    clean_null_values
+    prepare_headers,
 )
 
 
@@ -20,9 +21,7 @@ class TestUtils(unittest.TestCase):
     def test_convert_document_to_request_files_bytes(self):
         """Test convert_document_to_request_files with bytes."""
         document = b"Test document content"
-        result = convert_document_to_request_files(
-            document, "test.txt", "text/plain"
-        )
+        result = convert_document_to_request_files(document, "test.txt", "text/plain")
 
         self.assertIn("document", result)
         self.assertIn("documentName", result)
@@ -34,9 +33,7 @@ class TestUtils(unittest.TestCase):
     def test_convert_document_to_request_files_bytesio(self):
         """Test convert_document_to_request_files with BytesIO."""
         document = BytesIO(b"Test document content")
-        result = convert_document_to_request_files(
-            document, "test.txt", "text/plain"
-        )
+        result = convert_document_to_request_files(document, "test.txt", "text/plain")
 
         self.assertIn("document", result)
         self.assertIn("documentName", result)
@@ -50,11 +47,11 @@ class TestUtils(unittest.TestCase):
 
     @patch("builtins.open", new_callable=mock_open, read_data=b"Test document content")
     @patch("os.path.isfile", return_value=True)
-    def test_convert_document_to_request_files_filepath(self, mock_isfile, mock_file_open):
+    def test_convert_document_to_request_files_filepath(
+        self, mock_isfile, mock_file_open
+    ):
         """Test convert_document_to_request_files with file path."""
-        result = convert_document_to_request_files(
-            "test.txt", "test.txt", "text/plain"
-        )
+        result = convert_document_to_request_files("test.txt", "test.txt", "text/plain")
 
         mock_isfile.assert_called_once_with("test.txt")
         mock_file_open.assert_called_once_with("test.txt", "rb")
@@ -69,9 +66,7 @@ class TestUtils(unittest.TestCase):
     def test_convert_document_to_request_files_invalid_type(self):
         """Test convert_document_to_request_files with invalid type."""
         with self.assertRaises(ValueError):
-            convert_document_to_request_files(
-                123, "test.txt", "text/plain"
-            )
+            convert_document_to_request_files(123, "test.txt", "text/plain")
 
     def test_prepare_headers(self):
         """Test prepare_headers."""
@@ -99,12 +94,7 @@ class TestUtils(unittest.TestCase):
 
     def test_clean_null_values(self):
         """Test clean_null_values."""
-        data = {
-            "name": "test",
-            "description": None,
-            "value": 123,
-            "options": None
-        }
+        data = {"name": "test", "description": None, "value": 123, "options": None}
 
         result = clean_null_values(data)
 

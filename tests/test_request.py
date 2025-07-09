@@ -1,14 +1,18 @@
 """
 Tests for the Request class.
 """
+
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import requests
 
 from langbase.errors import (
-    APIError, APIConnectionError, BadRequestError,
-    NotFoundError, AuthenticationError
+    APIConnectionError,
+    APIError,
+    AuthenticationError,
+    BadRequestError,
+    NotFoundError,
 )
 from langbase.request import Request
 
@@ -20,7 +24,7 @@ class TestRequest(unittest.TestCase):
         """Set up test fixtures."""
         self.config = {
             "api_key": "test-api-key",
-            "base_url": "https://api.langbase.com"
+            "base_url": "https://api.langbase.com",
         }
         self.request = Request(self.config)
 
@@ -56,7 +60,7 @@ class TestRequest(unittest.TestCase):
         response = self.request.make_request(
             "https://api.langbase.com/test",
             "GET",
-            {"Authorization": "Bearer test-api-key"}
+            {"Authorization": "Bearer test-api-key"},
         )
 
         mock_request.assert_called_once_with(
@@ -64,7 +68,7 @@ class TestRequest(unittest.TestCase):
             url="https://api.langbase.com/test",
             headers={"Authorization": "Bearer test-api-key"},
             json=None,
-            stream=False
+            stream=False,
         )
         self.assertEqual(response, mock_response)
 
@@ -77,7 +81,7 @@ class TestRequest(unittest.TestCase):
             self.request.make_request(
                 "https://api.langbase.com/test",
                 "GET",
-                {"Authorization": "Bearer test-api-key"}
+                {"Authorization": "Bearer test-api-key"},
             )
 
     def test_handle_error_response(self):
@@ -97,7 +101,9 @@ class TestRequest(unittest.TestCase):
         mock_response.status_code = 400
         mock_response.reason = "Bad Request"
         mock_response.headers = {}
-        mock_response.json.side_effect = requests.exceptions.JSONDecodeError("msg", "doc", 0)
+        mock_response.json.side_effect = requests.exceptions.JSONDecodeError(
+            "msg", "doc", 0
+        )
         mock_response.text = "Bad request error"
 
         with self.assertRaises(BadRequestError):
@@ -120,7 +126,7 @@ class TestRequest(unittest.TestCase):
         mock_response.iter_lines.return_value = [b"chunk1", b"chunk2"]
         mock_response.headers = {
             "lb-thread-id": "thread_123",
-            "content-type": "text/event-stream"
+            "content-type": "text/event-stream",
         }
 
         # Test without raw_response
@@ -130,13 +136,15 @@ class TestRequest(unittest.TestCase):
         self.assertNotIn("rawResponse", result)
 
         # Test with raw_response
-        result = self.request.handle_run_response_stream(mock_response, raw_response=True)
+        result = self.request.handle_run_response_stream(
+            mock_response, raw_response=True
+        )
         self.assertEqual(result["thread_id"], "thread_123")
         self.assertEqual(list(result["stream"]), [b"chunk1", b"chunk2"])
         self.assertIn("rawResponse", result)
         self.assertEqual(
             result["rawResponse"]["headers"],
-            {"lb-thread-id": "thread_123", "content-type": "text/event-stream"}
+            {"lb-thread-id": "thread_123", "content-type": "text/event-stream"},
         )
 
     def test_handle_run_response(self):
@@ -157,14 +165,13 @@ class TestRequest(unittest.TestCase):
         self.assertEqual(result["threadId"], "thread_123")
         self.assertIn("rawResponse", result)
         self.assertEqual(
-            result["rawResponse"]["headers"],
-            {"lb-thread-id": "thread_123"}
+            result["rawResponse"]["headers"], {"lb-thread-id": "thread_123"}
         )
 
         # Test with raw field in response
         mock_response.json.return_value = {
             "completion": "Hello, world!",
-            "raw": {"id": "123", "model": "test-model"}
+            "raw": {"id": "123", "model": "test-model"},
         }
         result = self.request.handle_run_response(mock_response, "thread_123")
         self.assertEqual(result["completion"], "Hello, world!")
@@ -196,7 +203,7 @@ class TestRequest(unittest.TestCase):
             {"Authorization": "Bearer test-api-key"},
             None,
             False,
-            None
+            None,
         )
         self.assertEqual(result, {"result": "success"})
 
@@ -211,7 +218,9 @@ class TestRequest(unittest.TestCase):
         """Test post method."""
         mock_send.return_value = {"result": "success"}
         result = self.request.post("/test", {"key": "value"}, {"X-Custom": "Value"})
-        mock_send.assert_called_with("/test", "POST", {"X-Custom": "Value"}, {"key": "value"}, False, None)
+        mock_send.assert_called_with(
+            "/test", "POST", {"X-Custom": "Value"}, {"key": "value"}, False, None
+        )
         self.assertEqual(result, {"result": "success"})
 
     @patch.object(Request, "send")
@@ -227,7 +236,9 @@ class TestRequest(unittest.TestCase):
         """Test put method."""
         mock_send.return_value = {"result": "success"}
         result = self.request.put("/test", {"key": "value"}, {"X-Custom": "Value"})
-        mock_send.assert_called_with("/test", "PUT", {"X-Custom": "Value"}, {"key": "value"}, files=None)
+        mock_send.assert_called_with(
+            "/test", "PUT", {"X-Custom": "Value"}, {"key": "value"}, files=None
+        )
         self.assertEqual(result, {"result": "success"})
 
     @patch.object(Request, "send")

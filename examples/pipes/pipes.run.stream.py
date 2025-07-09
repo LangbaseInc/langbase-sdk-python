@@ -1,55 +1,44 @@
 """
-Example demonstrating how to run a pipe with streaming in Langbase.
+Example demonstrating how to run a pipe in streaming mode in Langbase.
 """
+
 import os
-import json
-from langbase import Langbase
+
 from dotenv import load_dotenv
 
-load_dotenv()
+from langbase import Langbase
 
-# Get API key from environment variable
-langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-# Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+def main():
+    load_dotenv()
 
-# Name of the pipe to run
-pipe_name = "my-assistant-pipe"
+    # Get API key from environment variable
+    langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-# Define messages for the conversation
-messages = [
-    {
-        "role": "user",
-        "content": "Write a short story about a robot learning to paint."
-    }
-]
+    # Initialize the client
+    lb = Langbase(api_key=langbase_api_key)
 
-# Run the pipe with streaming enabled
-try:
-    stream_response = lb.pipes.run(
-        name=pipe_name,
-        messages=messages,
-        stream=True
-    )
+    # Name of the pipe to run
+    pipe_name = "summary-agent"  # Replace with your pipe name
 
-    print("Thread ID:", stream_response['thread_id'])
+    # Define messages for the conversation
+    messages = [{"role": "user", "content": "Who is an AI Engineer?"}]
 
-    print("STREAMING RESPONSE:")
+    # Run the pipe with streaming enabled
+    try:
+        response = lb.pipes.run(name=pipe_name, messages=messages, stream=True)
 
-    # Process each chunk as it arrives
-    for chunk in stream_response["stream"]:
-        if chunk:
-            try:
-                # Try to decode as JSON
-                chunk_data = json.loads(chunk.decode('utf-8'))
-                if "completion" in chunk_data:
-                    print(chunk_data["completion"], end="", flush=True)
-            except json.JSONDecodeError:
-                # If not JSON, print raw decoded chunk
-                print(chunk.decode('utf-8'), end="", flush=True)
+        # Handle streaming response
+        for chunk in response["stream"]:
+            if chunk.data == "[DONE]":
+                break
+            print(chunk.data, end="", flush=True)
 
-    print("\n\nStream completed")
+        print()  # Add a newline at the end
 
-except Exception as e:
-    print(f"Error streaming from pipe: {e}")
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+if __name__ == "__main__":
+    main()

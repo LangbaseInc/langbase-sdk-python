@@ -1,13 +1,16 @@
 # Experimental upcoming beta AI primitve.
 # Please refer to the documentation for more information: https://langbase.com/docs for more information.
 import os
+
 from dotenv import load_dotenv
+
 from langbase import Langbase
 
 load_dotenv()
 
 # Cconfigure the Langbase client with your API key
 langbase = Langbase(api_key=os.environ.get("LANGBASE_API_KEY"))
+
 
 def main():
     """
@@ -20,6 +23,7 @@ def main():
         embedding_model="openai:text-embedding-3-large",
     )
     print(response)
+
 
 if __name__ == "__main__":
     main()

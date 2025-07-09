@@ -1,19 +1,59 @@
+[project]
+name = "langbase"
+version = "0.1.0"
+description = "Python SDK for the Langbase API"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    { name = "Saqib", email = "saqib@langbase.com" },
+    { name = "Ankit", email = "ankit@langbase.com" },
+]
+requires-python = ">=3.7"
+keywords = ["ai", "langbase", "agent", "memory", "rag", "mcp", "pipes", "workflow"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "requests>=2.25.0",
+    "typing-extensions>=4.0.0",
+]
+
+[project.urls]
+Documentation = "https://docs.langbase.com"
+Homepage = "https://langbase.com"
+Repository = "https://github.com/LangbaseInc/langbase-python-sdk"
+Issues = "https://github.com/LangbaseInc/langbase-python-sdk/issues"
+
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["langbase*"]
 
 [tool.black]
 line-length = 88
-target-version = ["py37", "py38", "py39", "py310", "py311"]
+target-version = ["py37", "py38", "py39", "py310", "py311", "py312"]
 include = '\.pyi?$'
 
 [tool.isort]
 profile = "black"
 line_length = 88
 
-[tool.pytest]
+[tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = "test_*.py"
+addopts = "-v"
 
 [tool.mypy]
 python_version = "3.7"

@@ -1,27 +1,36 @@
 """
-Example demonstrating how to get thread details in Langbase.
+Example demonstrating how to get a specific thread in Langbase.
 """
-import os
-from langbase import Langbase
-from datetime import datetime
-from dotenv import load_dotenv
+
 import json
+import os
 
-load_dotenv()
+from dotenv import load_dotenv
 
-# Get API key from environment variable
-langbase_api_key = os.getenv("LANGBASE_API_KEY")
+from langbase import Langbase
 
-# Initialize the client
-lb = Langbase(api_key=langbase_api_key)
 
-# Thread ID to get details for
-thread_id = "thread_123456789"  # Replace with your actual thread ID
+def main():
+    load_dotenv()
 
-# Get thread details
-try:
-    thread = lb.threads.get(thread_id=thread_id)
-    print(json.dumps(thread, indent=2))
+    # Get API key from environment variable
+    langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-except Exception as e:
-    print(f"Error getting thread: {e}")
+    # Initialize the client
+    lb = Langbase(api_key=langbase_api_key)
+
+    # Thread ID to retrieve
+    thread_id = "thread-123"  # Replace with your thread ID
+
+    # Get the specific thread
+    try:
+        thread = lb.threads.get(thread_id=thread_id)
+
+        print(json.dumps(thread, indent=2))
+
+    except Exception as e:
+        print(f"Error getting thread: {e}")
+
+
+if __name__ == "__main__":
+    main()

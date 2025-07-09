@@ -1,34 +1,40 @@
 """
-Example demonstrating how to delete a document from memory in Langbase.
+Example demonstrating how to delete documents from a memory in Langbase.
 """
-import os
-from langbase import Langbase
-from dotenv import load_dotenv
+
 import json
+import os
 
-load_dotenv()
+from dotenv import load_dotenv
 
-# Get API key from environment variable
-langbase_api_key = os.getenv("LANGBASE_API_KEY")
+from langbase import Langbase
 
-# Initialize the client
-lb = Langbase(api_key=langbase_api_key)
 
-# Memory and document to delete
-memory_name = "product-knowledge"
-document_name = "product-manual.pdf"
+def main():
+    load_dotenv()
 
-# Delete the document
-try:
-    response = lb.memories.documents.delete(
-        memory_name=memory_name,
-        document_name=document_name
-    )
+    # Get API key from environment variable
+    langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-    if response.get('success', False):
-        print(f"Successfully deleted document '{document_name}' from memory '{memory_name}'")
-    else:
-        print(f"Failed to delete document '{document_name}' from memory '{memory_name}'")
+    # Initialize the client
+    lb = Langbase(api_key=langbase_api_key)
 
-except Exception as e:
-    print(f"Error deleting document: {e}")
+    # Memory name and document ID to delete
+    memory_name = "product-knowledge"  # Replace with your memory name
+    document_id = "doc-123"  # Replace with the document ID you want to delete
+
+    # Delete the document
+    try:
+        response = lb.memories.docs.delete(name=memory_name, document_id=document_id)
+
+        print(
+            f"Document '{document_id}' deleted successfully from memory '{memory_name}'"
+        )
+        print(json.dumps(response, indent=2))
+
+    except Exception as e:
+        print(f"Error deleting document: {e}")
+
+
+if __name__ == "__main__":
+    main()

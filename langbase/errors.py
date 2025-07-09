@@ -4,7 +4,8 @@ Error classes for the Langbase SDK.
 This module defines the exception hierarchy used throughout the SDK.
 All errors inherit from the base APIError class.
 """
-from typing import Dict, Optional, Any
+
+from typing import Any, Dict, Optional
 
 
 class APIError(Exception):
@@ -28,12 +29,12 @@ class APIError(Exception):
         """
         self.status = status
         self.headers = headers
-        self.request_id = headers.get('lb-request-id') if headers else None
+        self.request_id = headers.get("lb-request-id") if headers else None
 
         if isinstance(error, dict):
             self.error = error
-            self.code = error.get('code')
-            self.status = error.get('status', status)
+            self.code = error.get("code")
+            self.status = error.get("status", status)
         else:
             self.error = error
             self.code = None
@@ -42,11 +43,7 @@ class APIError(Exception):
         super().__init__(msg)
 
     @staticmethod
-    def _make_message(
-        status: Optional[int],
-        error: Any,
-        message: Optional[str]
-    ) -> str:
+    def _make_message(status: Optional[int], error: Any, message: Optional[str]) -> str:
         """
         Create a human-readable error message.
 
@@ -58,8 +55,8 @@ class APIError(Exception):
         Returns:
             Formatted error message string
         """
-        if isinstance(error, dict) and 'message' in error:
-            msg = error['message']
+        if isinstance(error, dict) and "message" in error:
+            msg = error["message"]
             if not isinstance(msg, str):
                 msg = str(msg)
         elif error:
@@ -80,8 +77,8 @@ class APIError(Exception):
         status: Optional[int],
         error_response: Any,
         message: Optional[str],
-        headers: Optional[Dict[str, str]]
-    ) -> 'APIError':
+        headers: Optional[Dict[str, str]],
+    ) -> "APIError":
         """
         Generate the appropriate error based on status code.
 
@@ -98,7 +95,11 @@ class APIError(Exception):
             cause = error_response if isinstance(error_response, Exception) else None
             return APIConnectionError(cause=cause)
 
-        error = error_response.get('error') if isinstance(error_response, dict) else error_response
+        error = (
+            error_response.get("error")
+            if isinstance(error_response, dict)
+            else error_response
+        )
 
         if status == 400:
             return BadRequestError(status, error, message, headers)
@@ -123,7 +124,9 @@ class APIError(Exception):
 class APIConnectionError(APIError):
     """Raised when there's a problem connecting to the API."""
 
-    def __init__(self, message: Optional[str] = None, cause: Optional[Exception] = None):
+    def __init__(
+        self, message: Optional[str] = None, cause: Optional[Exception] = None
+    ):
         """
         Initialize a connection error.
 
@@ -151,39 +154,47 @@ class APIConnectionTimeoutError(APIConnectionError):
 
 class BadRequestError(APIError):
     """Raised when the API returns a 400 status code."""
+
     pass
 
 
 class AuthenticationError(APIError):
     """Raised when the API returns a 401 status code."""
+
     pass
 
 
 class PermissionDeniedError(APIError):
     """Raised when the API returns a 403 status code."""
+
     pass
 
 
 class NotFoundError(APIError):
     """Raised when the API returns a 404 status code."""
+
     pass
 
 
 class ConflictError(APIError):
     """Raised when the API returns a 409 status code."""
+
     pass
 
 
 class UnprocessableEntityError(APIError):
     """Raised when the API returns a 422 status code."""
+
     pass
 
 
 class RateLimitError(APIError):
     """Raised when the API returns a 429 status code."""
+
     pass
 
 
 class InternalServerError(APIError):
     """Raised when the API returns a 5xx status code."""
+
     pass

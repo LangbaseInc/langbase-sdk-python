@@ -1,39 +1,49 @@
 """
-Example demonstrating how to create a new pipe in Langbase.
+Example demonstrating how to create a pipe in Langbase.
 """
-import os
+
 import json
-from langbase import Langbase
+import os
+
 from dotenv import load_dotenv
 
-# Get API key from environment variable
-load_dotenv()
-
-langbase_api_key = os.getenv("LANGBASE_API_KEY")
+from langbase import Langbase
 
 
-# Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+def main():
+    load_dotenv()
 
+    # Get API key from environment variable
+    langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-# Create the pipe
-try:
-    response = lb.pipes.create(
-        name="summary-agent",
-        description="A summary agent that helps user to summarize text.",
-        model="openai:gpt-4o-mini",
-        temperature=0.7,
-        max_tokens=1000,
-        messages=[
+    # Initialize the client
+    lb = Langbase(api_key=langbase_api_key)
+
+    # Define pipe configuration
+    pipe_config = {
+        "name": "my-summary-pipe",  # Replace with your desired pipe name
+        "description": "A pipe for text summarization",
+        "system_prompt": "You are a helpful assistant that summarizes text clearly and concisely.",
+        "model": "openai:gpt-4-turbo-preview",
+        "variables": [
             {
-                "role": "system",
-                "content": "You are a helpful assistant that helps user to summarize text."
+                "name": "text_to_summarize",
+                "description": "The text that needs to be summarized",
+                "type": "string",
             }
         ],
-        upsert=True
-    )
+    }
 
-    print(json.dumps(response, indent=2))
+    # Create the pipe
+    try:
+        response = lb.pipes.create(**pipe_config)
 
-except Exception as e:
-    print(f"Error creating pipe: {e}")
+        print("Pipe created successfully!")
+        print(json.dumps(response, indent=2))
+
+    except Exception as e:
+        print(f"Error creating pipe: {e}")
+
+
+if __name__ == "__main__":
+    main()

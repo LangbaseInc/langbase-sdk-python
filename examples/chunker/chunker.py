@@ -1,10 +1,13 @@
 """
 Example demonstrating how to chunk text content using Langbase.
 """
+
 import os
 import pathlib
-from langbase import Langbase
+
 from dotenv import load_dotenv
+
+from langbase import Langbase
 
 load_dotenv()
 
@@ -13,6 +16,7 @@ langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
 # Initialize the client
 lb = Langbase(api_key=langbase_api_key)
+
 
 def main():
     """
@@ -39,16 +43,13 @@ def main():
         #     content = file.read()
 
         # Chunk the content
-        chunks = lb.chunker(
-            content=content,
-            chunk_max_length=1024,
-            chunk_overlap=256        
-        )
+        chunks = lb.chunker(content=content, chunk_max_length=1024, chunk_overlap=256)
 
         print(chunks)
 
     except Exception as e:
         print(f"Error chunking content: {e}")
+
 
 if __name__ == "__main__":
     main()

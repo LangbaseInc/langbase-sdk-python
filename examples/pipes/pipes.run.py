@@ -1,43 +1,43 @@
 """
 Example demonstrating how to run a pipe in non-streaming mode in Langbase.
 """
-import os
+
 import json
-from langbase import Langbase
+import os
+
 from dotenv import load_dotenv
+
+from langbase import Langbase
 from langbase.errors import APIError
 
-load_dotenv()
 
-# Get API key from environment variable
-langbase_api_key = os.getenv("LANGBASE_API_KEY")
+def main():
+    load_dotenv()
 
-# Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+    # Get API key from environment variable
+    langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-# Name of the pipe to run
-pipe_name = "summary-agent-14"  # Replace with your pipe name
+    # Initialize the client
+    lb = Langbase(api_key=langbase_api_key)
 
-# Define messages for the conversation
-messages = [
-    {
-        "role": "user",
-        "content": "Who is an AI Engineer?"
-    }
-]
+    # Name of the pipe to run
+    pipe_name = "summary-agent-14"  # Replace with your pipe name
 
-# Run the pipe with explicit stream=False
-try:
-    response = lb.pipes.run(
-        name=pipe_name,
-        messages=messages,
-        stream=False
-    )
+    # Define messages for the conversation
+    messages = [{"role": "user", "content": "Who is an AI Engineer?"}]
 
-    # Print the entire response as is
-    print(json.dumps(response, indent=2))
+    # Run the pipe with explicit stream=False
+    try:
+        response = lb.pipes.run(name=pipe_name, messages=messages, stream=False)
 
-except APIError as e:
-    print(f"API Error: {e}")
-except Exception as e:
-    print(f"Unexpected error: {e}")
+        # Print the entire response as is
+        print(json.dumps(response, indent=2))
+
+    except APIError as e:
+        print(f"API Error: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+
+
+if __name__ == "__main__":
+    main()
