@@ -29,11 +29,7 @@ def main():
     try:
         response = lb.memories.retrieve(
             query=query,
-            memory=[
-                {
-                    "name": memory_name
-                }
-            ],
+            memory=[{"name": memory_name}],
             top_k=5,  # Number of relevant memories to retrieve
         )
 

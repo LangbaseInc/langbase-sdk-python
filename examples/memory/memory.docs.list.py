@@ -24,9 +24,7 @@ def main():
 
     # List documents in the memory
     try:
-        response = lb.memories.documents.list(
-            memory_name=memory_name
-        )
+        response = lb.memories.documents.list(memory_name=memory_name)
 
         print(f"Documents in memory '{memory_name}':")
         print(json.dumps(response, indent=2))

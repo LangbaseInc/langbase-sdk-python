@@ -30,7 +30,7 @@ def main():
                     "content": "You are a helpful assistant that summarizes text clearly and concisely.",
                 }
             ],
-            upsert=True
+            upsert=True,
         )
 
         print("Pipe created successfully!")

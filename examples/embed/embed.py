@@ -1,7 +1,8 @@
 # Experimental upcoming beta AI primitve.
 # Please refer to the documentation for more information: https://langbase.com/docs for more information.
-import os
 import json
+import os
+
 from dotenv import load_dotenv
 
 from langbase import Langbase

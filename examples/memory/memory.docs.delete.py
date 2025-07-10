@@ -25,7 +25,9 @@ def main():
 
     # Delete the document
     try:
-        response = lb.memories.documents.delete(memory_name=memory_name, document_name=document_id)
+        response = lb.memories.documents.delete(
+            memory_name=memory_name, document_name=document_id
+        )
 
         print(
             f"Document '{document_id}' deleted successfully from memory '{memory_name}'"

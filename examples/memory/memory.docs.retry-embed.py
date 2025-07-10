@@ -21,11 +21,13 @@ def main():
 
     # Memory name to retry embedding for
     memory_name = "product-knowledge"  # Replace with your memory name
-    document_name="name.txt" # Replace with document name
+    document_name = "name.txt"  # Replace with document name
 
     # Retry embedding for failed documents
     try:
-        response = lb.memories.documents.embeddings.retry(memory_name=memory_name,document_name=document_name)
+        response = lb.memories.documents.embeddings.retry(
+            memory_name=memory_name, document_name=document_name
+        )
 
         print(f"Retry embedding initiated for memory '{memory_name}'")
         print(json.dumps(response, indent=2))

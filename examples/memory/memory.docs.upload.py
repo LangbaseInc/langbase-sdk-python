@@ -29,9 +29,9 @@ def main():
         response1 = lb.memories.documents.upload(
             memory_name=memory_name,
             document_name="intro.txt",
-            document=content1.encode('utf-8'),  # Convert string to bytes
+            document=content1.encode("utf-8"),  # Convert string to bytes
             content_type="text/plain",
-            meta={"source": "documentation", "section": "introduction"}
+            meta={"source": "documentation", "section": "introduction"},
         )
         print("Document 1 uploaded successfully!")
         print(f"Status: {response1.status_code}")

@@ -19,7 +19,6 @@ def main():
     # Initialize the client
     lb = Langbase(api_key=langbase_api_key)
 
-
     # Define updated configuration
     updates = {
         "description": "Updated description for the text summarization pipe",
@@ -36,8 +35,8 @@ def main():
                     "role": "system",
                     "content": "You are a helpful assistant that summarizes text clearly and concisely.",
                 }
-            ]
-            )
+            ],
+        )
 
         print("Pipe updated successfully!")
         print(json.dumps(response, indent=2))

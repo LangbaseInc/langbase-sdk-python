@@ -33,7 +33,7 @@ def main():
             model="openai:gpt-4.1-mini",
             instructions="You are a helpful assistant that help users summarize text.",
             input=[{"role": "user", "content": "Who is an AI Engineer?"}],
-            api_key=api_key
+            api_key=api_key,
         )
 
         # Convert the stream to a stream runner - equivalent to getRunner(stream)
@@ -41,7 +41,7 @@ def main():
 
         # Event-like handling in Python
         # Method 1: Using iterator pattern (Python equivalent of event listeners)
-        
+
         # Equivalent to runner.on('connect', ...)
         print("Stream started.\n")
 
@@ -49,10 +49,10 @@ def main():
             # Equivalent to runner.on('content', content => {...})
             for content in runner.text_generator():
                 print(content, end="", flush=True)
-            
+
             # Equivalent to runner.on('end', ...)
             print("\nStream ended.")
-            
+
         except Exception as error:
             # Equivalent to runner.on('error', error => {...})
             print(f"Error: {error}")

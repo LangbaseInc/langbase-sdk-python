@@ -2,9 +2,9 @@
 Example demonstrating how to chunk text content using Langbase.
 """
 
+import json
 import os
 import pathlib
-import json
 
 from dotenv import load_dotenv
 
