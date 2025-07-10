@@ -1,11 +1,8 @@
 """
-Shared test configuration and fixtures for Langbase SDK tests.
+Shared test config and fixtures for Langbase SDK tests.
 """
 
-import json
-
 import pytest
-import responses
 
 
 @pytest.fixture
@@ -34,14 +31,14 @@ def mock_responses():
     return {
         # Pipes responses
         "pipe_list": [
-            {"name": "test-pipe", "description": "Test pipe", "status": "deployed"},
-            {"name": "another-pipe", "description": "Another pipe", "status": "draft"},
+            {"name": "test-pipe", "description": "Test pipe", "status": "public"},
+            {"name": "another-pipe", "description": "Another pipe", "status": "private"},
         ],
         "pipe_create": {
             "name": "new-pipe",
             "api_key": "pipe-api-key",
             "description": "A test pipe",
-            "status": "draft",
+            "status": "public",
         },
         "pipe_run": {
             "completion": "Hello, world!",
