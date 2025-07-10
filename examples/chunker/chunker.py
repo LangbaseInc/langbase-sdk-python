@@ -4,6 +4,7 @@ Example demonstrating how to chunk text content using Langbase.
 
 import os
 import pathlib
+import json
 
 from dotenv import load_dotenv
 
@@ -37,15 +38,10 @@ def main():
         and tools for each part of the job and provides developers with a zero-config composable 
         AI infrastructure."""
 
-        # Alternative: Read content from a file
-        # document_path = pathlib.Path(__file__).parent.parent / "parse" / "composable-ai.md"
-        # with open(document_path, "r", encoding="utf-8") as file:
-        #     content = file.read()
-
         # Chunk the content
         chunks = lb.chunker(content=content, chunk_max_length=1024, chunk_overlap=256)
 
-        print(chunks)
+        print(json.dumps(chunks, indent=2))
 
     except Exception as e:
         print(f"Error chunking content: {e}")

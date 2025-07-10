@@ -1,5 +1,8 @@
 """
 Example demonstrating how to retrieve memories in Langbase.
+
+This example shows how to retrieve memories using a query. The memory parameter
+expects a list of dictionaries with 'name' keys specifying which memories to search.
 """
 
 import json
@@ -21,12 +24,16 @@ def main():
 
     # Retrieve memories using a query
     memory_name = "product-knowledge"  # Replace with your memory name
-    query = "What are the main features of the product?"
+    query = "What is Langbase?"
 
     try:
         response = lb.memories.retrieve(
-            name=memory_name,
             query=query,
+            memory=[
+                {
+                    "name": memory_name
+                }
+            ],
             top_k=5,  # Number of relevant memories to retrieve
         )
 

@@ -19,19 +19,25 @@ def main():
     # Initialize the client
     lb = Langbase(api_key=langbase_api_key)
 
-    # Name of the pipe to update
-    pipe_name = "my-summary-pipe"  # Replace with your pipe name
 
     # Define updated configuration
     updates = {
         "description": "Updated description for the text summarization pipe",
-        "system_prompt": "You are an expert assistant that provides detailed and structured summaries.",
         "model": "openai:gpt-4",
     }
 
     # Update the pipe
     try:
-        response = lb.pipes.update(name=pipe_name, **updates)
+        response = lb.pipes.update(
+            name="summary-agent",
+            description="An agent that summarizes text",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that summarizes text clearly and concisely.",
+                }
+            ]
+            )
 
         print("Pipe updated successfully!")
         print(json.dumps(response, indent=2))

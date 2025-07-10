@@ -1,12 +1,12 @@
 """
-Example demonstrating how to run a pipe in streaming mode in Langbase.
+Example demonstrating how to run a pipe in streaming mode using get_runner in Langbase.
 """
 
 import os
 
 from dotenv import load_dotenv
 
-from langbase import Langbase
+from langbase import Langbase, get_runner
 
 
 def main():
@@ -21,20 +21,22 @@ def main():
     # Name of the pipe to run
     pipe_name = "summary-agent"  # Replace with your pipe name
 
-    # Define messages for the conversation
-    messages = [{"role": "user", "content": "Who is an AI Engineer?"}]
-
-    # Run the pipe with streaming enabled
     try:
-        response = lb.pipes.run(name=pipe_name, messages=messages, stream=True)
+        # Message 1: Tell something to the LLM.
+        print("Stream started \n\n")
+        response1 = lb.pipes.run(
+            name=pipe_name, 
+            messages=[{"role": "user", "content": "What is an AI Engineer?"}], 
+            stream=True
+        )
 
-        # Handle streaming response
-        for chunk in response["stream"]:
-            if chunk.data == "[DONE]":
-                break
-            print(chunk.data, end="", flush=True)
+        runner1 = get_runner(response1)
 
-        print()  # Add a newline at the end
+        # Use text_generator() to stream content
+        for content in runner1.text_generator():
+            print(content, end="", flush=True)
+        
+        print("\n\nStream ended!")  # Add a newline after first response
 
     except Exception as e:
         print(f"Error: {e}")

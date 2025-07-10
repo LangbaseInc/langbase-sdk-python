@@ -20,15 +20,19 @@ def main():
     # Initialize the client
     lb = Langbase(api_key=langbase_api_key)
 
-    # Name of the pipe to run
-    pipe_name = "summary-agent-14"  # Replace with your pipe name
-
-    # Define messages for the conversation
-    messages = [{"role": "user", "content": "Who is an AI Engineer?"}]
 
     # Run the pipe with explicit stream=False
     try:
-        response = lb.pipes.run(name=pipe_name, messages=messages, stream=False)
+        response = lb.pipes.run(
+            name="summary-agent", 
+            messages=[
+                {
+                    "role": "user",
+                    "content": "Who is an AI Engineer?"
+                }
+            ], 
+            stream=False
+        )
 
         # Print the entire response as is
         print(json.dumps(response, indent=2))

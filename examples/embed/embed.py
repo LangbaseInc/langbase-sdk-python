@@ -1,7 +1,7 @@
 # Experimental upcoming beta AI primitve.
 # Please refer to the documentation for more information: https://langbase.com/docs for more information.
 import os
-
+import json
 from dotenv import load_dotenv
 
 from langbase import Langbase
@@ -22,7 +22,7 @@ def main():
         ],
         embedding_model="openai:text-embedding-3-large",
     )
-    print(response)
+    print(json.dumps(response, indent=2))
 
 
 if __name__ == "__main__":

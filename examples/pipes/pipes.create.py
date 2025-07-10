@@ -19,24 +19,19 @@ def main():
     # Initialize the client
     lb = Langbase(api_key=langbase_api_key)
 
-    # Define pipe configuration
-    pipe_config = {
-        "name": "my-summary-pipe",  # Replace with your desired pipe name
-        "description": "A pipe for text summarization",
-        "system_prompt": "You are a helpful assistant that summarizes text clearly and concisely.",
-        "model": "openai:gpt-4-turbo-preview",
-        "variables": [
-            {
-                "name": "text_to_summarize",
-                "description": "The text that needs to be summarized",
-                "type": "string",
-            }
-        ],
-    }
-
     # Create the pipe
     try:
-        response = lb.pipes.create(**pipe_config)
+        response = lb.pipes.create(
+            name="summary-agent",
+            description="A pipe for text summarization",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that summarizes text clearly and concisely.",
+                }
+            ],
+            upsert=True
+        )
 
         print("Pipe created successfully!")
         print(json.dumps(response, indent=2))

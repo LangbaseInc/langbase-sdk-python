@@ -24,8 +24,8 @@ def main():
 
     # List documents in the memory
     try:
-        response = lb.memories.docs.list(
-            name=memory_name, limit=10  # Limit the number of documents returned
+        response = lb.memories.documents.list(
+            memory_name=memory_name
         )
 
         print(f"Documents in memory '{memory_name}':")
