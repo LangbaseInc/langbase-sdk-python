@@ -4,7 +4,6 @@ Tests for utility methods.
 
 import json
 
-import pytest
 import responses
 
 
@@ -127,7 +126,7 @@ class TestUtilities:
 
         assert result == mock_responses["parser"]
         assert "content" in result
-        assert "metadata" in result
+        assert "document_name" in result
 
     @responses.activate
     def test_parser_with_different_content_types(

@@ -10,19 +10,9 @@ This module provides a robust workflow execution system with support for:
 
 import asyncio
 import time
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Dict,
-    Generic,
-    Literal,
-    Optional,
-    TypedDict,
-    TypeVar,
-)
+from typing import Any, Awaitable, Callable, Dict, Generic, List, Optional, TypeVar
 
-from typing_extensions import NotRequired
+from typing_extensions import Literal, NotRequired, TypedDict
 
 from .errors import APIError
 
@@ -168,14 +158,12 @@ class Workflow:
 
                     if isinstance(last_error, Exception):
                         raise last_error
-                    else:
-                        raise APIError(message=str(last_error))
+                    raise APIError(message=str(last_error))
 
         # This should never be reached, but just in case
         if last_error:
             raise last_error
-        else:
-            raise APIError(message="Unknown error occurred")
+        raise APIError(message="Unknown error occurred")
 
     async def _with_timeout(
         self, promise: Awaitable[T], timeout: int, step_id: str
@@ -198,37 +186,63 @@ class Workflow:
             result = await asyncio.wait_for(promise, timeout=timeout / 1000.0)
             return result
         except asyncio.TimeoutError:
-            raise TimeoutError(step_id, timeout)
+            raise TimeoutError(step_id=step_id, timeout=timeout)
 
     def _calculate_delay(
         self,
         base_delay: int,
         attempt: int,
-        backoff: Literal["exponential", "linear", "fixed"],
+        strategy: Literal["exponential", "linear", "fixed"],
     ) -> int:
         """
-        Calculate the delay for retry attempts based on backoff strategy.
+        Calculate retry delay based on strategy.
 
         Args:
             base_delay: Base delay in milliseconds
             attempt: Current attempt number (1-based)
-            backoff: Backoff strategy
+            strategy: Backoff strategy to use
 
         Returns:
             Calculated delay in milliseconds
         """
-        if backoff == "exponential":
+        if strategy == "exponential":
             return base_delay * (2 ** (attempt - 1))
-        elif backoff == "linear":
+        if strategy == "linear":
             return base_delay * attempt
-        else:  # fixed
-            return base_delay
+        # fixed
+        return base_delay
 
     async def _sleep(self, seconds: float) -> None:
         """
-        Sleep for the specified number of seconds.
+        Sleep for the specified duration.
 
         Args:
-            seconds: Number of seconds to sleep
+            seconds: Duration to sleep in seconds
         """
         await asyncio.sleep(seconds)
+
+    def run(self, steps: List[StepConfig[Any]]) -> Dict[str, Any]:
+        """
+        Execute multiple workflow steps in sequence.
+
+        Args:
+            steps: List of step configurations to execute
+
+        Returns:
+            Dictionary containing outputs from all steps
+
+        Raises:
+            TimeoutError: If any step exceeds its timeout
+            APIError: If any step fails after all retry attempts
+        """
+
+        async def _run_all():
+            for step_config in steps:
+                await self.step(step_config)
+            return self._context["outputs"]
+
+        return asyncio.run(_run_all())
+
+    def reset(self) -> None:
+        """Reset the workflow context, clearing all step outputs."""
+        self._context = {"outputs": {}}

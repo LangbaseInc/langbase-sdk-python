@@ -31,32 +31,39 @@ from .helper import (
     get_tools_from_run,
     get_tools_from_run_stream,
     get_tools_from_stream,
+    get_typed_runner,
     handle_response_stream,
     parse_chunk,
     stream_text,
 )
 from .langbase import Langbase
+from .streaming import StreamEventType, TypedStreamProcessor
 from .workflow import TimeoutError, Workflow
 
 __version__ = "0.1.0"
 __all__ = [
+    # Main classes
     "Langbase",
     "Workflow",
-    "APIError",
+    # Streaming
+    "StreamEventType",
+    "TypedStreamProcessor",
+    # Errors
     "APIConnectionError",
     "APIConnectionTimeoutError",
-    "BadRequestError",
+    "APIError",
     "AuthenticationError",
-    "PermissionDeniedError",
-    "NotFoundError",
+    "BadRequestError",
     "ConflictError",
-    "UnprocessableEntityError",
-    "RateLimitError",
     "InternalServerError",
+    "NotFoundError",
+    "PermissionDeniedError",
+    "RateLimitError",
     "TimeoutError",
+    "UnprocessableEntityError",
     # Helper utilities
-    "ChunkStream",
     "ChoiceStream",
+    "ChunkStream",
     "Delta",
     "StreamProcessor",
     "collect_stream_text",
@@ -66,6 +73,7 @@ __all__ = [
     "get_tools_from_run",
     "get_tools_from_run_stream",
     "get_tools_from_stream",
+    "get_typed_runner",
     "handle_response_stream",
     "parse_chunk",
     "stream_text",

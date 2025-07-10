@@ -17,6 +17,7 @@ class APIError(Exception):
         error: Optional[Dict[str, Any]] = None,
         message: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
+        endpoint: Optional[str] = None,
     ):
         """
         Initialize an API error.
@@ -26,9 +27,11 @@ class APIError(Exception):
             error: Error response body
             message: Error message
             headers: HTTP response headers
+            endpoint: API endpoint that was called
         """
         self.status = status
         self.headers = headers
+        self.endpoint = endpoint
         self.request_id = headers.get("lb-request-id") if headers else None
 
         if isinstance(error, dict):
@@ -39,11 +42,17 @@ class APIError(Exception):
             self.error = error
             self.code = None
 
-        msg = self._make_message(status, error, message)
+        msg = self._make_message(status, error, message, endpoint, self.request_id)
         super().__init__(msg)
 
     @staticmethod
-    def _make_message(status: Optional[int], error: Any, message: Optional[str]) -> str:
+    def _make_message(
+        status: Optional[int],
+        error: Any,
+        message: Optional[str],
+        endpoint: Optional[str] = None,
+        request_id: Optional[str] = None,
+    ) -> str:
         """
         Create a human-readable error message.
 
@@ -51,10 +60,13 @@ class APIError(Exception):
             status: HTTP status code
             error: Error response body
             message: Error message
+            endpoint: API endpoint that was called
+            request_id: Request ID from headers
 
         Returns:
             Formatted error message string
         """
+        # Extract the main error message
         if isinstance(error, dict) and "message" in error:
             msg = error["message"]
             if not isinstance(msg, str):
@@ -64,13 +76,52 @@ class APIError(Exception):
         else:
             msg = message
 
-        if status and msg:
-            return f"{status} {msg}"
+        # Build comprehensive error message
+        parts = []
+
+        # Status line
         if status:
-            return f"{status} status code (no body)"
+            status_text = {
+                400: "Bad Request",
+                401: "Unauthorized",
+                403: "Forbidden",
+                404: "Not Found",
+                409: "Conflict",
+                422: "Unprocessable Entity",
+                429: "Too Many Requests",
+                500: "Internal Server Error",
+                502: "Bad Gateway",
+                503: "Service Unavailable",
+                504: "Gateway Timeout",
+            }.get(status, "Unknown Error")
+            parts.append(f"{status_text} ({status})")
+
+        # Error message
         if msg:
-            return msg
-        return "(no status code or body)"
+            parts.append(f"\n  Message: {msg}")
+
+        # API endpoint
+        if endpoint:
+            parts.append(f"\n  Endpoint: {endpoint}")
+
+        # Request ID
+        if request_id:
+            parts.append(f"\n  Request ID: {request_id}")
+
+        # Error details from response
+        if isinstance(error, dict):
+            if "code" in error:
+                parts.append(f"\n  Error Code: {error['code']}")
+            if "details" in error:
+                parts.append(f"\n  Details: {error['details']}")
+
+        # Documentation link
+        if status:
+            parts.append(
+                f"\n  Documentation: https://langbase.com/docs/errors/{status}"
+            )
+
+        return "".join(parts) if parts else "(no error information available)"
 
     @staticmethod
     def generate(
@@ -78,6 +129,7 @@ class APIError(Exception):
         error_response: Any,
         message: Optional[str],
         headers: Optional[Dict[str, str]],
+        endpoint: Optional[str] = None,
     ) -> "APIError":
         """
         Generate the appropriate error based on status code.
@@ -87,6 +139,7 @@ class APIError(Exception):
             error_response: Error response body
             message: Error message
             headers: HTTP response headers
+            endpoint: API endpoint that was called
 
         Returns:
             An instance of the appropriate APIError subclass
@@ -102,23 +155,22 @@ class APIError(Exception):
         )
 
         if status == 400:
-            return BadRequestError(status, error, message, headers)
-        elif status == 401:
-            return AuthenticationError(status, error, message, headers)
-        elif status == 403:
-            return PermissionDeniedError(status, error, message, headers)
-        elif status == 404:
-            return NotFoundError(status, error, message, headers)
-        elif status == 409:
-            return ConflictError(status, error, message, headers)
-        elif status == 422:
-            return UnprocessableEntityError(status, error, message, headers)
-        elif status == 429:
-            return RateLimitError(status, error, message, headers)
-        elif status >= 500:
-            return InternalServerError(status, error, message, headers)
-        else:
-            return APIError(status, error, message, headers)
+            return BadRequestError(status, error, message, headers, endpoint)
+        if status == 401:
+            return AuthenticationError(status, error, message, headers, endpoint)
+        if status == 403:
+            return PermissionDeniedError(status, error, message, headers, endpoint)
+        if status == 404:
+            return NotFoundError(status, error, message, headers, endpoint)
+        if status == 409:
+            return ConflictError(status, error, message, headers, endpoint)
+        if status == 422:
+            return UnprocessableEntityError(status, error, message, headers, endpoint)
+        if status == 429:
+            return RateLimitError(status, error, message, headers, endpoint)
+        if status >= 500:
+            return InternalServerError(status, error, message, headers, endpoint)
+        return APIError(status, error, message, headers, endpoint)
 
 
 class APIConnectionError(APIError):

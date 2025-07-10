@@ -9,7 +9,7 @@ import os
 from io import BytesIO
 from typing import Any, BinaryIO, Dict, Union
 
-from .types import ContentType, FileProtocol
+from .types import ContentType
 
 
 def convert_document_to_request_files(

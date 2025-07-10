@@ -6,7 +6,7 @@ with the Langbase API, including error handling and response parsing.
 """
 
 import json
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, Optional, Union
 
 import requests
 
@@ -294,13 +294,12 @@ class Request:
                 raw_response=body.get("raw_response", False),
                 endpoint=endpoint,
             )
-        else:
-            # For non-generation endpoints, just return the JSON response
-            try:
-                return response.json()
-            except json.JSONDecodeError:
-                # If the response is not JSON, return the text
-                return {"text": response.text}
+        # For non-generation endpoints, just return the JSON response
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            # If the response is not JSON, return the text
+            return {"text": response.text}
 
     def post(
         self,

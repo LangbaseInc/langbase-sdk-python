@@ -4,7 +4,6 @@ Tests for the Tools API.
 
 import json
 
-import pytest
 import responses
 
 

@@ -427,22 +427,61 @@ def get_runner(
     return StreamProcessor(stream)
 
 
+def get_typed_runner(
+    response_or_stream: Union[Any, Iterator[Union[bytes, str]]],
+) -> "TypedStreamProcessor":
+    """
+    Returns a typed stream processor for the given response or stream.
+
+    This provides an enhanced event-driven interface for processing streaming responses.
+
+    Args:
+        response_or_stream: Response dict, response object, or raw stream iterator
+
+    Returns:
+        TypedStreamProcessor instance with event-based handling
+    """
+    from .streaming import TypedStreamProcessor
+
+    # Extract stream and thread_id
+    thread_id = None
+
+    # Handle dict response
+    if isinstance(response_or_stream, dict) and "stream" in response_or_stream:
+        stream = response_or_stream["stream"]
+        thread_id = response_or_stream.get("thread_id")
+    # Handle response object with iter_lines method
+    elif hasattr(response_or_stream, "iter_lines"):
+        stream = response_or_stream.iter_lines()
+        if hasattr(response_or_stream, "headers"):
+            thread_id = response_or_stream.headers.get("lb-thread-id")
+    # Handle already extracted stream iterator
+    elif hasattr(response_or_stream, "__iter__"):
+        stream = response_or_stream
+    else:
+        # Fallback: assume it's a stream
+        stream = response_or_stream
+
+    return TypedStreamProcessor(stream, thread_id)
+
+
 # Export all main components for easy access
 __all__ = [
-    "MessageRole",
-    "ToolCallResult",
-    "Delta",
     "ChoiceStream",
     "ChunkStream",
-    "get_text_part",
-    "parse_chunk",
-    "stream_text",
-    "collect_stream_text",
-    "get_tools_from_stream",
-    "get_tools_from_run_stream",
-    "get_tools_from_run",
-    "handle_response_stream",
+    "Delta",
+    "MessageRole",
     "StreamProcessor",
+    "ToolCallResult",
+    "collect_stream_text",
     "create_stream_processor",
     "get_runner",
+    "get_typed_runner",
+    "get_text_part",
+    "get_tools_from_run",
+    "get_tools_from_run_stream",
+    "get_tools_from_stream",
+    "handle_response_stream",
+    "parse_chunk",
+    "stream_text",
 ]

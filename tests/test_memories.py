@@ -4,7 +4,6 @@ Tests for the Memories API.
 
 import json
 
-import pytest
 import responses
 
 
@@ -193,7 +192,11 @@ class TestMemoryDocuments:
         )
 
         # Mock the file upload to signed URL
-        responses.add(responses.PUT, "https://upload-url.com", status=200)
+        responses.add(
+            responses.PUT,
+            "https://storage.langbase.com/upload?signature=xyz",
+            status=200,
+        )
 
         result = langbase_client.memories.documents.upload(
             memory_name=memory_name,
@@ -223,7 +226,11 @@ class TestMemoryDocuments:
         )
 
         # Mock the file upload to signed URL
-        responses.add(responses.PUT, "https://upload-url.com", status=200)
+        responses.add(
+            responses.PUT,
+            "https://storage.langbase.com/upload?signature=xyz",
+            status=200,
+        )
 
         result = langbase_client.memories.documents.upload(
             memory_name=memory_name,

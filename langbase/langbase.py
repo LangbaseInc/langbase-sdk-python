@@ -7,7 +7,7 @@ for interacting with the Langbase API.
 
 import os
 from io import BytesIO
-from typing import Any, BinaryIO, Dict, List, Optional, Union, overload
+from typing import Any, BinaryIO, Dict, List, Optional, Union
 
 import requests
 
@@ -16,7 +16,6 @@ from .request import Request
 from .types import (
     ContentType,
     EmbeddingModel,
-    FileProtocol,
     MemoryCreateResponse,
     MemoryDeleteDocResponse,
     MemoryDeleteResponse,

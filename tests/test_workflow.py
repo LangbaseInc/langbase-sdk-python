@@ -248,7 +248,7 @@ class TestWorkflow:
         assert result == "retry_success"
         assert "🔄 Retries:" in output
         assert "⚠️ Attempt 1 failed, retrying in 10ms..." in output
-        assert "Error: Debug retry test" in output
+        assert "Error: Unknown Error (Debug retry test)" in output
 
     @pytest.mark.asyncio
     async def test_step_with_complex_return_type(self):
