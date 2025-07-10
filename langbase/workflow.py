@@ -73,31 +73,6 @@ class Workflow:
     """
     A workflow execution engine that provides step-based execution with retry logic,
     timeouts, and debugging capabilities.
-
-    Example:
-        ```python
-        from langbase import Workflow
-
-        # Create a workflow with debugging enabled
-        workflow = Workflow(debug=True)
-
-        # Define and execute steps
-        async def my_operation():
-            return "Hello, World!"
-
-        result = await workflow.step({
-            "id": "greeting",
-            "timeout": 5000,  # 5 seconds
-            "retries": {
-                "limit": 3,
-                "delay": 1000,  # 1 second
-                "backoff": "exponential"
-            },
-            "run": my_operation
-        })
-
-        print(result)  # "Hello, World!"
-        ```
     """
 
     def __init__(self, debug: bool = False):
