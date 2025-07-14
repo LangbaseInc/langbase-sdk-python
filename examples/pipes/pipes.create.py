@@ -17,11 +17,11 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Create the pipe
     try:
-        response = lb.pipes.create(
+        response = langbase.pipes.create(
             name="summary-agent",
             description="A pipe for text summarization",
             messages=[

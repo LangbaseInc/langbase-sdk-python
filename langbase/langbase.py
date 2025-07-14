@@ -22,6 +22,11 @@ from .types import (
     MemoryListDocResponse,
     MemoryListResponse,
     MemoryRetrieveResponse,
+    PipeCreateResponse,
+    PipeListResponse,
+    PipeUpdateResponse,
+    RunResponse,
+    RunResponseStream,
     ThreadMessagesBaseResponse,
     ThreadsBaseResponse,
 )
@@ -73,7 +78,7 @@ class Langbase:
             def __init__(self, parent):
                 self.parent = parent
 
-            def list(self):
+            def list(self) -> List[PipeListResponse]:
                 """
                 List all pipes.
 
@@ -82,7 +87,7 @@ class Langbase:
                 """
                 return self.parent.request.get("/v1/pipes")
 
-            def create(self, name: str, description: Optional[str] = None, **kwargs):
+            def create(self, name: str, description: Optional[str] = None, **kwargs) -> PipeCreateResponse:
                 """
                 Create a new pipe.
 
@@ -97,7 +102,7 @@ class Langbase:
                 options = {"name": name, "description": description, **kwargs}
                 return self.parent.request.post("/v1/pipes", clean_null_values(options))
 
-            def update(self, name: str, **kwargs):
+            def update(self, name: str, **kwargs) -> PipeUpdateResponse:
                 """
                 Update an existing pipe.
 
@@ -118,11 +123,28 @@ class Langbase:
                 name: Optional[str] = None,
                 api_key: Optional[str] = None,
                 messages: Optional[List[Dict[str, Any]]] = None,
-                stream: Optional[
-                    bool
-                ] = None,  # Changed to Optional[bool] with default None
+                variables: Optional[List[Dict[str, str]]] = None,
+                thread_id: Optional[str] = None,
+                raw_response: Optional[bool] = None,
+                run_tools: Optional[bool] = None,
+                tools: Optional[List[Dict[str, Any]]] = None,
+                tool_choice: Optional[Union[str, Dict[str, Any]]] = None,
+                parallel_tool_calls: Optional[bool] = None,
+                llm_key: Optional[str] = None,
+                json: Optional[bool] = None,
+                memory: Optional[List[Dict[str, str]]] = None,
+                response_format: Optional[Dict[str, Any]] = None,
+                top_p: Optional[float] = None,
+                max_tokens: Optional[int] = None,
+                temperature: Optional[float] = None,
+                presence_penalty: Optional[float] = None,
+                frequency_penalty: Optional[float] = None,
+                stop: Optional[List[str]] = None,
+                store: Optional[bool] = None,
+                moderate: Optional[bool] = None,
+                stream: Optional[bool] = None,
                 **kwargs,
-            ):
+            ) -> Union[RunResponse, RunResponseStream]:
                 """
                 Run a pipe.
 
@@ -130,7 +152,26 @@ class Langbase:
                     name: Name of the pipe to run
                     api_key: API key for the pipe
                     messages: List of messages for the conversation
-                    stream: Whether to stream the response (None means don't specify)
+                    variables: List of variables for template substitution
+                    thread_id: Thread ID for conversation continuity
+                    raw_response: Whether to include raw response headers
+                    run_tools: Whether to enable tool execution
+                    tools: List of tools available to the pipe
+                    tool_choice: Tool choice strategy ('auto', 'required', or tool spec)
+                    parallel_tool_calls: Whether to enable parallel tool calls
+                    llm_key: LLM API key for the request
+                    json: Whether to enable JSON mode
+                    memory: List of runtime memory configurations
+                    response_format: Response format configuration
+                    top_p: Top-p sampling parameter
+                    max_tokens: Maximum tokens to generate
+                    temperature: Temperature for randomness
+                    presence_penalty: Presence penalty parameter
+                    frequency_penalty: Frequency penalty parameter
+                    stop: List of stop sequences
+                    store: Whether to store the conversation
+                    moderate: Whether to enable content moderation
+                    stream: Whether to stream the response
                     **kwargs: Additional parameters for the run
 
                 Returns:
@@ -146,6 +187,24 @@ class Langbase:
                     "name": name,
                     "api_key": api_key,
                     "messages": messages or [],
+                    "variables": variables,
+                    "thread_id": thread_id,
+                    "raw_response": raw_response,
+                    "run_tools": run_tools,
+                    "tools": tools,
+                    "tool_choice": tool_choice,
+                    "parallel_tool_calls": parallel_tool_calls,
+                    "json": json,
+                    "memory": memory,
+                    "response_format": response_format,
+                    "top_p": top_p,
+                    "max_tokens": max_tokens,
+                    "temperature": temperature,
+                    "presence_penalty": presence_penalty,
+                    "frequency_penalty": frequency_penalty,
+                    "stop": stop,
+                    "store": store,
+                    "moderate": moderate,
                     **kwargs,
                 }
 
@@ -161,8 +220,8 @@ class Langbase:
                     )
 
                 headers = {}
-                if "llm_key" in kwargs:
-                    headers["LB-LLM-KEY"] = kwargs.pop("llm_key")
+                if llm_key:
+                    headers["LB-LLM-KEY"] = llm_key
 
                 # Pass the stream parameter to post method (which might be None)
                 return request.post(
@@ -696,7 +755,7 @@ class Langbase:
         custom_model_params: Optional[Dict[str, Any]] = None,
         mcp_servers: Optional[List[Dict[str, Any]]] = None,
         stream: bool = False,
-    ) -> Union[Dict[str, Any], requests.Response]:
+    ) -> Union[Dict[str, Any], Any]:
         """
         Run an agent with the specified parameters.
 

@@ -122,6 +122,13 @@ class Variable(TypedDict):
     value: str
 
 
+# Runtime memory definition
+class RuntimeMemory(TypedDict):
+    """Runtime memory configuration."""
+
+    name: str
+
+
 # Response types
 class Usage(TypedDict):
     """Token usage information."""
@@ -157,10 +164,22 @@ class RunOptionsBase(TypedDict, total=False):
     raw_response: bool
     run_tools: bool
     tools: List[Tools]
+    tool_choice: Union[Literal["auto", "required"], ToolChoice]
+    parallel_tool_calls: bool
     name: str
     api_key: str
     llm_key: str
     json: bool
+    memory: List[RuntimeMemory]
+    response_format: ResponseFormat
+    top_p: float
+    max_tokens: int
+    temperature: float
+    presence_penalty: float
+    frequency_penalty: float
+    stop: List[str]
+    store: bool
+    moderate: bool
 
 
 class RunOptions(RunOptionsBase, total=False):
@@ -216,10 +235,10 @@ class RawResponseHeaders(TypedDict):
 
 
 class RunResponse(TypedDict, total=False):
-    """Response from running a pipe."""
+    """Response from running a pipe without streaming."""
 
     completion: str
-    thread_id: str
+    thread_id: Optional[str]
     id: str
     object: str
     created: int
@@ -228,17 +247,17 @@ class RunResponse(TypedDict, total=False):
     usage: Usage
     system_fingerprint: Optional[str]
     raw_response: Optional[RawResponseHeaders]
-    messages: List[Message]
-    llm_key: str
-    name: str
 
 
-class RunResponseStream(TypedDict, total=False):
-    """Stream response from running a pipe."""
+class RunResponseStream(TypedDict):
+    """Response from running a pipe with streaming."""
 
     stream: Any  # This would be an iterator in Python
     thread_id: Optional[str]
     raw_response: Optional[RawResponseHeaders]
+
+
+# Note: Delta, ChoiceStream, and ChunkStream are defined in helper.py
 
 
 # Memory types
@@ -529,6 +548,122 @@ class ThreadMessagesBaseResponse(TypedDict, total=False):
     tool_calls: Optional[List[ToolCall]]
     attachments: Optional[List[Any]]
     metadata: Optional[Dict[str, str]]
+
+
+# Pipe types - simplified based on TypeScript SDK
+class PipeBaseOptions(TypedDict, total=False):
+    """Base options for pipe operations."""
+
+    name: str
+    description: Optional[str]
+    status: Optional[Literal["public", "private"]]
+    upsert: Optional[bool]
+    model: Optional[str]
+    stream: Optional[bool]
+    json: Optional[bool]
+    store: Optional[bool]
+    moderate: Optional[bool]
+    top_p: Optional[float]
+    max_tokens: Optional[int]
+    temperature: Optional[float]
+    presence_penalty: Optional[float]
+    frequency_penalty: Optional[float]
+    stop: Optional[List[str]]
+    tools: Optional[List[Tools]]
+    tool_choice: Optional[Union[Literal["auto", "required"], ToolChoice]]
+    parallel_tool_calls: Optional[bool]
+    messages: Optional[List[Message]]
+    variables: Optional[List[Variable]]
+    memory: Optional[List[Dict[str, str]]]
+    response_format: Optional[ResponseFormat]
+
+
+class PipeCreateOptions(PipeBaseOptions):
+    """Options for creating a pipe."""
+    pass
+
+
+class PipeUpdateOptions(PipeBaseOptions):
+    """Options for updating a pipe."""
+    pass
+
+
+class PipeRunOptions(TypedDict, total=False):
+    """Options for running a pipe."""
+
+    name: Optional[str]
+    api_key: Optional[str]
+    messages: Optional[List[Message]]
+    stream: Optional[bool]
+    variables: Optional[Union[List[Variable], Dict[str, str]]]
+    thread_id: Optional[str]
+    tools: Optional[List[Tools]]
+    tool_choice: Optional[Union[Literal["auto", "required"], ToolChoice]]
+    parallel_tool_calls: Optional[bool]
+    memory: Optional[List[Dict[str, str]]]
+    response_format: Optional[ResponseFormat]
+    top_p: Optional[float]
+    max_tokens: Optional[int]
+    temperature: Optional[float]
+    presence_penalty: Optional[float]
+    frequency_penalty: Optional[float]
+    stop: Optional[List[str]]
+    llm_key: Optional[str]
+    json: Optional[bool]
+    store: Optional[bool]
+    moderate: Optional[bool]
+
+
+class PipeBaseResponse(TypedDict):
+    """Base response for pipe operations."""
+
+    name: str
+    description: str
+    status: Literal["public", "private"]
+    owner_login: str
+    url: str
+    type: str
+    api_key: str
+
+
+class PipeCreateResponse(PipeBaseResponse):
+    """Response from creating a pipe."""
+    pass
+
+
+class PipeUpdateResponse(PipeBaseResponse):
+    """Response from updating a pipe."""
+    pass
+
+
+class PipeListResponse(TypedDict):
+    """Response from listing pipes - includes all pipe configuration."""
+
+    name: str
+    description: str
+    status: Literal["public", "private"]
+    owner_login: str
+    url: str
+    model: str
+    stream: bool
+    json: bool
+    store: bool
+    moderate: bool
+    top_p: float
+    max_tokens: int
+    temperature: float
+    presence_penalty: float
+    frequency_penalty: float
+    stop: List[str]
+    tool_choice: Union[Literal["auto", "required"], ToolChoice]
+    parallel_tool_calls: bool
+    messages: List[Message]
+    variables: List[Variable]
+    tools: List[Tools]
+    memory: List[Dict[str, str]]
+
+
+# Pipe run response types (use existing RunResponse and RunResponseStream)
 
 
 # Config types

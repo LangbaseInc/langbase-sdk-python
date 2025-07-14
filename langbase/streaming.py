@@ -339,4 +339,3 @@ class TypedStreamProcessor:
         self.process()
 
         return tool_calls
-

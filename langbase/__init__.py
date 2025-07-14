@@ -38,6 +38,25 @@ from .helper import (
 )
 from .langbase import Langbase
 from .streaming import StreamEventType, TypedStreamProcessor
+from .types import (
+    ChoiceGenerate,
+    Message,
+    PipeBaseOptions,
+    PipeBaseResponse,
+    PipeCreateOptions,
+    PipeCreateResponse,
+    PipeListResponse,
+    PipeUpdateOptions,
+    PipeUpdateResponse,
+    ResponseFormat,
+    RunResponse,
+    RunResponseStream,
+    ToolCall,
+    ToolChoice,
+    Tools,
+    Usage,
+    Variable,
+)
 from .workflow import TimeoutError, Workflow
 
 __version__ = "0.1.0"
@@ -61,10 +80,26 @@ __all__ = [
     "RateLimitError",
     "TimeoutError",
     "UnprocessableEntityError",
+    # Type definitions
+    "ChoiceGenerate",
+    "Message",
+    "PipeBaseOptions",
+    "PipeBaseResponse",
+    "PipeCreateOptions",
+    "PipeCreateResponse",
+    "PipeListResponse",
+    "PipeUpdateOptions",
+    "PipeUpdateResponse",
+    "ResponseFormat",
+    "RunResponse",
+    "RunResponseStream",
+    "ToolCall",
+    "ToolChoice",
+    "Tools",
+    "Usage",
+    "Variable",
     # Helper utilities
-    "ChoiceStream",
     "ChunkStream",
-    "Delta",
     "StreamProcessor",
     "collect_stream_text",
     "create_stream_processor",
