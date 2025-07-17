@@ -79,21 +79,11 @@ class ToolChoice(TypedDict):
     function: Dict[str, str]
 
 
-# Message types
-class MessageContentItem(TypedDict, total=False):
-    """Content item for a message with multiple content parts."""
-
-    type: str
-    text: Optional[str]
-    image_url: Optional[Dict[str, str]]
-    cache_control: Optional[Dict[str, str]]
-
-
 class Message(TypedDict, total=False):
     """Basic message structure."""
 
     role: Role
-    content: Optional[Union[str, List[MessageContentItem]]]
+    content: string | NULL
     name: Optional[str]
     tool_call_id: Optional[str]
     tool_calls: Optional[List[ToolCall]]
@@ -783,6 +773,3 @@ AgentRunOptionsStream = AgentRunOptionsStreamT
 
 # Agent response type (reuses RunResponse)
 AgentRunResponse = RunResponse
-
-
-# Workflow types - moved to workflow.py for better type support with generics

@@ -101,10 +101,14 @@ class Request:
         try:
             # If files are provided, don't send JSON body
             if files:
+                # Remove Content-Type header for file uploads (requests will set it automatically)
+                filtered_headers = {
+                    k: v for k, v in headers.items() if k != "Content-Type"
+                }
                 response = requests.request(
                     method=method,
                     url=url,
-                    headers={k: v for k, v in headers.items() if k != "Content-Type"},
+                    headers=filtered_headers,
                     files=files,
                     stream=stream,
                 )
@@ -275,25 +279,28 @@ class Request:
             thread_id = response.headers.get("lb-thread-id")
 
             if not body:
+                raw_response = body.get("raw_response", False) if body else False
                 return self.handle_run_response(
                     response,
                     thread_id=None,
-                    raw_response=body.get("raw_response", False) if body else False,
+                    raw_response=raw_response,
                     endpoint=endpoint,
                 )
 
             if body.get("stream") and "run" in url:
+                raw_response = body.get("raw_response", False)
                 return self.handle_run_response_stream(
-                    response, raw_response=body.get("raw_response", False)
+                    response, raw_response=raw_response
                 )
 
             if body.get("stream"):
                 return self.handle_stream_response(response)
 
+            raw_response = body.get("raw_response", False)
             return self.handle_run_response(
                 response,
                 thread_id=thread_id,
-                raw_response=body.get("raw_response", False),
+                raw_response=raw_response,
                 endpoint=endpoint,
             )
         # For non-generation endpoints, just return the JSON response
