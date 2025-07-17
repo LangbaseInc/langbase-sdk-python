@@ -1,15 +1,6 @@
-"""
-Helper utilities for the Langbase SDK.
-
-This module provides utility functions for handling streaming responses,
-extracting content from chunks, and working with tool calls from streams.
-
-"""
-
 import json
 from typing import Any, Dict, Iterator, List, Literal, Optional, Union
 
-from .streaming import TypedStreamProcessor
 from .types import ToolCall
 
 # Type aliases to match TypeScript version
@@ -129,7 +120,10 @@ def parse_chunk(chunk_data: Union[bytes, str]) -> Optional[ChunkStream]:
             return None
 
         # Handle SSE format - remove "data: " prefix if present
-        json_str = chunk_str[6:] if chunk_str.startswith("data: ") else chunk_str
+        if chunk_str.startswith("data: "):
+            json_str = chunk_str[6:]  # Remove "data: " prefix
+        else:
+            json_str = chunk_str
 
         # Skip if it's just whitespace after removing prefix
         if not json_str.strip():
@@ -439,6 +433,8 @@ def get_typed_runner(
     Returns:
         TypedStreamProcessor instance with event-based handling
     """
+    from .streaming import TypedStreamProcessor
+
     # Extract stream and thread_id
     thread_id = None
 
