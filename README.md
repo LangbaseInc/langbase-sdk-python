@@ -98,16 +98,16 @@ response = lb.pipes.run(
 runner = get_typed_runner(response)
 
 # Register event handlers
-runner.on(StreamEventType.CONNECT, lambda e: 
+runner.on(StreamEventType.CONNECT, lambda e:
     print(f"✓ Connected to thread: {e['threadId']}"))
 
-runner.on(StreamEventType.CONTENT, lambda e: 
+runner.on(StreamEventType.CONTENT, lambda e:
     print(e["content"], end="", flush=True))
 
-runner.on(StreamEventType.TOOL_CALL, lambda e: 
+runner.on(StreamEventType.TOOL_CALL, lambda e:
     print(f"\n🔧 Tool: {e['toolCall']['function']['name']}"))
 
-runner.on(StreamEventType.END, lambda e: 
+runner.on(StreamEventType.END, lambda e:
     print(f"\n⏱️  Duration: {e['duration']:.2f}s"))
 
 # Process the stream
@@ -160,7 +160,7 @@ results = lb.memories.retrieve(
 
 ```python
 # Run an agent with tools
-response = lb.agent_run(
+response = lb.agent.run(
     model="openai:gpt-4",
     messages=[{"role": "user", "content": "Search for AI news"}],
     tools=[{"type": "function", "function": {...}}],

@@ -6,6 +6,8 @@ import time
 
 import pytest
 
+from langbase import Langbase
+
 
 @pytest.fixture
 def base_url():
@@ -22,8 +24,6 @@ def api_key():
 @pytest.fixture
 def langbase_client(api_key, base_url):
     """Langbase client instance for testing."""
-    from langbase import Langbase
-
     return Langbase(api_key=api_key, base_url=base_url)
 
 
@@ -248,7 +248,7 @@ def mock_responses():
             "content": "Parsed document content from test.pdf",
         },
         # Agent run response (similar to pipe run)
-        "agent_run": {
+        "agent.run": {
             "completion": "Agent response to the query",
             "thread_id": "thread_agent123",
             "id": "chatcmpl-agent123",
@@ -373,7 +373,6 @@ def create_stream_response(chunks):
     """Helper function to create streaming response."""
 
     def stream_generator():
-        for chunk in chunks:
-            yield chunk
+        yield from chunks
 
     return stream_generator()

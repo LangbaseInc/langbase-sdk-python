@@ -7,6 +7,8 @@ import json
 import pytest
 import responses
 
+from langbase import Langbase
+
 
 class TestPipes:
     """Test the Pipes API."""
@@ -140,8 +142,6 @@ class TestPipes:
     @responses.activate
     def test_pipes_run_with_api_key(self, mock_responses):
         """Test pipes.run method with pipe API key."""
-        from langbase import Langbase
-
         # Create client with different API key
         client = Langbase(api_key="client-api-key")
         messages = [{"role": "user", "content": "Hello"}]

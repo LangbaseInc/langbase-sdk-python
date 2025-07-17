@@ -12,7 +12,7 @@ import asyncio
 import time
 from typing import Any, Awaitable, Callable, Dict, Generic, List, Optional, TypeVar
 
-from typing_extensions import Literal, NotRequired, TypedDict
+from typing_extensions import Literal, TypedDict
 
 from .errors import APIError
 
@@ -37,8 +37,8 @@ class StepConfig(TypedDict, Generic[T]):
     """Configuration for a workflow step."""
 
     id: str
-    timeout: NotRequired[Optional[int]]
-    retries: NotRequired[Optional[RetryConfig]]
+    timeout: Optional[int]
+    retries: Optional[RetryConfig]
     run: Callable[[], Awaitable[T]]
 
 
@@ -157,8 +157,8 @@ class Workflow:
                         print(f"Error: {error}")
 
                     if isinstance(last_error, Exception):
-                        raise last_error
-                    raise APIError(message=str(last_error))
+                        raise last_error from None
+                    raise APIError(message=str(last_error)) from None
 
         # This should never be reached, but just in case
         if last_error:
@@ -183,10 +183,9 @@ class Workflow:
             TimeoutError: If the promise doesn't complete within the timeout
         """
         try:
-            result = await asyncio.wait_for(promise, timeout=timeout / 1000.0)
-            return result
-        except asyncio.TimeoutError:
-            raise TimeoutError(step_id=step_id, timeout=timeout)
+            return await asyncio.wait_for(promise, timeout=timeout / 1000.0)
+        except asyncio.TimeoutError as e:
+            raise TimeoutError(step_id=step_id, timeout=timeout) from e
 
     def _calculate_delay(
         self,

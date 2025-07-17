@@ -140,7 +140,7 @@ langbase = Langbase(api_key=os.environ.get("LANGBASE_API_KEY"))
 Basic agent run pattern:
 
 ```python
-response = langbase.agent_run(
+response = langbase.agent.run(
     model="openai:gpt-4.1-mini",
     api_key=os.environ.get("LLM_API_KEY"),
     instructions="Your instructions here",
@@ -184,4 +184,4 @@ logging.basicConfig(level=logging.DEBUG)
 - Explore the [Langbase Documentation](https://docs.langbase.com)
 - Try creating your own custom tools
 - Experiment with different models and parameters
-- Build multi-agent workflows 
+- Build multi-agent workflows

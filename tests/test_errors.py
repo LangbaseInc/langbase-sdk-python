@@ -6,6 +6,15 @@ import pytest
 import requests
 import responses
 
+from langbase.errors import (
+    APIConnectionError,
+    APIError,
+    AuthenticationError,
+    BadRequestError,
+    NotFoundError,
+    RateLimitError,
+)
+
 
 class TestErrorHandling:
     """Test error handling scenarios."""
@@ -19,8 +28,6 @@ class TestErrorHandling:
             json={"error": "Bad request", "message": "Invalid parameters"},
             status=400,
         )
-
-        from langbase.errors import BadRequestError
 
         with pytest.raises(BadRequestError) as exc_info:
             langbase_client.pipes.create(name="test")
@@ -37,8 +44,6 @@ class TestErrorHandling:
             status=500,
         )
 
-        from langbase.errors import APIError
-
         with pytest.raises(APIError) as exc_info:
             langbase_client.pipes.list()
 
@@ -53,8 +58,6 @@ class TestErrorHandling:
             body=requests.exceptions.ConnectionError("Connection failed"),
         )
 
-        from langbase.errors import APIConnectionError
-
         with pytest.raises(APIConnectionError):
             langbase_client.pipes.list()
 
@@ -66,8 +69,6 @@ class TestErrorHandling:
             "https://api.langbase.com/v1/pipes",
             body=requests.exceptions.Timeout("Request timed out"),
         )
-
-        from langbase.errors import APIConnectionError
 
         with pytest.raises(APIConnectionError):
             langbase_client.pipes.list()
@@ -81,8 +82,6 @@ class TestErrorHandling:
             json={"error": "Unauthorized", "message": "Invalid API key"},
             status=401,
         )
-
-        from langbase.errors import AuthenticationError
 
         with pytest.raises(AuthenticationError) as exc_info:
             langbase_client.pipes.list()
@@ -102,8 +101,6 @@ class TestErrorHandling:
             status=503,
         )
 
-        from langbase.errors import APIError
-
         with pytest.raises(APIError) as exc_info:
             langbase_client.pipes.list()
 
@@ -120,8 +117,6 @@ class TestErrorHandling:
             json={"error": "Rate limit exceeded", "message": "Too many requests"},
             status=429,
         )
-
-        from langbase.errors import RateLimitError
 
         with pytest.raises(RateLimitError) as exc_info:
             langbase_client.pipes.run(name="test", messages=[])
@@ -149,8 +144,6 @@ class TestErrorHandling:
             status=400,
         )
 
-        from langbase.errors import BadRequestError, NotFoundError
-
         with pytest.raises(NotFoundError):
             langbase_client.memories.list()
 
@@ -166,8 +159,6 @@ class TestErrorHandling:
             json={"error": "Model not available"},
             status=503,
         )
-
-        from langbase.errors import APIError
 
         with pytest.raises(APIError) as exc_info:
             langbase_client.pipes.run(
@@ -188,14 +179,9 @@ class TestErrorHandling:
             status=413,
         )
 
-        from langbase.errors import APIError
-
         with pytest.raises(APIError) as exc_info:
             langbase_client.memories.documents.upload(
-                memory_name="test-memory",
-                document_name="test.txt",
-                document=b"test content",
-                content_type="text/plain",
+                "test-memory", "test.txt", "test content", "text/plain"
             )
 
         assert exc_info.value.status == 413

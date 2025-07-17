@@ -49,7 +49,7 @@ def send_email(args):
     response = requests.post(
         "https://api.resend.com/emails",
         headers={
-            "Authorization": f'Bearer {os.environ.get("RESEND_API_KEY")}',
+            "Authorization": f"Bearer {os.environ.get('RESEND_API_KEY')}",
             "Content-Type": "application/json",
         },
         json={
@@ -99,7 +99,7 @@ def main():
     input_messages = [{"role": "user", "content": "Send a welcome email to Sam."}]
 
     # Initial run with tool
-    response = langbase.agent_run(
+    response = langbase.agent.run(
         model="openai:gpt-4.1-mini",
         api_key=llm_api_key,
         instructions="You are an email sending assistant.",
@@ -159,7 +159,7 @@ def main():
                 continue
 
     # Final agent response with tool result
-    final_response = langbase.agent_run(
+    final_response = langbase.agent.run(
         model="openai:gpt-4.1-mini",
         api_key=os.environ.get("OPENAI_API_KEY"),
         instructions="You are an email sending assistant. Confirm the email has been sent successfully.",

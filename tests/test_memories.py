@@ -41,7 +41,11 @@ class TestMemories:
             status=201,
         )
 
-        result = langbase_client.memories.create(**request_data)
+        result = langbase_client.memories.create(
+            name=request_data["name"],
+            description=request_data["description"],
+            embedding_model=request_data["embedding_model"],
+        )
 
         assert result == mock_responses["memory_create"]
 

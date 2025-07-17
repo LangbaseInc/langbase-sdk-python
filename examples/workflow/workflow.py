@@ -22,7 +22,7 @@ async def main():
 
     # Define and execute a workflow step
     async def summarize_step():
-        return langbase.agent_run(
+        return langbase.agent.run(
             model="openai:gpt-4o-mini",
             api_key=os.environ.get("OPENAI_API_KEY"),
             input=[

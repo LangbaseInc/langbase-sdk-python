@@ -39,7 +39,7 @@ def main():
     )
 
     # Step 2: Run the agent with the retrieved memory
-    response = langbase.agent_run(
+    response = langbase.agent.run(
         model="openai:gpt-4.1",
         api_key=llm_api_key,
         instructions="You are a career advisor who helps users understand AI job roles.",

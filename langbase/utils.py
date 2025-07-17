@@ -5,9 +5,9 @@ This module contains helper functions for common tasks like
 document handling and data conversion.
 """
 
-import os
 from io import BytesIO
-from typing import Any, BinaryIO, Dict, Union
+from pathlib import Path
+from typing import Any, BinaryIO, Dict, Optional, Tuple, Union
 
 from .types import ContentType
 
@@ -16,7 +16,7 @@ def convert_document_to_request_files(
     document: Union[bytes, BytesIO, str, BinaryIO],
     document_name: str,
     content_type: ContentType,
-) -> Dict[str, Union[tuple, str]]:
+) -> Dict[str, Union[Tuple[str, bytes, ContentType], Tuple[None, str], str]]:
     """
     Convert a document to the format needed for requests library's files parameter.
 
@@ -32,11 +32,11 @@ def convert_document_to_request_files(
         ValueError: If the document type is not supported
         FileNotFoundError: If the document path doesn't exist
     """
-    files = {}
+    files: Dict[str, Union[Tuple[str, bytes, ContentType], Tuple[None, str], str]] = {}
 
-    if isinstance(document, str) and os.path.isfile(document):
+    if isinstance(document, str) and Path(document).is_file():
         # If it's a file path, open and read the file
-        with open(document, "rb") as f:
+        with Path(document).open("rb") as f:
             files["document"] = (document_name, f.read(), content_type)
     elif isinstance(document, bytes):
         # If it's raw bytes
@@ -49,7 +49,8 @@ def convert_document_to_request_files(
             document.seek(0)
         files["document"] = (document_name, document_content, content_type)
     else:
-        raise ValueError(f"Unsupported document type: {type(document)}")
+        msg = f"Unsupported document type: {type(document)}"
+        raise ValueError(msg)
 
     # Add documentName as a separate field (not as a file)
     files["documentName"] = (None, document_name)
@@ -57,7 +58,7 @@ def convert_document_to_request_files(
 
 
 def prepare_headers(
-    api_key: str, additional_headers: Dict[str, str] = None
+    api_key: str, additional_headers: Optional[Dict[str, str]] = None
 ) -> Dict[str, str]:
     """
     Prepare headers for API requests.

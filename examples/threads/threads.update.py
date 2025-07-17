@@ -4,7 +4,6 @@ Example demonstrating how to update thread metadata in Langbase.
 
 import json
 import os
-from datetime import datetime
 
 from dotenv import load_dotenv
 
@@ -32,7 +31,7 @@ def main():
     # Update the thread metadata
     try:
         updated_thread = lb.threads.update(
-            thread_id=thread_id, metadata=updated_metadata
+            {"thread_id": thread_id, "metadata": updated_metadata}
         )
 
         print(json.dumps(updated_thread, indent=2))

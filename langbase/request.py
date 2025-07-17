@@ -118,9 +118,9 @@ class Request:
                 )
             return response
         except requests.Timeout as e:
-            raise APIConnectionTimeoutError(str(e))
+            raise APIConnectionTimeoutError(str(e)) from e
         except requests.RequestException as e:
-            raise APIConnectionError(cause=e)
+            raise APIConnectionError(cause=e) from e
 
     def handle_error_response(self, response: requests.Response) -> None:
         """
@@ -201,7 +201,9 @@ class Request:
 
         build_response = (
             {
-                "output" if is_agent_run else "completion": generate_response.get(
+                "output"
+                if is_agent_run
+                else "completion": generate_response.get(
                     "output" if is_agent_run else "completion"
                 ),
                 **generate_response.get("raw", {}),

@@ -51,7 +51,7 @@ def main():
     }
 
     # Run the agent with structured output
-    response = langbase.agent_run(
+    response = langbase.agent.run(
         model="openai:gpt-4.1",
         api_key=llm_api_key,
         instructions="You are a helpful math tutor. Guide the user through the solution step by step.",

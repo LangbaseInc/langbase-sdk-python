@@ -101,7 +101,8 @@ class TestWorkflow:
             nonlocal call_count
             call_count += 1
             if call_count < 3:
-                raise APIError("Temporary failure")
+                msg = "Temporary failure"
+                raise APIError(msg)
             return "success_on_retry"
 
         config: StepConfig = {
@@ -122,7 +123,8 @@ class TestWorkflow:
         workflow = Workflow()
 
         async def always_fail_task():
-            raise APIError("Persistent failure")
+            msg = "Persistent failure"
+            raise APIError(msg)
 
         config: StepConfig = {
             "id": "failing_step",
@@ -230,7 +232,8 @@ class TestWorkflow:
             nonlocal call_count
             call_count += 1
             if call_count < 2:
-                raise APIError("Debug retry test")
+                msg = "Debug retry test"
+                raise APIError(msg)
             return "retry_success"
 
         config: StepConfig = {
@@ -281,7 +284,8 @@ class TestWorkflow:
         workflow = Workflow()
 
         async def failing_task():
-            raise ValueError("Test error without retries")
+            msg = "Test error without retries"
+            raise ValueError(msg)
 
         config: StepConfig = {"id": "no_retry_step", "run": failing_task}
 

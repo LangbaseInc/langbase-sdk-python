@@ -37,6 +37,10 @@ from .helper import (
     stream_text,
 )
 from .langbase import Langbase
+from .primitives.memories import Memories
+from .primitives.pipes import Pipes
+from .primitives.threads import Threads
+from .primitives.tools import Tools
 from .streaming import StreamEventType, TypedStreamProcessor
 from .types import (
     ChoiceGenerate,
@@ -53,7 +57,6 @@ from .types import (
     RunResponseStream,
     ToolCall,
     ToolChoice,
-    Tools,
     Usage,
     Variable,
 )
@@ -61,28 +64,24 @@ from .workflow import TimeoutError, Workflow
 
 __version__ = "0.1.0"
 __all__ = [
-    # Main classes
-    "Langbase",
-    "Workflow",
-    # Streaming
-    "StreamEventType",
-    "TypedStreamProcessor",
     # Errors
     "APIConnectionError",
     "APIConnectionTimeoutError",
     "APIError",
     "AuthenticationError",
     "BadRequestError",
-    "ConflictError",
-    "InternalServerError",
-    "NotFoundError",
-    "PermissionDeniedError",
-    "RateLimitError",
-    "TimeoutError",
-    "UnprocessableEntityError",
     # Type definitions
     "ChoiceGenerate",
+    # Helper utilities
+    "ChunkStream",
+    "ConflictError",
+    "InternalServerError",
+    # Main classes
+    "Langbase",
+    "Memories",
     "Message",
+    "NotFoundError",
+    "PermissionDeniedError",
     "PipeBaseOptions",
     "PipeBaseResponse",
     "PipeCreateOptions",
@@ -90,17 +89,25 @@ __all__ = [
     "PipeListResponse",
     "PipeUpdateOptions",
     "PipeUpdateResponse",
+    "Pipes",
+    "RateLimitError",
     "ResponseFormat",
     "RunResponse",
     "RunResponseStream",
+    # Streaming
+    "StreamEventType",
+    "StreamProcessor",
+    "Threads",
+    "TimeoutError",
     "ToolCall",
     "ToolChoice",
     "Tools",
+    "Tools",
+    "TypedStreamProcessor",
+    "UnprocessableEntityError",
     "Usage",
     "Variable",
-    # Helper utilities
-    "ChunkStream",
-    "StreamProcessor",
+    "Workflow",
     "collect_stream_text",
     "create_stream_processor",
     "get_runner",

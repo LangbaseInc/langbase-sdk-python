@@ -96,8 +96,7 @@ async def main():
                 ],
             )
             return response["completion"]
-        else:
-            raise Exception("Temporary service unavailable")
+        raise Exception("Temporary service unavailable")
 
     try:
         analysis = await workflow.step(

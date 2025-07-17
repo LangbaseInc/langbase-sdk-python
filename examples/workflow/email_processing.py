@@ -50,7 +50,7 @@ async def process_email(email_content: str):
     try:
         # Steps 1 & 2: Run summary and sentiment analysis in parallel
         async def summarize_email():
-            response = langbase.agent_run(
+            response = langbase.agent.run(
                 model="openai:gpt-4.1-mini",
                 instructions="""Create a concise summary of this email. Focus on the main points,
                 requests, and any action items mentioned.""",
@@ -61,7 +61,7 @@ async def process_email(email_content: str):
             return response.get("output")
 
         async def analyze_sentiment():
-            response = langbase.agent_run(
+            response = langbase.agent.run(
                 model="openai:gpt-4.1-mini",
                 instructions="""Analyze the sentiment of this email. Provide a brief analysis
                 that includes the overall tone (positive, neutral, or negative) and any notable
@@ -81,7 +81,7 @@ async def process_email(email_content: str):
 
         # Step 3: Determine if response is needed (using the results from previous steps)
         async def determine_response_needed():
-            response = langbase.agent_run(
+            response = langbase.agent.run(
                 model="openai:gpt-4.1-mini",
                 instructions="""Based on the email summary and sentiment analysis, determine if a
                 response is needed. Answer with 'yes' if a response is required, or 'no' if no
@@ -113,7 +113,7 @@ Does this email require a response?""",
         if response_needed:
 
             async def generate_response():
-                response = langbase.agent_run(
+                response = langbase.agent.run(
                     model="openai:gpt-4.1-mini",
                     instructions="""Generate a professional email response. Address all questions
                     and requests from the original email. Be helpful, clear, and maintain a

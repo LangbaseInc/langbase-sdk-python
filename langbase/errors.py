@@ -7,6 +7,8 @@ All errors inherit from the base APIError class.
 
 from typing import Any, Dict, Optional
 
+from .constants import ERROR_MAP, STATUS_CODE_TO_MESSAGE
+
 
 class APIError(Exception):
     """Base class for all API errors."""
@@ -72,7 +74,7 @@ class APIError(Exception):
             if not isinstance(msg, str):
                 msg = str(msg)
         elif error:
-            msg = str(error) if isinstance(error, str) else str(error)
+            msg = str(error)
         else:
             msg = message
 
@@ -81,19 +83,7 @@ class APIError(Exception):
 
         # Status line
         if status:
-            status_text = {
-                400: "Bad Request",
-                401: "Unauthorized",
-                403: "Forbidden",
-                404: "Not Found",
-                409: "Conflict",
-                422: "Unprocessable Entity",
-                429: "Too Many Requests",
-                500: "Internal Server Error",
-                502: "Bad Gateway",
-                503: "Service Unavailable",
-                504: "Gateway Timeout",
-            }.get(status, "Unknown Error")
+            status_text = STATUS_CODE_TO_MESSAGE.get(status, "Unknown Error")
             parts.append(f"{status_text} ({status})")
 
         # Error message
@@ -154,20 +144,11 @@ class APIError(Exception):
             else error_response
         )
 
-        if status == 400:
-            return BadRequestError(status, error, message, headers, endpoint)
-        if status == 401:
-            return AuthenticationError(status, error, message, headers, endpoint)
-        if status == 403:
-            return PermissionDeniedError(status, error, message, headers, endpoint)
-        if status == 404:
-            return NotFoundError(status, error, message, headers, endpoint)
-        if status == 409:
-            return ConflictError(status, error, message, headers, endpoint)
-        if status == 422:
-            return UnprocessableEntityError(status, error, message, headers, endpoint)
-        if status == 429:
-            return RateLimitError(status, error, message, headers, endpoint)
+        if status in ERROR_MAP:
+            error_class_name = ERROR_MAP[status]
+            error_class = globals()[error_class_name]
+            return error_class(status, error, message, headers, endpoint)
+
         if status >= 500:
             return InternalServerError(status, error, message, headers, endpoint)
         return APIError(status, error, message, headers, endpoint)

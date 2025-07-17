@@ -6,6 +6,23 @@ line-length = 88
 # Target Python 3.7+
 target-version = "py37"
 
+# Allow autofix for all enabled rules
+fix = true
+
+# Exclude directories
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "__pycache__",
+    "build",
+    "dist",
+    "venv",
+    ".venv",
+]
+
+[lint]
 # Enable various lint rules
 select = [
     "E",    # pycodestyle errors
@@ -34,33 +51,52 @@ ignore = [
     "E501",   # line too long (handled by Black)
     "PLR0913", # too many arguments
     "PLR2004", # magic value comparison
-]
+    "PLR0912", # too many branches (functions can be complex)
 
-# Exclude directories
-exclude = [
-    ".git",
-    ".mypy_cache",
-    ".pytest_cache",
-    ".ruff_cache",
-    "__pycache__",
-    "build",
-    "dist",
-    "venv",
-    ".venv",
+
+    # Import-related rules (if you prefer current style)
+    # "TID252",  # prefer absolute imports over relative imports
+    # "PLC0415", # import should be at top-level
+
+    # Pathlib rules (if you prefer os.path)
+    # "PTH113",  # os.path.isfile() should be Path.is_file()
+    # "PTH123",  # open() should be Path.open()
+
+    # Exception rules (if you don't mind string literals)
+    # "EM101",   # exception must not use string literal
+    # "EM102",   # exception must not use f-string literal
+    # "B904",    # exception chaining with 'raise ... from err'
+
+    # Code style rules (if you prefer current style)
+    # "RUF013",  # implicit Optional type
+    # "RET504",  # unnecessary assignment before return
+    # "UP028",   # replace yield loop with yield from
+    # "RUF034",  # useless if-else condition
+    # "SIM108",  # use ternary operator instead of if-else
 ]
 
 # Allow unused variables when prefixed with underscore
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
-# Allow autofix for all enabled rules
-fix = true
-
-[per-file-ignores]
+[lint.per-file-ignores]
 # Allow unused imports in __init__.py files
 "__init__.py" = ["F401"]
 
 # Allow assert statements in test files
 "tests/*.py" = ["S101", "PLR2004"]
 
-# Allow print statements and magic values in examples
-"examples/*.py" = ["T201", "PLR2004"]
+# Allow various rules in examples since they're demonstration files
+"examples/*.py" = [
+    "T201",     # print statements
+    "PLR2004",  # magic value comparison
+    "PLR1722",  # use sys.exit instead of exit
+    "EM101",    # exception string literals
+    "PLC0415",  # import at top level
+    "PLR0915",  # too many statements
+    "F841",     # unused variables
+    "F821",     # undefined names
+    "PTH123",   # use pathlib
+    "W291",     # trailing whitespace
+    "W293",     # blank line whitespace
+    "E501",     # line too long
+]

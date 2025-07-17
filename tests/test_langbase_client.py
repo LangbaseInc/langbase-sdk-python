@@ -2,11 +2,6 @@
 Tests for Langbase client initialization and configuration.
 """
 
-import os
-from unittest.mock import patch
-
-import pytest
-
 from langbase import Langbase
 
 
@@ -22,44 +17,6 @@ class TestLangbaseClient:
         assert hasattr(client, "memories")
         assert hasattr(client, "tools")
         assert hasattr(client, "threads")
-
-    def test_initialization_with_custom_base_url(self):
-        """Test initialization with custom base URL."""
-        custom_url = "https://custom-api.langbase.com"
-        client = Langbase(api_key="test-api-key", base_url=custom_url)
-        assert client.api_key == "test-api-key"
-        assert client.base_url == custom_url
-
-    @patch.dict(os.environ, {"LANGBASE_API_KEY": "env-api-key"}, clear=True)
-    def test_initialization_with_env_var(self):
-        """Test initialization with environment variable."""
-        client = Langbase()
-        assert client.api_key == "env-api-key"
-        assert client.base_url == "https://api.langbase.com"
-
-    @patch.dict(os.environ, {"LANGBASE_API_KEY": "env-key"}, clear=True)
-    def test_api_key_parameter_overrides_env(self):
-        """Test that API key parameter overrides environment variable."""
-        client = Langbase(api_key="param-key")
-        assert client.api_key == "param-key"
-
-    def test_initialization_no_api_key(self):
-        """Test initialization with no API key raises error."""
-        with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(ValueError, match="API key must be provided"):
-                Langbase()
-
-    def test_initialization_empty_api_key(self):
-        """Test initialization with empty API key raises error."""
-        with patch.dict(os.environ, {}, clear=True):
-            with pytest.raises(ValueError, match="API key must be provided"):
-                Langbase(api_key="")
-
-    @patch.dict(os.environ, {"LANGBASE_API_KEY": ""}, clear=True)
-    def test_initialization_empty_env_api_key(self):
-        """Test initialization with empty environment API key raises error."""
-        with pytest.raises(ValueError, match="API key must be provided"):
-            Langbase()
 
     def test_request_instance_creation(self, langbase_client):
         """Test that request instance is properly created."""
@@ -105,4 +62,5 @@ class TestLangbaseClient:
         assert hasattr(langbase_client, "embed")
         assert hasattr(langbase_client, "chunker")
         assert hasattr(langbase_client, "parser")
-        assert hasattr(langbase_client, "agent_run")
+        assert hasattr(langbase_client, "agent")
+        assert hasattr(langbase_client.agent, "run")

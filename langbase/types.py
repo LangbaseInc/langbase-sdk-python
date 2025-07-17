@@ -5,19 +5,11 @@ This module defines the various data structures and type hints used
 throughout the SDK to provide better code assistance and documentation.
 """
 
-from typing import (
-    Any,
-    Dict,
-    List,
-    Literal,
-    Optional,
-    Protocol,
-    TypedDict,
-    Union,
-    runtime_checkable,
-)
+from typing import Any, Dict, List, Optional, Protocol, Union, runtime_checkable
 
-from typing_extensions import NotRequired
+from typing_extensions import Literal, TypedDict
+
+# NotRequired removed - using Optional instead
 
 # Base types and constants
 GENERATION_ENDPOINTS = [
@@ -69,8 +61,8 @@ class ToolFunction(TypedDict):
     """Function definition for tools."""
 
     name: str
-    description: NotRequired[str]
-    parameters: NotRequired[Dict[str, Any]]
+    description: Optional[str]
+    parameters: Optional[Dict[str, Any]]
 
 
 class Tools(TypedDict):
@@ -200,19 +192,19 @@ class LlmOptionsBase(TypedDict):
     messages: List[Message]
     model: str
     llm_key: str
-    top_p: NotRequired[float]
-    max_tokens: NotRequired[int]
-    temperature: NotRequired[float]
-    presence_penalty: NotRequired[float]
-    frequency_penalty: NotRequired[float]
-    stop: NotRequired[List[str]]
-    tools: NotRequired[List[Tools]]
-    tool_choice: NotRequired[Union[Literal["auto", "required"], ToolChoice]]
-    parallel_tool_calls: NotRequired[bool]
-    reasoning_effort: NotRequired[Optional[str]]
-    max_completion_tokens: NotRequired[int]
-    response_format: NotRequired[ResponseFormat]
-    custom_model_params: NotRequired[Dict[str, Any]]
+    top_p: Optional[float]
+    max_tokens: Optional[int]
+    temperature: Optional[float]
+    presence_penalty: Optional[float]
+    frequency_penalty: Optional[float]
+    stop: Optional[List[str]]
+    tools: Optional[List[Tools]]
+    tool_choice: Optional[Union[Literal["auto", "required"], ToolChoice]]
+    parallel_tool_calls: Optional[bool]
+    reasoning_effort: Optional[str]
+    max_completion_tokens: Optional[int]
+    response_format: Optional[ResponseFormat]
+    custom_model_params: Optional[Dict[str, Any]]
 
 
 class LlmOptions(LlmOptionsBase, total=False):
@@ -261,12 +253,26 @@ class RunResponseStream(TypedDict):
 
 
 # Memory types
-class MemoryCreateOptions(TypedDict, total=False):
+FilterOperator = Literal["Eq", "NotEq", "In", "NotIn", "And", "Or"]
+FilterConnective = Literal["And", "Or"]
+FilterValue = Union[str, List[str]]
+FilterCondition = List[Union[str, FilterOperator, FilterValue]]
+
+# Recursive type for memory filters
+MemoryFilters = Union[
+    List[Union[FilterConnective, List["MemoryFilters"]]], FilterCondition
+]
+
+
+class MemoryCreateOptions(TypedDict):
     """Options for creating a memory."""
 
     name: str
-    description: str
-    embedding_model: EmbeddingModel
+    description: Optional[str]
+    embedding_model: Optional[EmbeddingModel]
+    top_k: Optional[int]
+    chunk_size: Optional[int]
+    chunk_overlap: Optional[int]
 
 
 class MemoryDeleteOptions(TypedDict):
@@ -275,25 +281,19 @@ class MemoryDeleteOptions(TypedDict):
     name: str
 
 
-class MemoryFilter(List):
-    """Filter for memory retrieval."""
-
-    pass
-
-
 class MemoryConfig(TypedDict):
     """Memory configuration for retrieval."""
 
     name: str
-    filters: NotRequired[MemoryFilter]
+    filters: Optional[MemoryFilters]
 
 
-class MemoryRetrieveOptions(TypedDict, total=False):
+class MemoryRetrieveOptions(TypedDict):
     """Options for retrieving from memory."""
 
     query: str
     memory: List[MemoryConfig]
-    top_k: int
+    top_k: Optional[int]
 
 
 class MemoryListDocOptions(TypedDict):
@@ -316,12 +316,12 @@ class MemoryRetryDocEmbedOptions(TypedDict):
     document_name: str
 
 
-class MemoryUploadDocOptions(TypedDict, total=False):
+class MemoryUploadDocOptions(TypedDict):
     """Options for uploading a document to memory."""
 
     memory_name: str
     document_name: str
-    meta: Dict[str, str]
+    meta: Optional[Dict[str, str]]
     document: Any  # This would be bytes, file-like object, etc.
     content_type: ContentType
 
@@ -339,6 +339,8 @@ class MemoryBaseResponse(TypedDict):
 class MemoryCreateResponse(MemoryBaseResponse):
     """Response from creating a memory."""
 
+    chunk_size: int
+    chunk_overlap: int
     embedding_model: EmbeddingModel
 
 
@@ -411,16 +413,6 @@ class ToolWebSearchOptions(TypedDict, total=False):
     api_key: str
 
 
-class EmbedOptions(TypedDict, total=False):
-    """Options for embedding generation."""
-
-    chunks: List[str]
-    embedding_model: EmbeddingModel
-
-
-EmbedResponse = List[List[float]]
-
-
 class ToolWebSearchResponse(TypedDict):
     """Response from web search."""
 
@@ -448,7 +440,7 @@ class EmbedOptions(TypedDict, total=False):
     """Options for embedding generation."""
 
     chunks: List[str]
-    embedding_model: EmbeddingModel
+    embedding_model: Optional[EmbeddingModel]
 
 
 EmbedResponse = List[List[float]]
@@ -456,14 +448,11 @@ EmbedResponse = List[List[float]]
 
 # Chunk types
 class ChunkOptions(TypedDict, total=False):
-    """Options for chunking a document."""
+    """Options for chunking content."""
 
-    document: Any  # This would be bytes, file-like object, etc.
-    document_name: str
-    content_type: ContentType
-    chunk_max_length: str
-    chunk_overlap: str
-    separator: str
+    content: str
+    chunkOverlap: Optional[int]
+    chunkMaxLength: Optional[int]
 
 
 ChunkResponse = List[str]
@@ -580,11 +569,13 @@ class PipeBaseOptions(TypedDict, total=False):
 
 class PipeCreateOptions(PipeBaseOptions):
     """Options for creating a pipe."""
+
     pass
 
 
 class PipeUpdateOptions(PipeBaseOptions):
     """Options for updating a pipe."""
+
     pass
 
 
@@ -628,11 +619,13 @@ class PipeBaseResponse(TypedDict):
 
 class PipeCreateResponse(PipeBaseResponse):
     """Response from creating a pipe."""
+
     pass
 
 
 class PipeUpdateResponse(PipeBaseResponse):
     """Response from updating a pipe."""
+
     pass
 
 
@@ -679,7 +672,115 @@ class LangbaseOptions(TypedDict, total=False):
 class FileProtocol(Protocol):
     """Protocol for file-like objects."""
 
-    def read(self, size: int = -1) -> bytes: ...
+    def read(self, size: int = -1) -> bytes:
+        ...
+
+
+# Agent types
+class McpServerSchema(TypedDict):
+    """MCP (Model Context Protocol) server configuration."""
+
+    name: str
+    type: Literal["url"]
+    url: str
+    authorization_token: Optional[str]
+    tool_configuration: Optional[Dict[str, Any]]
+    custom_headers: Optional[Dict[str, str]]
+
+
+class AgentRunOptionsBase(TypedDict):
+    """Base options for running an agent."""
+
+    input: Union[str, List[Message]]  # REQUIRED
+    model: str  # REQUIRED
+    apiKey: str  # REQUIRED
+    instructions: Optional[str]  # OPTIONAL (has ? in TypeScript)
+    top_p: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    max_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
+    temperature: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    presence_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    frequency_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    stop: Optional[List[str]]  # OPTIONAL (has ? in TypeScript)
+    tools: Optional[List[Tools]]  # OPTIONAL (has ? in TypeScript)
+    tool_choice: Optional[
+        Union[Literal["auto", "required"], ToolChoice]
+    ]  # OPTIONAL (has ? in TypeScript)
+    parallel_tool_calls: Optional[bool]  # OPTIONAL (has ? in TypeScript)
+    mcp_servers: Optional[List[McpServerSchema]]  # OPTIONAL (has ? in TypeScript)
+    reasoning_effort: Optional[str]  # OPTIONAL (has ? in TypeScript)
+    max_completion_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
+    response_format: Optional[ResponseFormat]  # OPTIONAL (has ? in TypeScript)
+    customModelParams: Optional[Dict[str, Any]]  # OPTIONAL (has ? in TypeScript)
+
+
+class AgentRunOptionsWithoutMcp(AgentRunOptionsBase):
+    """Agent run options without MCP servers."""
+
+    stream: Optional[Literal[False]]  # OPTIONAL (has ? in TypeScript)
+
+
+class AgentRunOptionsWithMcp(TypedDict):
+    """Agent run options with MCP servers."""
+
+    # Required fields from base
+    input: Union[str, List[Message]]  # REQUIRED
+    model: str  # REQUIRED
+    apiKey: str  # REQUIRED
+
+    # Optional fields from base
+    instructions: Optional[str]  # OPTIONAL (has ? in TypeScript)
+    top_p: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    max_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
+    temperature: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    presence_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    frequency_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    stop: Optional[List[str]]  # OPTIONAL (has ? in TypeScript)
+    tools: Optional[List[Tools]]  # OPTIONAL (has ? in TypeScript)
+    tool_choice: Optional[
+        Union[Literal["auto", "required"], ToolChoice]
+    ]  # OPTIONAL (has ? in TypeScript)
+    parallel_tool_calls: Optional[bool]  # OPTIONAL (has ? in TypeScript)
+    reasoning_effort: Optional[str]  # OPTIONAL (has ? in TypeScript)
+    max_completion_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
+    response_format: Optional[ResponseFormat]  # OPTIONAL (has ? in TypeScript)
+    customModelParams: Optional[Dict[str, Any]]  # OPTIONAL (has ? in TypeScript)
+
+    # Overridden fields
+    mcp_servers: List[McpServerSchema]  # REQUIRED (overrides optional from base)
+    stream: Literal[False]  # REQUIRED
+
+
+class AgentRunOptionsStreamT(TypedDict):
+    """Agent run options for streaming (without MCP servers)."""
+
+    input: Union[str, List[Message]]  # REQUIRED
+    model: str  # REQUIRED
+    apiKey: str  # REQUIRED
+    stream: Literal[True]  # REQUIRED
+    instructions: Optional[str]  # OPTIONAL (has ? in TypeScript)
+    top_p: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    max_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
+    temperature: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    presence_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    frequency_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
+    stop: Optional[List[str]]  # OPTIONAL (has ? in TypeScript)
+    tools: Optional[List[Tools]]  # OPTIONAL (has ? in TypeScript)
+    tool_choice: Optional[
+        Union[Literal["auto", "required"], ToolChoice]
+    ]  # OPTIONAL (has ? in TypeScript)
+    parallel_tool_calls: Optional[bool]  # OPTIONAL (has ? in TypeScript)
+    reasoning_effort: Optional[str]  # OPTIONAL (has ? in TypeScript)
+    max_completion_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
+    response_format: Optional[ResponseFormat]  # OPTIONAL (has ? in TypeScript)
+    customModelParams: Optional[Dict[str, Any]]  # OPTIONAL (has ? in TypeScript)
+
+
+# Union types for agent options
+AgentRunOptions = Union[AgentRunOptionsWithoutMcp, AgentRunOptionsWithMcp]
+AgentRunOptionsStream = AgentRunOptionsStreamT
+
+# Agent response type (reuses RunResponse)
+AgentRunResponse = RunResponse
 
 
 # Workflow types - moved to workflow.py for better type support with generics

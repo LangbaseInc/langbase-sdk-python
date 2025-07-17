@@ -160,21 +160,21 @@ class TestUtilities:
 
     @responses.activate
     def test_agent_run_basic(self, langbase_client, mock_responses):
-        """Test agent_run method with basic parameters."""
+        """Test agent.run method with basic parameters."""
         responses.add(
             responses.POST,
             "https://api.langbase.com/v1/agent/run",
-            json=mock_responses["agent_run"],
+            json=mock_responses["agent.run"],
             status=200,
         )
 
-        result = langbase_client.agent_run(
+        result = langbase_client.agent.run(
             input="Hello, agent!",
             model="anthropic:claude-3-sonnet",
             api_key="test-llm-key",
         )
 
-        assert result == mock_responses["agent_run"]
+        assert result == mock_responses["agent.run"]
 
         # Verify request data
         request = responses.calls[0].request
@@ -185,7 +185,7 @@ class TestUtilities:
 
     @responses.activate
     def test_agent_run_with_messages(self, langbase_client, mock_responses):
-        """Test agent_run method with message format input."""
+        """Test agent.run method with message format input."""
         messages = [
             {"role": "user", "content": "Hello"},
             {"role": "assistant", "content": "Hi there!"},
@@ -194,15 +194,15 @@ class TestUtilities:
         responses.add(
             responses.POST,
             "https://api.langbase.com/v1/agent/run",
-            json=mock_responses["agent_run"],
+            json=mock_responses["agent.run"],
             status=200,
         )
 
-        result = langbase_client.agent_run(
+        result = langbase_client.agent.run(
             input=messages, model="openai:gpt-4", api_key="openai-key"
         )
 
-        assert result == mock_responses["agent_run"]
+        assert result == mock_responses["agent.run"]
 
         # Verify messages format
         request = responses.calls[0].request
@@ -211,15 +211,15 @@ class TestUtilities:
 
     @responses.activate
     def test_agent_run_with_all_parameters(self, langbase_client, mock_responses):
-        """Test agent_run method with all parameters."""
+        """Test agent.run method with all parameters."""
         responses.add(
             responses.POST,
             "https://api.langbase.com/v1/agent/run",
-            json=mock_responses["agent_run"],
+            json=mock_responses["agent.run"],
             status=200,
         )
 
-        result = langbase_client.agent_run(
+        result = langbase_client.agent.run(
             input="Complex query",
             model="anthropic:claude-3-sonnet",
             api_key="test-key",
@@ -231,7 +231,7 @@ class TestUtilities:
             stream=False,
         )
 
-        assert result == mock_responses["agent_run"]
+        assert result == mock_responses["agent.run"]
 
         # Verify all parameters
         request = responses.calls[0].request
@@ -247,7 +247,7 @@ class TestUtilities:
 
     @responses.activate
     def test_agent_run_streaming(self, langbase_client, stream_chunks):
-        """Test agent_run method with streaming."""
+        """Test agent.run method with streaming."""
         stream_content = b"".join(stream_chunks)
 
         responses.add(
@@ -258,7 +258,7 @@ class TestUtilities:
             headers={"content-type": "text/event-stream"},
         )
 
-        result = langbase_client.agent_run(
+        result = langbase_client.agent.run(
             input="Streaming query",
             model="openai:gpt-4",
             api_key="stream-key",

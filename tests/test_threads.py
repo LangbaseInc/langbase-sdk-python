@@ -7,6 +7,8 @@ import json
 import pytest
 import responses
 
+from langbase.errors import NotFoundError
+
 
 class TestThreads:
     """Test the Threads API."""
@@ -21,7 +23,7 @@ class TestThreads:
             status=200,
         )
 
-        result = langbase_client.threads.create()
+        result = langbase_client.threads.create({})
 
         assert result == mock_responses["threads_create"]
         assert result["id"] == "thread_123"
@@ -257,8 +259,6 @@ class TestThreads:
             json={"error": "Thread not found"},
             status=404,
         )
-
-        from langbase.errors import NotFoundError
 
         with pytest.raises(NotFoundError):
             langbase_client.threads.get(thread_id)

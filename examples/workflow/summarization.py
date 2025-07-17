@@ -49,9 +49,9 @@ async def process_text(input_text: str):
     try:
         # Define a single step with retries
         async def process_text_step():
-            response = langbase.agent_run(
+            response = langbase.agent.run(
                 model="openai:gpt-4o",
-                instructions="""Summarize the following text in a 
+                instructions="""Summarize the following text in a
                 single paragraph. Be concise but capture the key information.""",
                 api_key=llm_api_key,
                 input=[{"role": "user", "content": input_text}],
@@ -78,15 +78,15 @@ async def process_text(input_text: str):
 async def main():
     sample_text = """
     Langbase is the most powerful serverless AI platform for building AI agents with memory.
-    Build, deploy, and scale AI agents with tools and memory (RAG). Simple AI primitives 
+    Build, deploy, and scale AI agents with tools and memory (RAG). Simple AI primitives
     with a world-class developer experience without using any frameworks.
-    
-    Compared to complex AI frameworks, Langbase is serverless and the first composable 
-    AI platform. Build AI agents without any bloated frameworks. You write the logic, 
+
+    Compared to complex AI frameworks, Langbase is serverless and the first composable
+    AI platform. Build AI agents without any bloated frameworks. You write the logic,
     we handle the logistics.
-    
-    Langbase offers AI Pipes (serverless agents with tools), AI Memory (serverless RAG), 
-    and AI Studio (developer platform). The platform is 30-50x less expensive than 
+
+    Langbase offers AI Pipes (serverless agents with tools), AI Memory (serverless RAG),
+    and AI Studio (developer platform). The platform is 30-50x less expensive than
     competitors, supports 250+ LLM models, and enables collaboration among team members.
     """
 

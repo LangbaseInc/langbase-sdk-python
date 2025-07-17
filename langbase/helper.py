@@ -9,6 +9,7 @@ extracting content from chunks, and working with tool calls from streams.
 import json
 from typing import Any, Dict, Iterator, List, Literal, Optional, Union
 
+from .streaming import TypedStreamProcessor
 from .types import ToolCall
 
 # Type aliases to match TypeScript version
@@ -128,10 +129,7 @@ def parse_chunk(chunk_data: Union[bytes, str]) -> Optional[ChunkStream]:
             return None
 
         # Handle SSE format - remove "data: " prefix if present
-        if chunk_str.startswith("data: "):
-            json_str = chunk_str[6:]  # Remove "data: " prefix
-        else:
-            json_str = chunk_str
+        json_str = chunk_str[6:] if chunk_str.startswith("data: ") else chunk_str
 
         # Skip if it's just whitespace after removing prefix
         if not json_str.strip():
@@ -233,9 +231,9 @@ def get_tools_from_stream(stream: Iterator[Union[bytes, str]]) -> List[ToolCall]
                             function_data = delta_tool_call["function"]
 
                             if "name" in function_data:
-                                tool_calls_accumulator[index]["function"]["name"] = (
-                                    function_data["name"]
-                                )
+                                tool_calls_accumulator[index]["function"][
+                                    "name"
+                                ] = function_data["name"]
 
                             if "arguments" in function_data:
                                 # Accumulate arguments by concatenating them
@@ -441,8 +439,6 @@ def get_typed_runner(
     Returns:
         TypedStreamProcessor instance with event-based handling
     """
-    from .streaming import TypedStreamProcessor
-
     # Extract stream and thread_id
     thread_id = None
 
@@ -476,11 +472,11 @@ __all__ = [
     "collect_stream_text",
     "create_stream_processor",
     "get_runner",
-    "get_typed_runner",
     "get_text_part",
     "get_tools_from_run",
     "get_tools_from_run_stream",
     "get_tools_from_stream",
+    "get_typed_runner",
     "handle_response_stream",
     "parse_chunk",
     "stream_text",

@@ -32,7 +32,7 @@ def main():
     langbase = Langbase(api_key=langbase_api_key)
 
     # Run the agent
-    response = langbase.agent_run(
+    response = langbase.agent.run(
         stream=False,
         model="openai:gpt-4.1-mini",
         api_key=llm_api_key,

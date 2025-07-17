@@ -2,7 +2,6 @@
 Example demonstrating how to upload documents to a memory in Langbase.
 """
 
-import json
 import os
 
 from dotenv import load_dotenv

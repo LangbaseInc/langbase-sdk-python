@@ -4,6 +4,7 @@ Streaming utilities for the Langbase SDK.
 This module provides typed event-based streaming interfaces for better developer experience.
 """
 
+import time
 from enum import Enum
 from typing import Any, Callable, Dict, Iterator, List, Optional, Union
 
@@ -32,56 +33,63 @@ class StreamEvent(TypedDict):
     timestamp: float
 
 
-class ConnectEvent(StreamEvent):
+class ConnectEvent(TypedDict):
     """Event fired when stream connection is established."""
 
     type: Literal[StreamEventType.CONNECT]
+    timestamp: float
     threadId: Optional[str]
 
 
-class ContentEvent(StreamEvent):
+class ContentEvent(TypedDict):
     """Event fired when text content is received."""
 
     type: Literal[StreamEventType.CONTENT]
+    timestamp: float
     content: str
     chunk: ChunkStream
 
 
-class ToolCallEvent(StreamEvent):
+class ToolCallEvent(TypedDict):
     """Event fired when a tool call is received."""
 
     type: Literal[StreamEventType.TOOL_CALL]
+    timestamp: float
     toolCall: ToolCall
     index: int
 
 
-class CompletionEvent(StreamEvent):
+class CompletionEvent(TypedDict):
     """Event fired when the completion is done."""
 
     type: Literal[StreamEventType.COMPLETION]
+    timestamp: float
     reason: str
     usage: Optional[Dict[str, int]]
 
 
-class ErrorEvent(StreamEvent):
+class ErrorEvent(TypedDict):
     """Event fired when an error occurs."""
 
     type: Literal[StreamEventType.ERROR]
+    timestamp: float
     error: Exception
     message: str
 
 
-class EndEvent(StreamEvent):
+class EndEvent(TypedDict):
     """Event fired when the stream ends."""
 
     type: Literal[StreamEventType.END]
+    timestamp: float
     duration: float
 
 
-class MetadataEvent(StreamEvent):
+class MetadataEvent(TypedDict):
     """Event fired when metadata is received."""
 
     type: Literal[StreamEventType.METADATA]
+    timestamp: float
     metadata: Dict[str, Any]
 
 
@@ -175,7 +183,7 @@ class TypedStreamProcessor:
                                 type=StreamEventType.ERROR,
                                 timestamp=self._get_timestamp(),
                                 error=e,
-                                message=f"Error in {event_type} handler: {str(e)}",
+                                message=f"Error in {event_type} handler: {e!s}",
                             )
                         )
                     else:
@@ -183,8 +191,6 @@ class TypedStreamProcessor:
 
     def _get_timestamp(self) -> float:
         """Get current timestamp in seconds."""
-        import time
-
         return time.time()
 
     def process(self) -> None:

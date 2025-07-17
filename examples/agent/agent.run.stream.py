@@ -28,7 +28,7 @@ def main():
 
     try:
         # Get readable stream - equivalent to const {stream} = await langbase.agent.run(...)
-        response = langbase.agent_run(
+        response = langbase.agent.run(
             stream=True,
             model="openai:gpt-4.1-mini",
             instructions="You are a helpful assistant that help users summarize text.",
