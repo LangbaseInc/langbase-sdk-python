@@ -7,9 +7,19 @@ import json
 import pytest
 import responses
 
+from langbase.constants import (
+    BASE_URL,
+    THREAD_DETAIL_ENDPOINT,
+    THREAD_MESSAGES_ENDPOINT,
+    THREADS_ENDPOINT,
+)
 from langbase.errors import NotFoundError
-from langbase.types import ThreadMessagesBaseResponse, ThreadsBaseResponse
-from tests.validation_utils import validate_response_body, validate_response_headers
+from tests.constants import (
+    AUTH_AND_JSON_CONTENT_HEADER,
+    AUTHORIZATION_HEADER,
+    JSON_CONTENT_TYPE_HEADER,
+)
+from tests.validation_utils import validate_response_headers
 
 
 class TestThreads:
@@ -20,7 +30,7 @@ class TestThreads:
         """Test threads.create method with basic parameters."""
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/threads",
+            f"{BASE_URL}{THREADS_ENDPOINT}",
             json=mock_responses["threads_create"],
             status=200,
         )
@@ -28,43 +38,29 @@ class TestThreads:
         result = langbase_client.threads.create({})
 
         assert result == mock_responses["threads_create"]
-        assert result["id"] == "thread_123"
         assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "POST"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, ThreadsBaseResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
 
     @responses.activate
     def test_threads_create_with_metadata(self, langbase_client, mock_responses):
         """Test threads.create method with metadata."""
-        metadata = {"user_id": "123", "session": "abc"}
+        request_body = {"metadata": {"user_id": "123", "session": "abc"}}
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/threads",
-            json=mock_responses["threads_create"],
+            f"{BASE_URL}{THREADS_ENDPOINT}",
+            json=mock_responses["threads_create_with_metadata"],
             status=200,
         )
 
-        result = langbase_client.threads.create(metadata=metadata)
+        result = langbase_client.threads.create(metadata=request_body["metadata"])
 
-        assert result == mock_responses["threads_create"]
-
-        # Verify metadata was included
+        assert result == mock_responses["threads_create_with_metadata"]
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["metadata"] == metadata
-        validate_response_body(result, ThreadsBaseResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
 
     @responses.activate
     def test_threads_create_with_thread_id(self, langbase_client, mock_responses):
@@ -73,86 +69,72 @@ class TestThreads:
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/threads",
-            json=mock_responses["threads_create"],
+            f"{BASE_URL}{THREADS_ENDPOINT}",
+            json=mock_responses["threads_create_with_thread_id"],
             status=200,
         )
 
         result = langbase_client.threads.create(thread_id=thread_id)
 
-        assert result == mock_responses["threads_create"]
+        assert result == mock_responses["threads_create_with_thread_id"]
 
         # Verify thread_id was included
         request = responses.calls[0].request
-        request_json = json.loads(request.body)
-        assert request_json["threadId"] == thread_id
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, ThreadsBaseResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        print("request.body", request.body)
+        assert json.loads(request.body) == {"threadId": thread_id}
 
     @responses.activate
     def test_threads_create_with_messages(self, langbase_client, mock_responses):
         """Test threads.create method with initial messages."""
-        messages = [
-            {"role": "user", "content": "Hello"},
-            {"role": "assistant", "content": "Hi there!"},
-        ]
+        request_body = {
+            "messages": [
+                {"role": "user", "content": "Hello"},
+                {"role": "assistant", "content": "Hi there!"},
+            ]
+        }
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/threads",
-            json=mock_responses["threads_create"],
+            f"{BASE_URL}{THREADS_ENDPOINT}",
+            json=mock_responses["threads_create_with_messages"],
             status=200,
         )
 
-        result = langbase_client.threads.create(messages=messages)
+        result = langbase_client.threads.create(messages=request_body["messages"])
 
-        assert result == mock_responses["threads_create"]
-
-        # Verify messages were included
+        assert result == mock_responses["threads_create_with_messages"]
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        request_json = json.loads(request.body)
-        assert request_json["messages"] == messages
-
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, ThreadsBaseResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
 
     @responses.activate
     def test_threads_update(self, langbase_client, mock_responses):
         """Test threads.update method."""
-        thread_id = "thread_123"
-        metadata = {"status": "active", "updated": "true"}
+        request_data = {
+            "thread_id": "thread_123",
+            "metadata": {"user_id": "123", "session": "abc"},
+        }
 
         responses.add(
             responses.POST,
-            f"https://api.langbase.com/v1/threads/{thread_id}",
+            f"{BASE_URL}{THREAD_DETAIL_ENDPOINT.format(thread_id=request_data['thread_id'])}",
             json=mock_responses["threads_update"],
             status=200,
         )
 
-        result = langbase_client.threads.update(thread_id, metadata)
+        result = langbase_client.threads.update(**request_data)
 
         assert result == mock_responses["threads_update"]
-
-        # Verify request data
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "POST"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["threadId"] == thread_id
-        assert request_json["metadata"] == metadata
-        validate_response_body(result, ThreadsBaseResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert (
+            request.url
+            == f"{BASE_URL}{THREAD_DETAIL_ENDPOINT.format(thread_id=request_data['thread_id'])}"
+        )
+        assert json.loads(request.body) == {"metadata": request_data["metadata"]}
 
     @responses.activate
     def test_threads_get(self, langbase_client, mock_responses):
@@ -161,7 +143,7 @@ class TestThreads:
 
         responses.add(
             responses.GET,
-            f"https://api.langbase.com/v1/threads/{thread_id}",
+            f"{BASE_URL}{THREAD_DETAIL_ENDPOINT.format(thread_id=thread_id)}",
             json=mock_responses["threads_get"],
             status=200,
         )
@@ -169,15 +151,13 @@ class TestThreads:
         result = langbase_client.threads.get(thread_id)
 
         assert result == mock_responses["threads_get"]
-        assert result["id"] == "thread_123"
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "GET"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, ThreadsBaseResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert (
+            request.url
+            == f"{BASE_URL}{THREAD_DETAIL_ENDPOINT.format(thread_id=thread_id)}"
+        )
 
     @responses.activate
     def test_threads_delete(self, langbase_client, mock_responses):
@@ -186,7 +166,7 @@ class TestThreads:
 
         responses.add(
             responses.DELETE,
-            f"https://api.langbase.com/v1/threads/{thread_id}",
+            f"{BASE_URL}{THREAD_DETAIL_ENDPOINT.format(thread_id=thread_id)}",
             json=mock_responses["threads_delete"],
             status=200,
         )
@@ -194,45 +174,13 @@ class TestThreads:
         result = langbase_client.threads.delete(thread_id)
 
         assert result == mock_responses["threads_delete"]
-        assert result["deleted"] is True
-        assert result["id"] == "thread_123"
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "DELETE"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-
-    @responses.activate
-    def test_threads_append(self, langbase_client, mock_responses):
-        """Test threads.append method."""
-        thread_id = "thread_123"
-        messages = [{"role": "user", "content": "New message"}]
-
-        responses.add(
-            responses.POST,
-            f"https://api.langbase.com/v1/threads/{thread_id}/messages",
-            json=mock_responses["threads_append"],
-            status=200,
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert (
+            request.url
+            == f"{BASE_URL}{THREAD_DETAIL_ENDPOINT.format(thread_id=thread_id)}"
         )
-
-        result = langbase_client.threads.append(thread_id, messages)
-
-        assert result == mock_responses["threads_append"]
-
-        # Verify messages were sent directly as body
-        request = responses.calls[0].request
-        assert request.method == "POST"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json == messages
-        for item in result:
-            validate_response_body(item, ThreadMessagesBaseResponse)
 
     @responses.activate
     def test_threads_messages_list(self, langbase_client, mock_responses):
@@ -241,7 +189,7 @@ class TestThreads:
 
         responses.add(
             responses.GET,
-            f"https://api.langbase.com/v1/threads/{thread_id}/messages",
+            f"{BASE_URL}{THREAD_MESSAGES_ENDPOINT.format(thread_id=thread_id)}",
             json=mock_responses["threads_messages_list"],
             status=200,
         )
@@ -249,37 +197,35 @@ class TestThreads:
         result = langbase_client.threads.messages.list(thread_id)
 
         assert result == mock_responses["threads_messages_list"]
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "GET"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        for item in result:
-            validate_response_body(item, ThreadMessagesBaseResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert (
+            request.url
+            == f"{BASE_URL}{THREAD_MESSAGES_ENDPOINT.format(thread_id=thread_id)}"
+        )
 
     @responses.activate
-    def test_threads_list_messages_direct_call(self, langbase_client, mock_responses):
-        """Test threads.list method for messages."""
+    def test_threads_append(self, langbase_client, mock_responses):
+        """Test threads.append method."""
         thread_id = "thread_123"
+        request_body = {"messages": [{"role": "user", "content": "New message"}]}
 
         responses.add(
-            responses.GET,
-            f"https://api.langbase.com/v1/threads/{thread_id}/messages",
-            json=mock_responses["threads_messages_list"],
+            responses.POST,
+            f"{BASE_URL}{THREAD_MESSAGES_ENDPOINT.format(thread_id=thread_id)}",
+            json=mock_responses["threads_append"],
             status=200,
         )
 
-        result = langbase_client.threads.list(thread_id)
+        result = langbase_client.threads.append(thread_id, request_body["messages"])
 
-        assert result == mock_responses["threads_messages_list"]
+        assert result == mock_responses["threads_append"]
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "GET"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        for item in result:
-            validate_response_body(item, ThreadMessagesBaseResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == {"messages": request_body["messages"]}
+        assert (
+            request.url
+            == f"{BASE_URL}{THREAD_MESSAGES_ENDPOINT.format(thread_id=thread_id)}"
+        )

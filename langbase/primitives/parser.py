@@ -47,15 +47,20 @@ class Parser:
         Returns:
             Dictionary with document name and extracted content
         """
-        files = convert_document_to_request_files(document, document_name, content_type)
-
-        response = requests.post(
-            f"{self.parent.base_url}{PARSER_ENDPOINT}",
-            headers={"Authorization": f"Bearer {self.parent.api_key}"},
-            files=files,
+        document_content = convert_document_to_request_files(
+            document, document_name, content_type
         )
 
-        if not response.ok:
-            self.request.handle_error_response(response)
+        response = self.request.post(
+            PARSER_ENDPOINT,
+            headers={"Authorization": f"Bearer {self.parent.api_key}"},
+            document=document_content,
+        )
 
-        return response.json()
+        # Transform API response: rename documentName to document_name
+        if isinstance(response, dict) and "documentName" in response:
+            response["document_name"] = response.pop("documentName")
+
+        print("response", response)
+
+        return response

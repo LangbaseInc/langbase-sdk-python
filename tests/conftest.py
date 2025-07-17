@@ -186,11 +186,33 @@ def mock_responses():
             "created_at": timestamp,
             "metadata": {},
         },
+        "threads_create_with_metadata": {
+            "id": "thread_123",
+            "object": "thread",
+            "created_at": timestamp,
+            "metadata": {"user_id": "123", "session": "abc"},
+        },
+        "threads_create_with_thread_id": {
+            "id": "custom_thread_456",
+            "object": "thread",
+            "created_at": timestamp,
+            "metadata": {},
+        },
+        "threads_create_with_messages": {
+            "id": "thread_123",
+            "object": "thread",
+            "created_at": timestamp,
+            "metadata": {},
+            "messages": [
+                {"role": "user", "content": "Hello"},
+                {"role": "assistant", "content": "Hi there!"},
+            ],
+        },
         "threads_update": {
             "id": "thread_123",
             "object": "thread",
             "created_at": timestamp,
-            "metadata": {"updated": "true"},
+            "metadata": {"user_id": "123", "session": "abc"},
         },
         "threads_get": {
             "id": "thread_123",
@@ -244,7 +266,7 @@ def mock_responses():
         "embed": [[0.1, 0.2, 0.3], [0.4, 0.5, 0.6]],
         "chunker": ["First chunk", "Second chunk", "Third chunk"],
         "parser": {
-            "document_name": "test.pdf",
+            "documentName": "test.pdf",
             "content": "Parsed document content from test.pdf",
         },
         # Agent run response (similar to pipe run)

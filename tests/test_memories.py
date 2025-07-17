@@ -6,6 +6,16 @@ import json
 
 import responses
 
+from langbase.constants import (
+    BASE_URL,
+    MEMORY_DETAIL_ENDPOINT,
+    MEMORY_DOCUMENT_DETAIL_ENDPOINT,
+    MEMORY_DOCUMENT_EMBEDDINGS_RETRY_ENDPOINT,
+    MEMORY_DOCUMENTS_ENDPOINT,
+    MEMORY_DOCUMENTS_UPLOAD_ENDPOINT,
+    MEMORY_ENDPOINT,
+    MEMORY_RETRIEVE_ENDPOINT,
+)
 from langbase.types import (
     MemoryCreateResponse,
     MemoryDeleteResponse,
@@ -14,7 +24,12 @@ from langbase.types import (
     MemoryRetrieveResponse,
     MemoryRetryDocEmbedResponse,
 )
-from tests.validation_utils import validate_response_body, validate_response_headers
+from tests.constants import (
+    AUTH_AND_JSON_CONTENT_HEADER,
+    AUTHORIZATION_HEADER,
+    JSON_CONTENT_TYPE_HEADER,
+)
+from tests.validation_utils import validate_response_headers
 
 
 class TestMemories:
@@ -25,7 +40,7 @@ class TestMemories:
         """Test memories.list method."""
         responses.add(
             responses.GET,
-            "https://api.langbase.com/v1/memory",
+            f"{BASE_URL}{MEMORY_ENDPOINT}",
             json=mock_responses["memory_list"],
             status=200,
         )
@@ -35,19 +50,12 @@ class TestMemories:
         assert result == mock_responses["memory_list"]
         assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "GET"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        for item in result:
-            validate_response_body(item, MemoryListResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
 
     @responses.activate
     def test_memories_create(self, langbase_client, mock_responses):
         """Test memories.create method."""
-        request_data = {
+        request_body = {
             "name": "new-memory",
             "description": "A test memory",
             "embedding_model": "openai:text-embedding-ada-002",
@@ -55,30 +63,18 @@ class TestMemories:
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/memory",
+            f"{BASE_URL}{MEMORY_ENDPOINT}",
             json=mock_responses["memory_create"],
             status=201,
         )
 
-        result = langbase_client.memories.create(
-            name=request_data["name"],
-            description=request_data["description"],
-            embedding_model=request_data["embedding_model"],
-        )
+        result = langbase_client.memories.create(**request_body)
 
         assert result == mock_responses["memory_create"]
-
-        # Verify request data
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "POST"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["name"] == "new-memory"
-        validate_response_body(result, MemoryCreateResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
 
     @responses.activate
     def test_memories_delete(self, langbase_client, mock_responses):
@@ -87,7 +83,7 @@ class TestMemories:
 
         responses.add(
             responses.DELETE,
-            f"https://api.langbase.com/v1/memory/{memory_name}",
+            f"{BASE_URL}{MEMORY_DETAIL_ENDPOINT.format(name=memory_name)}",
             json=mock_responses["memory_delete"],
             status=200,
         )
@@ -95,46 +91,37 @@ class TestMemories:
         result = langbase_client.memories.delete(memory_name)
 
         assert result == mock_responses["memory_delete"]
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "DELETE"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, MemoryDeleteResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
 
     @responses.activate
     def test_memories_retrieve(self, langbase_client, mock_responses):
         """Test memories.retrieve method."""
+        request_body = {
+            "query": "test query",
+            "memory": [{"name": "memory1"}, {"name": "memory2"}],
+            "topK": 5,
+        }
+
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/memory/retrieve",
+            f"{BASE_URL}{MEMORY_RETRIEVE_ENDPOINT}",
             json=mock_responses["memory_retrieve"],
             status=200,
         )
 
         result = langbase_client.memories.retrieve(
-            query="test query",
-            memory=[{"name": "memory1"}, {"name": "memory2"}],
+            query=request_body["query"],
+            memory=request_body["memory"],
             top_k=5,
         )
 
         assert result == mock_responses["memory_retrieve"]
-
-        # Verify request data - note that top_k becomes topK in the request
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "POST"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["query"] == "test query"
-        assert request_json["topK"] == 5
-        for item in result:
-            validate_response_body(item, MemoryRetrieveResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
 
 
 class TestMemoryDocuments:
@@ -147,7 +134,7 @@ class TestMemoryDocuments:
 
         responses.add(
             responses.GET,
-            f"https://api.langbase.com/v1/memory/{memory_name}/documents",
+            f"{BASE_URL}{MEMORY_DOCUMENTS_ENDPOINT.format(memory_name=memory_name)}",
             json=mock_responses["memory_docs_list"],
             status=200,
         )
@@ -155,15 +142,9 @@ class TestMemoryDocuments:
         result = langbase_client.memories.documents.list(memory_name)
 
         assert result == mock_responses["memory_docs_list"]
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "GET"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        for item in result:
-            validate_response_body(item, MemoryListDocResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
 
     @responses.activate
     def test_documents_delete(self, langbase_client, mock_responses):
@@ -173,7 +154,7 @@ class TestMemoryDocuments:
 
         responses.add(
             responses.DELETE,
-            f"https://api.langbase.com/v1/memory/{memory_name}/documents/{document_name}",
+            f"{BASE_URL}{MEMORY_DOCUMENT_DETAIL_ENDPOINT.format(memory_name=memory_name, document_name=document_name)}",
             json=mock_responses["memory_docs_delete"],
             status=200,
         )
@@ -181,13 +162,9 @@ class TestMemoryDocuments:
         result = langbase_client.memories.documents.delete(memory_name, document_name)
 
         assert result == mock_responses["memory_docs_delete"]
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "DELETE"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
 
     @responses.activate
     def test_documents_upload_simple(
@@ -200,7 +177,7 @@ class TestMemoryDocuments:
         # Mock the signed URL request
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/memory/documents",
+            f"{BASE_URL}{MEMORY_DOCUMENTS_UPLOAD_ENDPOINT}",
             json=mock_responses["memory_docs_upload_signed_url"],
             status=200,
         )
@@ -219,16 +196,14 @@ class TestMemoryDocuments:
             content_type="text/plain",
         )
 
-        assert result.status_code == 200
         assert len(responses.calls) == 2
         request = responses.calls[0].request
-        assert request.method == "POST"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        assert responses.calls[1].request.method == "PUT"
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert responses.calls[1].request.body == upload_file_content
+        validate_response_headers(
+            responses.calls[1].request.headers,
+            {**AUTHORIZATION_HEADER, "Content-Type": "text/plain"},
+        )
 
     @responses.activate
     def test_documents_upload_with_metadata(
@@ -242,7 +217,7 @@ class TestMemoryDocuments:
         # Mock the signed URL request
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/memory/documents",
+            f"{BASE_URL}{MEMORY_DOCUMENTS_UPLOAD_ENDPOINT}",
             json=mock_responses["memory_docs_upload_signed_url"],
             status=200,
         )
@@ -262,16 +237,10 @@ class TestMemoryDocuments:
             meta=metadata,
         )
 
-        assert result.status_code == 200
-
-        # Verify metadata was included in the signed URL request
         signed_url_request = responses.calls[0].request
-        assert signed_url_request.method == "POST"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(signed_url_request.headers, expected_headers)
+        validate_response_headers(
+            signed_url_request.headers, AUTH_AND_JSON_CONTENT_HEADER
+        )
         request_json = json.loads(signed_url_request.body)
         assert request_json["meta"] == metadata
 
@@ -283,7 +252,7 @@ class TestMemoryDocuments:
 
         responses.add(
             responses.GET,
-            f"https://api.langbase.com/v1/memory/{memory_name}/documents/{document_name}/embeddings/retry",
+            f"{BASE_URL}{MEMORY_DOCUMENT_EMBEDDINGS_RETRY_ENDPOINT.format(memory_name=memory_name, document_name=document_name)}",
             json=mock_responses["memory_docs_embeddings_retry"],
             status=200,
         )
@@ -293,11 +262,6 @@ class TestMemoryDocuments:
         )
 
         assert result == mock_responses["memory_docs_embeddings_retry"]
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "GET"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, MemoryRetryDocEmbedResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)

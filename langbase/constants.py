@@ -26,6 +26,7 @@ ERROR_MAP: Dict[int, str] = {
     429: "RateLimitError",
 }
 
+BASE_URL = "https://api.langbase.com"
 # API Endpoints
 PIPES_ENDPOINT = "/v1/pipes"
 PIPE_DETAIL_ENDPOINT = "/v1/pipes/{name}"

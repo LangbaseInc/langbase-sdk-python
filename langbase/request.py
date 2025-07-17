@@ -316,7 +316,7 @@ class Request:
         body: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
         stream: bool = False,
-        files: Optional[Dict[str, Any]] = None,
+        document: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """
         Send a POST request to the API.
@@ -331,7 +331,7 @@ class Request:
         Returns:
             Processed API response
         """
-        return self.send(endpoint, "POST", headers, body, stream, files)
+        return self.send(endpoint, "POST", headers, body, stream, document)
 
     def get(
         self,

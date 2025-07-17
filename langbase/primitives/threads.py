@@ -79,7 +79,7 @@ class Threads:
         Returns:
             Updated thread object
         """
-        options = {"threadId": thread_id, "metadata": metadata}
+        options = {"metadata": metadata}
         return self.request.post(
             THREAD_DETAIL_ENDPOINT.format(thread_id=thread_id), options
         )
@@ -121,8 +121,10 @@ class Threads:
         Returns:
             List of added messages
         """
+        options = {"messages": messages}
+
         return self.request.post(
-            THREAD_MESSAGES_ENDPOINT.format(thread_id=thread_id), messages
+            THREAD_MESSAGES_ENDPOINT.format(thread_id=thread_id), options
         )
 
     def list(self, thread_id: str) -> List[ThreadMessagesBaseResponse]:

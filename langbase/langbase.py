@@ -31,8 +31,7 @@ class Langbase:
         Initialize the Langbase client.
 
         Args:
-            api_key: The API key for authentication. If not provided, it will be read
-                    from the LANGBASE_API_KEY environment variable.
+            api_key: The API key for authentication.
             base_url: The base URL for the API.
         """
         self.base_url = base_url

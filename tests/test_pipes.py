@@ -8,14 +8,13 @@ import pytest
 import responses
 
 from langbase import Langbase
-from langbase.types import (
-    PipeCreateResponse,
-    PipeListResponse,
-    PipeUpdateResponse,
-    RunResponse,
-    RunResponseStream,
+from langbase.constants import BASE_URL, PIPES_ENDPOINT
+from tests.constants import (
+    AUTH_AND_JSON_CONTENT_HEADER,
+    AUTHORIZATION_HEADER,
+    JSON_CONTENT_TYPE_HEADER,
 )
-from tests.validation_utils import validate_response_body, validate_response_headers
+from tests.validation_utils import validate_response_headers
 
 
 class TestPipes:
@@ -26,7 +25,7 @@ class TestPipes:
         """Test pipes.list method."""
         responses.add(
             responses.GET,
-            "https://api.langbase.com/v1/pipes",
+            f"{BASE_URL}{PIPES_ENDPOINT}",
             json=mock_responses["pipe_list"],
             status=200,
         )
@@ -34,22 +33,14 @@ class TestPipes:
         result = langbase_client.pipes.list()
 
         assert result == mock_responses["pipe_list"]
-        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "GET"
-        assert request.url == "https://api.langbase.com/v1/pipes"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        for item in result:
-            validate_response_body(item, PipeListResponse)
+        assert len(responses.calls) == 1
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
 
     @responses.activate
     def test_pipes_create(self, langbase_client, mock_responses):
         """Test pipes.create method."""
-        request_data = {
+        request_body = {
             "name": "new-pipe",
             "description": "A test pipe",
             "model": "anthropic:claude-3-sonnet",
@@ -57,57 +48,41 @@ class TestPipes:
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/pipes",
+            f"{BASE_URL}{PIPES_ENDPOINT}",
             json=mock_responses["pipe_create"],
             status=201,
         )
 
-        result = langbase_client.pipes.create(**request_data)
-
+        result = langbase_client.pipes.create(**request_body)
+        request = responses.calls[0].request
         assert result == mock_responses["pipe_create"]
         assert len(responses.calls) == 1
-
-        # Verify request body and headers
-        request = responses.calls[0].request
-        assert request.method == "POST"
-        assert request.url == "https://api.langbase.com/v1/pipes"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["name"] == "new-pipe"
-        assert request_json["description"] == "A test pipe"
-        validate_response_body(result, PipeCreateResponse)
+        assert json.loads(request.body) == request_body
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
 
     @responses.activate
     def test_pipes_update(self, langbase_client, mock_responses):
         """Test pipes.update method."""
         pipe_name = "test-pipe"
-        update_data = {"temperature": 0.7, "description": "Updated description"}
+        request_body = {"temperature": 0.7, "description": "Updated description"}
 
         responses.add(
             responses.POST,
-            f"https://api.langbase.com/v1/pipes/{pipe_name}",
-            json={**mock_responses["pipe_create"], **update_data},
+            f"{BASE_URL}{PIPES_ENDPOINT}/{pipe_name}",
+            json={**mock_responses["pipe_create"], **request_body},
             status=200,
         )
 
-        result = langbase_client.pipes.update(name=pipe_name, **update_data)
-
-        assert "temperature" in str(result)
-        assert len(responses.calls) == 1
-
+        result = langbase_client.pipes.update(name=pipe_name, **request_body)
         request = responses.calls[0].request
-        assert request.method == "POST"
-        assert request.url == f"https://api.langbase.com/v1/pipes/{pipe_name}"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
+
+        assert result == {**mock_responses["pipe_create"], **request_body}
+        assert len(responses.calls) == 1
+        assert json.loads(request.body) == {
+            "name": pipe_name,
+            **request_body,
         }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, PipeUpdateResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
 
     @responses.activate
     def test_pipes_run_basic(self, langbase_client, mock_responses):
@@ -116,183 +91,173 @@ class TestPipes:
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/pipes/run",
+            f"{BASE_URL}{PIPES_ENDPOINT}/run",
             json=mock_responses["pipe_run"],
             status=200,
-            headers={"lb-thread-id": "thread_123"},
         )
 
-        result = langbase_client.pipes.run(name="test-pipe", messages=messages)
-
-        assert result["completion"] == "Hello, world!"
-        assert result["threadId"] == "thread_123"
-        assert "usage" in result
-
-        request = responses.calls[0].request
-        assert request.method == "POST"
-        assert request.url == "https://api.langbase.com/v1/pipes/run"
-
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
+        request_body = {
+            "name": "test-pipe",
+            "messages": messages,
         }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, RunResponse)
+
+        result = langbase_client.pipes.run(**request_body)
+        request = responses.calls[0].request
+
+        assert result == mock_responses["pipe_run"]
+        assert len(responses.calls) == 1
+
+        # Validate body.
+        assert json.loads(request.body) == request_body
+
+        # Validate headers.
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
 
     @responses.activate
-    def test_pipes_run_with_api_key(self, mock_responses):
+    def test_pipes_run_with_api_key(self, langbase_client, mock_responses):
         """Test pipes.run method with pipe API key."""
-        # Create client with different API key
-        client = Langbase(api_key="client-api-key")
         messages = [{"role": "user", "content": "Hello"}]
+
+        request_body = {"messages": messages}
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/pipes/run",
+            f"{BASE_URL}{PIPES_ENDPOINT}/run",
             json=mock_responses["pipe_run"],
             status=200,
-            headers={"lb-thread-id": "thread_456"},
         )
 
-        result = client.pipes.run(api_key="pipe-specific-key", messages=messages)
-
-        assert result["threadId"] == "thread_456"
-
-        # Verify the request used the pipe-specific API key
+        result = langbase_client.pipes.run(api_key="pipe-specific-key", **request_body)
         request = responses.calls[0].request
-        assert request.headers["Authorization"] == "Bearer pipe-specific-key"
-        expected_headers = {
-            "Authorization": "Bearer pipe-specific-key",
-            "Content-Type": "application/json",
+
+        assert result == mock_responses["pipe_run"]
+        assert len(responses.calls) == 1
+
+        assert json.loads(request.body) == {
+            **request_body,
+            "api_key": "pipe-specific-key",
         }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, RunResponse)
+        validate_response_headers(
+            request.headers,
+            {
+                **AUTH_AND_JSON_CONTENT_HEADER,
+                "Authorization": "Bearer pipe-specific-key",
+            },
+        )
 
     @responses.activate
     def test_pipes_run_streaming(self, langbase_client, stream_chunks):
         """Test pipes.run method with streaming."""
         messages = [{"role": "user", "content": "Hello"}]
 
+        request_body = {"name": "test-pipe", "messages": messages, "stream": True}
+
         # Create streaming response
         stream_content = b"".join(stream_chunks)
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/pipes/run",
+            f"{BASE_URL}{PIPES_ENDPOINT}/run",
             body=stream_content,
             status=200,
             headers={
                 "Content-Type": "text/event-stream",
-                "lb-thread-id": "thread_123",
             },
         )
 
-        result = langbase_client.pipes.run(
-            name="test-pipe", messages=messages, stream=True
-        )
-
-        assert result["thread_id"] == "thread_123"
-        assert hasattr(result["stream"], "__iter__")
+        result = langbase_client.pipes.run(**request_body)
         request = responses.calls[0].request
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, RunResponseStream)
+
+        assert hasattr(result["stream"], "__iter__")
+        assert len(responses.calls) == 1
+
+        # Validate body
+        assert json.loads(request.body) == request_body
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
 
     @responses.activate
     def test_pipes_run_with_llm_key(self, langbase_client, mock_responses):
         """Test pipes.run method with LLM key header."""
         messages = [{"role": "user", "content": "Hello"}]
 
+        request_body = {"name": "test-pipe", "messages": messages}
+
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/pipes/run",
+            f"{BASE_URL}{PIPES_ENDPOINT}/run",
             json=mock_responses["pipe_run"],
             status=200,
-            headers={"lb-thread-id": "thread_123"},
         )
 
-        result = langbase_client.pipes.run(
-            name="test-pipe", messages=messages, llm_key="custom-llm-key"
-        )
-
-        assert result["threadId"] == "thread_123"
+        result = langbase_client.pipes.run(llm_key="custom-llm-key", **request_body)
         request = responses.calls[0].request
-        assert request.headers["LB-LLM-KEY"] == "custom-llm-key"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, RunResponse)
+
+        assert result == mock_responses["pipe_run"]
+        assert len(responses.calls) == 1
+
+        # Validate body
+        assert json.loads(request.body) == request_body
+
+        validate_response_headers(
+            request.headers,
+            {**AUTH_AND_JSON_CONTENT_HEADER, "LB-LLM-KEY": "custom-llm-key"},
+        )
 
     @responses.activate
     def test_pipes_run_with_all_parameters(self, langbase_client, mock_responses):
         """Test pipes.run method with all possible parameters."""
+        request_body = {
+            "name": "test-pipe",
+            "messages": [{"role": "user", "content": "Hello"}],
+            "temperature": 0.7,
+            "max_tokens": 100,
+            "top_p": 0.9,
+            "stream": False,
+            "variables": {"var1": "value1"},
+            "thread_id": "existing_thread",
+        }
+
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/pipes/run",
+            f"{BASE_URL}{PIPES_ENDPOINT}/run",
             json=mock_responses["pipe_run"],
             status=200,
-            headers={"lb-thread-id": "thread_123"},
         )
 
-        result = langbase_client.pipes.run(
-            name="test-pipe",
-            messages=[{"role": "user", "content": "Hello"}],
-            temperature=0.7,
-            max_tokens=100,
-            top_p=0.9,
-            stream=False,
-            variables={"var1": "value1"},
-            thread_id="existing_thread",
-        )
+        result = langbase_client.pipes.run(**request_body)
+        request = responses.calls[0].request
 
-        assert result["threadId"] == "thread_123"
+        assert result == mock_responses["pipe_run"]
+        assert len(responses.calls) == 1
 
         # Verify all parameters were included in request
-        request = responses.calls[0].request
-        request_data = json.loads(request.body)
-        assert request_data["temperature"] == 0.7
-        assert request_data["max_tokens"] == 100
-        assert request_data["top_p"] == 0.9
-        assert request_data["variables"]["var1"] == "value1"
-        assert request_data["thread_id"] == "existing_thread"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, RunResponse)
+        assert json.loads(request.body) == request_body
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
 
     @responses.activate
     def test_pipes_run_stream_parameter_not_included_when_false(
         self, langbase_client, mock_responses
     ):
         """Test that stream parameter is included in request when explicitly set to False."""
+        request_body = {
+            "name": "test-pipe",
+            "messages": [{"role": "user", "content": "Hello"}],
+            "stream": False,
+        }
+
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/pipes/run",
+            f"{BASE_URL}{PIPES_ENDPOINT}/run",
             json=mock_responses["pipe_run"],
             status=200,
-            headers={"lb-thread-id": "thread_123"},
         )
 
-        # When stream=False, it should be included in the request because it's explicitly set
-        langbase_client.pipes.run(
-            name="test-pipe",
-            messages=[{"role": "user", "content": "Hello"}],
-            stream=False,
-        )
-
+        result = langbase_client.pipes.run(**request_body)
         request = responses.calls[0].request
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_data = json.loads(request.body)
-        # stream should be in the request body when explicitly set to False
-        assert request_data["stream"] is False
+
+        assert result == mock_responses["pipe_run"]
+        assert len(responses.calls) == 1
+
+        # Validate body - stream should be included when explicitly set to False
+        assert json.loads(request.body) == request_body
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)

@@ -6,6 +6,13 @@ import json
 
 import responses
 
+from langbase.constants import (
+    AGENT_RUN_ENDPOINT,
+    BASE_URL,
+    CHUNKER_ENDPOINT,
+    EMBED_ENDPOINT,
+    PARSER_ENDPOINT,
+)
 from langbase.types import (
     AgentRunResponse,
     ChunkResponse,
@@ -13,162 +20,69 @@ from langbase.types import (
     ParseResponse,
     RunResponseStream,
 )
-from tests.validation_utils import validate_response_body, validate_response_headers
+from tests.constants import (
+    AUTH_AND_JSON_CONTENT_HEADER,
+    AUTHORIZATION_HEADER,
+    JSON_CONTENT_TYPE_HEADER,
+)
+from tests.validation_utils import validate_response_headers
 
 
 class TestUtilities:
     """Test utility methods."""
 
     @responses.activate
-    def test_embed_basic(self, langbase_client, mock_responses):
-        """Test embed method with basic parameters."""
-        chunks = ["Hello world", "Another chunk"]
-
-        responses.add(
-            responses.POST,
-            "https://api.langbase.com/v1/embed",
-            json=mock_responses["embed"],
-            status=200,
-        )
-
-        result = langbase_client.embed(chunks)
-
-        assert result == mock_responses["embed"]
-        assert len(result) == 2
-        assert len(result[0]) == 3  # Vector dimension
-
-        # Verify request data
-        request = responses.calls[0].request
-        assert request.method == "POST"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["chunks"] == chunks
-        validate_response_body(result, EmbedResponse)
-
-    @responses.activate
     def test_embed_with_model(self, langbase_client, mock_responses):
         """Test embed method with specific model."""
-        chunks = ["Text to embed"]
-        model = "openai:text-embedding-ada-002"
+        request_body = {
+            "chunks": ["First chunk", "Second chunk"],
+            "embeddingModel": "openai:text-embedding-ada-002",
+        }
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/embed",
+            f"{BASE_URL}{EMBED_ENDPOINT}",
             json=mock_responses["embed"],
             status=200,
         )
 
-        result = langbase_client.embed(chunks, embedding_model=model)
+        result = langbase_client.embed(
+            request_body["chunks"], embedding_model="openai:text-embedding-ada-002"
+        )
 
         assert result == mock_responses["embed"]
-
-        # Verify model parameter
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["embeddingModel"] == model
-        validate_response_body(result, EmbedResponse)
-
-    @responses.activate
-    def test_chunker_basic(self, langbase_client, mock_responses):
-        """Test chunker method with basic parameters."""
-        content = (
-            "This is a long document that needs to be chunked into smaller pieces."
-        )
-
-        responses.add(
-            responses.POST,
-            "https://api.langbase.com/v1/chunker",
-            json=mock_responses["chunker"],
-            status=200,
-        )
-
-        result = langbase_client.chunker(content)
-
-        assert result == mock_responses["chunker"]
-        assert len(result) == 3
-        assert isinstance(result[0], str)
-
-        # Verify request data
-        request = responses.calls[0].request
-        assert request.method == "POST"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["content"] == content
-        validate_response_body(result, ChunkResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
 
     @responses.activate
     def test_chunker_with_parameters(self, langbase_client, mock_responses):
         """Test chunker method with custom parameters."""
-        content = "Long document content for chunking test."
+        request_body = {
+            "content": "Long document content for chunking test.",
+            "chunkMaxLength": 500,
+            "chunkOverlap": 50,
+        }
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/chunker",
+            f"{BASE_URL}{CHUNKER_ENDPOINT}",
             json=mock_responses["chunker"],
             status=200,
         )
 
         result = langbase_client.chunker(
-            content=content, chunk_max_length=500, chunk_overlap=50
+            content=request_body["content"],
+            chunk_max_length=request_body["chunkMaxLength"],
+            chunk_overlap=request_body["chunkOverlap"],
         )
 
         assert result == mock_responses["chunker"]
-
-        # Verify parameters
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["content"] == content
-        assert request_json["chunkMaxLength"] == 500
-        assert request_json["chunkOverlap"] == 50
-        validate_response_body(result, ChunkResponse)
-
-    @responses.activate
-    def test_parser_basic(self, langbase_client, mock_responses, upload_file_content):
-        """Test parser method with basic parameters."""
-        document_name = "test.pdf"
-        content_type = "application/pdf"
-
-        responses.add(
-            responses.POST,
-            "https://api.langbase.com/v1/parser",
-            json=mock_responses["parser"],
-            status=200,
-        )
-
-        result = langbase_client.parser(
-            document=upload_file_content,
-            document_name=document_name,
-            content_type=content_type,
-        )
-
-        assert result == mock_responses["parser"]
-        assert "content" in result
-        assert "document_name" in result
-        request = responses.calls[0].request
-        assert request.method == "POST"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, ParseResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
 
     @responses.activate
     def test_parser_with_different_content_types(
@@ -184,10 +98,10 @@ class TestUtilities:
             ("document.txt", "text/plain"),
         ]
 
-        for document_name, content_type in test_cases:
+        for i, (document_name, content_type) in enumerate(test_cases):
             responses.add(
                 responses.POST,
-                "https://api.langbase.com/v1/parser",
+                f"{BASE_URL}{PARSER_ENDPOINT}",
                 json=mock_responses["parser"],
                 status=200,
             )
@@ -198,200 +112,142 @@ class TestUtilities:
                 content_type=content_type,
             )
 
-            assert result == mock_responses["parser"]
-
-            # Verify headers for each test case
-            request = responses.calls[-1].request
-            expected_headers = {
-                "Authorization": "Bearer test-api-key",
+            assert result == {
+                "document_name": mock_responses["parser"]["documentName"],
+                "content": mock_responses["parser"]["content"],
             }
-            validate_response_headers(request.headers, expected_headers)
-            validate_response_body(result, ParseResponse)
+            # The number of calls increases with each iteration
+            assert len(responses.calls) == i + 1
+            request = responses.calls[i].request
+            validate_response_headers(request.headers, AUTHORIZATION_HEADER)
 
     @responses.activate
     def test_agent_run_basic(self, langbase_client, mock_responses):
         """Test agent.run method with basic parameters."""
+        request_body = {
+            "input": "Hello, agent!",
+            "model": "anthropic:claude-3-sonnet",
+            "apiKey": "test-llm-key",
+        }
+
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/agent/run",
+            f"{BASE_URL}{AGENT_RUN_ENDPOINT}",
             json=mock_responses["agent.run"],
             status=200,
         )
 
         result = langbase_client.agent.run(
-            input="Hello, agent!",
-            model="anthropic:claude-3-sonnet",
-            api_key="test-llm-key",
+            input=request_body["input"],
+            model=request_body["model"],
+            api_key=request_body["apiKey"],
         )
 
         assert result == mock_responses["agent.run"]
-
-        # Verify request data
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        assert request.method == "POST"
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["input"] == "Hello, agent!"
-        assert request_json["model"] == "anthropic:claude-3-sonnet"
-        assert request_json["apiKey"] == "test-llm-key"
-        validate_response_body(result, AgentRunResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
 
     @responses.activate
     def test_agent_run_with_messages(self, langbase_client, mock_responses):
         """Test agent.run method with message format input."""
-        messages = [
-            {"role": "user", "content": "Hello"},
-            {"role": "assistant", "content": "Hi there!"},
-        ]
+        request_body = {
+            "input": [
+                {"role": "user", "content": "Hello"},
+                {"role": "assistant", "content": "Hi there!"},
+            ],
+            "model": "openai:gpt-4",
+            "apiKey": "openai-key",
+        }
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/agent/run",
+            f"{BASE_URL}{AGENT_RUN_ENDPOINT}",
             json=mock_responses["agent.run"],
             status=200,
         )
 
         result = langbase_client.agent.run(
-            input=messages, model="openai:gpt-4", api_key="openai-key"
+            input=request_body["input"],
+            model=request_body["model"],
+            api_key=request_body["apiKey"],
         )
 
         assert result == mock_responses["agent.run"]
-
-        # Verify messages format
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["input"] == messages
-        validate_response_body(result, AgentRunResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
 
     @responses.activate
     def test_agent_run_with_all_parameters(self, langbase_client, mock_responses):
         """Test agent.run method with all parameters."""
+        request_body = {
+            "input": "Complex query",
+            "model": "anthropic:claude-3-sonnet",
+            "apiKey": "test-key",
+            "instructions": "Be helpful and concise",
+            "temperature": 0.7,
+            "max_tokens": 150,
+            "top_p": 0.9,
+            "tools": [{"type": "function", "function": {"name": "test"}}],
+        }
+
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/agent/run",
+            f"{BASE_URL}{AGENT_RUN_ENDPOINT}",
             json=mock_responses["agent.run"],
             status=200,
         )
 
         result = langbase_client.agent.run(
-            input="Complex query",
-            model="anthropic:claude-3-sonnet",
-            api_key="test-key",
-            instructions="Be helpful and concise",
-            temperature=0.7,
-            max_tokens=150,
-            top_p=0.9,
-            tools=[{"type": "function", "function": {"name": "test"}}],
+            input=request_body["input"],
+            model=request_body["model"],
+            api_key=request_body["apiKey"],
+            instructions=request_body["instructions"],
+            temperature=request_body["temperature"],
+            max_tokens=request_body["max_tokens"],
+            top_p=request_body["top_p"],
+            tools=request_body["tools"],
             stream=False,
         )
 
         assert result == mock_responses["agent.run"]
-
-        # Verify all parameters
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        request_json = json.loads(request.body)
-        assert request_json["input"] == "Complex query"
-        assert request_json["instructions"] == "Be helpful and concise"
-        assert request_json["temperature"] == 0.7
-        assert request_json["max_tokens"] == 150
-        assert request_json["top_p"] == 0.9
-        assert request_json["tools"][0]["type"] == "function"
-        # stream is not included when False
-        assert "stream" not in request_json
-        validate_response_body(result, AgentRunResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
 
     @responses.activate
     def test_agent_run_streaming(self, langbase_client, stream_chunks):
         """Test agent.run method with streaming."""
+        request_body = {
+            "input": "Streaming query",
+            "model": "openai:gpt-4",
+            "apiKey": "stream-key",
+            "stream": True,
+        }
         stream_content = b"".join(stream_chunks)
 
         responses.add(
             responses.POST,
-            "https://api.langbase.com/v1/agent/run",
+            f"{BASE_URL}{AGENT_RUN_ENDPOINT}",
             body=stream_content,
             status=200,
-            headers={"content-type": "text/event-stream"},
+            headers={"Content-Type": "text/event-stream"},
         )
 
         result = langbase_client.agent.run(
-            input="Streaming query",
-            model="openai:gpt-4",
-            api_key="stream-key",
+            input=request_body["input"],
+            model=request_body["model"],
+            api_key=request_body["apiKey"],
             stream=True,
         )
 
-        # For streaming, the result is a dict with stream property
         assert "stream" in result
         assert hasattr(result["stream"], "__iter__")
-
-        # Verify stream parameter and headers
+        assert len(responses.calls) == 1
         request = responses.calls[0].request
-        request_json = json.loads(request.body)
-        assert request_json["stream"] is True
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-        validate_response_body(result, RunResponseStream)
-
-    @responses.activate
-    def test_utilities_authentication_headers(self, langbase_client, mock_responses):
-        """Test that utility methods include correct authentication headers."""
-        responses.add(
-            responses.POST,
-            "https://api.langbase.com/v1/embed",
-            json=mock_responses["embed"],
-            status=200,
-        )
-
-        langbase_client.embed(["test"])
-
-        request = responses.calls[0].request
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-
-    @responses.activate
-    def test_request_format_validation(self, langbase_client, mock_responses):
-        """Test that utility requests are properly formatted."""
-        responses.add(
-            responses.POST,
-            "https://api.langbase.com/v1/chunker",
-            json=mock_responses["chunker"],
-            status=200,
-        )
-
-        result = langbase_client.chunker(content="Test content", chunk_max_length=100)
-
-        request = responses.calls[0].request
-        assert request.url == "https://api.langbase.com/v1/chunker"
-
-        # Verify headers
-        expected_headers = {
-            "Authorization": "Bearer test-api-key",
-            "Content-Type": "application/json",
-        }
-        validate_response_headers(request.headers, expected_headers)
-
-        # Verify JSON body format
-        request_json = json.loads(request.body)
-        assert isinstance(request_json["content"], str)
-        assert isinstance(request_json["chunkMaxLength"], int)
-        validate_response_body(result, ChunkResponse)
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body

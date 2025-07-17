@@ -83,7 +83,7 @@ class Message(TypedDict, total=False):
     """Basic message structure."""
 
     role: Role
-    content: string | NULL
+    content: Optional[str]
     name: Optional[str]
     tool_call_id: Optional[str]
     tool_calls: Optional[List[ToolCall]]

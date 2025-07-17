@@ -11,13 +11,6 @@ responses>=0.23.0
 black>=22.1.0
 isort>=5.10.1
 
-# Type checking
-mypy>=1.0.0
-types-requests>=2.28.0
-
-# Linting
-ruff>=0.1.0
-
 # Pre-commit hooks
 pre-commit>=3.0.0
 

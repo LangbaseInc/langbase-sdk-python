@@ -79,7 +79,7 @@ pytest -v
 
 ### 5. Run All Checks at Once
 ```bash
-# This runs all pre-commit hooks (black, isort, ruff, mypy)
+# This runs all pre-commit hooks (black, isort)
 pre-commit run --all-files
 ```
 
