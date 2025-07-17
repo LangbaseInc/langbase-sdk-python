@@ -26,9 +26,7 @@ class Langbase:
     including pipes, memories, tools, threads, and utilities.
     """
 
-    def __init__(
-        self, api_key: Optional[str] = None, base_url: str = "https://api.langbase.com"
-    ):
+    def __init__(self, api_key: str = "", base_url: str = "https://api.langbase.com"):
         """
         Initialize the Langbase client.
 
@@ -36,12 +34,9 @@ class Langbase:
             api_key: The API key for authentication. If not provided, it will be read
                     from the LANGBASE_API_KEY environment variable.
             base_url: The base URL for the API.
-
-        Raises:
-            ValueError: If no API key is provided and LANGBASE_API_KEY is not set.
         """
-        self.api_key = api_key
         self.base_url = base_url
+        self.api_key = api_key
 
         self.request = Request({"api_key": self.api_key, "base_url": self.base_url})
 

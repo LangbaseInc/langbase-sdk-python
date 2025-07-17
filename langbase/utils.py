@@ -27,10 +27,6 @@ def convert_document_to_request_files(
 
     Returns:
         Dictionary for use with requests.post(files=...)
-
-    Raises:
-        ValueError: If the document type is not supported
-        FileNotFoundError: If the document path doesn't exist
     """
     files: Dict[str, Union[Tuple[str, bytes, ContentType], Tuple[None, str], str]] = {}
 

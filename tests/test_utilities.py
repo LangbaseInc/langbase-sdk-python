@@ -6,6 +6,15 @@ import json
 
 import responses
 
+from langbase.types import (
+    AgentRunResponse,
+    ChunkResponse,
+    EmbedResponse,
+    ParseResponse,
+    RunResponseStream,
+)
+from tests.validation_utils import validate_response_body, validate_response_headers
+
 
 class TestUtilities:
     """Test utility methods."""
@@ -30,8 +39,15 @@ class TestUtilities:
 
         # Verify request data
         request = responses.calls[0].request
+        assert request.method == "POST"
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["chunks"] == chunks
+        validate_response_body(result, EmbedResponse)
 
     @responses.activate
     def test_embed_with_model(self, langbase_client, mock_responses):
@@ -52,8 +68,14 @@ class TestUtilities:
 
         # Verify model parameter
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["embeddingModel"] == model
+        validate_response_body(result, EmbedResponse)
 
     @responses.activate
     def test_chunker_basic(self, langbase_client, mock_responses):
@@ -77,8 +99,15 @@ class TestUtilities:
 
         # Verify request data
         request = responses.calls[0].request
+        assert request.method == "POST"
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["content"] == content
+        validate_response_body(result, ChunkResponse)
 
     @responses.activate
     def test_chunker_with_parameters(self, langbase_client, mock_responses):
@@ -100,10 +129,16 @@ class TestUtilities:
 
         # Verify parameters
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["content"] == content
         assert request_json["chunkMaxLength"] == 500
         assert request_json["chunkOverlap"] == 50
+        validate_response_body(result, ChunkResponse)
 
     @responses.activate
     def test_parser_basic(self, langbase_client, mock_responses, upload_file_content):
@@ -127,6 +162,13 @@ class TestUtilities:
         assert result == mock_responses["parser"]
         assert "content" in result
         assert "document_name" in result
+        request = responses.calls[0].request
+        assert request.method == "POST"
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+        }
+        validate_response_headers(request.headers, expected_headers)
+        validate_response_body(result, ParseResponse)
 
     @responses.activate
     def test_parser_with_different_content_types(
@@ -158,6 +200,14 @@ class TestUtilities:
 
             assert result == mock_responses["parser"]
 
+            # Verify headers for each test case
+            request = responses.calls[-1].request
+            expected_headers = {
+                "Authorization": "Bearer test-api-key",
+            }
+            validate_response_headers(request.headers, expected_headers)
+            validate_response_body(result, ParseResponse)
+
     @responses.activate
     def test_agent_run_basic(self, langbase_client, mock_responses):
         """Test agent.run method with basic parameters."""
@@ -178,10 +228,17 @@ class TestUtilities:
 
         # Verify request data
         request = responses.calls[0].request
+        assert request.method == "POST"
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["input"] == "Hello, agent!"
         assert request_json["model"] == "anthropic:claude-3-sonnet"
         assert request_json["apiKey"] == "test-llm-key"
+        validate_response_body(result, AgentRunResponse)
 
     @responses.activate
     def test_agent_run_with_messages(self, langbase_client, mock_responses):
@@ -206,8 +263,14 @@ class TestUtilities:
 
         # Verify messages format
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["input"] == messages
+        validate_response_body(result, AgentRunResponse)
 
     @responses.activate
     def test_agent_run_with_all_parameters(self, langbase_client, mock_responses):
@@ -235,6 +298,11 @@ class TestUtilities:
 
         # Verify all parameters
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["input"] == "Complex query"
         assert request_json["instructions"] == "Be helpful and concise"
@@ -244,6 +312,7 @@ class TestUtilities:
         assert request_json["tools"][0]["type"] == "function"
         # stream is not included when False
         assert "stream" not in request_json
+        validate_response_body(result, AgentRunResponse)
 
     @responses.activate
     def test_agent_run_streaming(self, langbase_client, stream_chunks):
@@ -269,10 +338,16 @@ class TestUtilities:
         assert "stream" in result
         assert hasattr(result["stream"], "__iter__")
 
-        # Verify stream parameter
+        # Verify stream parameter and headers
         request = responses.calls[0].request
         request_json = json.loads(request.body)
         assert request_json["stream"] is True
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
+        validate_response_body(result, RunResponseStream)
 
     @responses.activate
     def test_utilities_authentication_headers(self, langbase_client, mock_responses):
@@ -287,8 +362,11 @@ class TestUtilities:
         langbase_client.embed(["test"])
 
         request = responses.calls[0].request
-        assert request.headers["Authorization"] == "Bearer test-api-key"
-        assert request.headers["Content-Type"] == "application/json"
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
 
     @responses.activate
     def test_request_format_validation(self, langbase_client, mock_responses):
@@ -300,12 +378,20 @@ class TestUtilities:
             status=200,
         )
 
-        langbase_client.chunker(content="Test content", chunk_max_length=100)
+        result = langbase_client.chunker(content="Test content", chunk_max_length=100)
 
         request = responses.calls[0].request
         assert request.url == "https://api.langbase.com/v1/chunker"
+
+        # Verify headers
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
 
         # Verify JSON body format
         request_json = json.loads(request.body)
         assert isinstance(request_json["content"], str)
         assert isinstance(request_json["chunkMaxLength"], int)
+        validate_response_body(result, ChunkResponse)

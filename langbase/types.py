@@ -663,8 +663,10 @@ class PipeListResponse(TypedDict):
 class LangbaseOptions(TypedDict, total=False):
     """Options for initializing Langbase client."""
 
-    api_key: str
-    base_url: Literal["https://api.langbase.com", "https://eu-api.langbase.com"]
+    api_key: str  # Required
+    base_url: Literal[
+        "https://api.langbase.com", "https://eu-api.langbase.com"
+    ]  # Optional
 
 
 # Protocol for file-like objects

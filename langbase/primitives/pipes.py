@@ -121,9 +121,6 @@ class Pipes:
 
         Returns:
             Run response or stream
-
-        Raises:
-            ValueError: If neither name nor API key is provided
         """
         if not name and not api_key:
             msg = "Either pipe name or API key is required"

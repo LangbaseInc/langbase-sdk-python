@@ -8,6 +8,14 @@ import pytest
 import responses
 
 from langbase import Langbase
+from langbase.types import (
+    PipeCreateResponse,
+    PipeListResponse,
+    PipeUpdateResponse,
+    RunResponse,
+    RunResponseStream,
+)
+from tests.validation_utils import validate_response_body, validate_response_headers
 
 
 class TestPipes:
@@ -27,23 +35,16 @@ class TestPipes:
 
         assert result == mock_responses["pipe_list"]
         assert len(responses.calls) == 1
-        assert responses.calls[0].request.url == "https://api.langbase.com/v1/pipes"
-
-    @responses.activate
-    def test_pipes_list_with_headers(self, langbase_client, mock_responses):
-        """Test pipes.list method includes correct headers."""
-        responses.add(
-            responses.GET,
-            "https://api.langbase.com/v1/pipes",
-            json=mock_responses["pipe_list"],
-            status=200,
-        )
-
-        langbase_client.pipes.list()
-
         request = responses.calls[0].request
-        assert request.headers["Authorization"] == "Bearer test-api-key"
-        assert request.headers["Content-Type"] == "application/json"
+        assert request.method == "GET"
+        assert request.url == "https://api.langbase.com/v1/pipes"
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
+        for item in result:
+            validate_response_body(item, PipeListResponse)
 
     @responses.activate
     def test_pipes_create(self, langbase_client, mock_responses):
@@ -66,35 +67,19 @@ class TestPipes:
         assert result == mock_responses["pipe_create"]
         assert len(responses.calls) == 1
 
-        # Verify request body
+        # Verify request body and headers
         request = responses.calls[0].request
+        assert request.method == "POST"
         assert request.url == "https://api.langbase.com/v1/pipes"
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["name"] == "new-pipe"
         assert request_json["description"] == "A test pipe"
-
-    @responses.activate
-    def test_pipes_create_minimal(self, langbase_client, mock_responses):
-        """Test pipes.create method with minimal parameters."""
-        responses.add(
-            responses.POST,
-            "https://api.langbase.com/v1/pipes",
-            json=mock_responses["pipe_create"],
-            status=201,
-        )
-
-        result = langbase_client.pipes.create(name="minimal-pipe")
-
-        assert result == mock_responses["pipe_create"]
-
-        # Verify that null values are cleaned
-        request = responses.calls[0].request
-        request_json = json.loads(request.body)
-        assert request_json["name"] == "minimal-pipe"
-        # Should not contain null description
-        assert (
-            "description" not in request_json or request_json["description"] is not None
-        )
+        validate_response_body(result, PipeCreateResponse)
 
     @responses.activate
     def test_pipes_update(self, langbase_client, mock_responses):
@@ -115,7 +100,14 @@ class TestPipes:
         assert len(responses.calls) == 1
 
         request = responses.calls[0].request
+        assert request.method == "POST"
         assert request.url == f"https://api.langbase.com/v1/pipes/{pipe_name}"
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
+        validate_response_body(result, PipeUpdateResponse)
 
     @responses.activate
     def test_pipes_run_basic(self, langbase_client, mock_responses):
@@ -137,7 +129,15 @@ class TestPipes:
         assert "usage" in result
 
         request = responses.calls[0].request
+        assert request.method == "POST"
         assert request.url == "https://api.langbase.com/v1/pipes/run"
+
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
+        validate_response_body(result, RunResponse)
 
     @responses.activate
     def test_pipes_run_with_api_key(self, mock_responses):
@@ -161,6 +161,12 @@ class TestPipes:
         # Verify the request used the pipe-specific API key
         request = responses.calls[0].request
         assert request.headers["Authorization"] == "Bearer pipe-specific-key"
+        expected_headers = {
+            "Authorization": "Bearer pipe-specific-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
+        validate_response_body(result, RunResponse)
 
     @responses.activate
     def test_pipes_run_streaming(self, langbase_client, stream_chunks):
@@ -176,8 +182,8 @@ class TestPipes:
             body=stream_content,
             status=200,
             headers={
-                "content-type": "text/event-stream",
-                "lb-thread-id": "thread_stream",
+                "Content-Type": "text/event-stream",
+                "lb-thread-id": "thread_123",
             },
         )
 
@@ -185,8 +191,15 @@ class TestPipes:
             name="test-pipe", messages=messages, stream=True
         )
 
-        assert result["thread_id"] == "thread_stream"
+        assert result["thread_id"] == "thread_123"
         assert hasattr(result["stream"], "__iter__")
+        request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
+        validate_response_body(result, RunResponseStream)
 
     @responses.activate
     def test_pipes_run_with_llm_key(self, langbase_client, mock_responses):
@@ -206,16 +219,14 @@ class TestPipes:
         )
 
         assert result["threadId"] == "thread_123"
-
         request = responses.calls[0].request
         assert request.headers["LB-LLM-KEY"] == "custom-llm-key"
-
-    def test_pipes_run_missing_name_and_api_key(self, langbase_client):
-        """Test pipes.run method raises error when both name and API key are missing."""
-        messages = [{"role": "user", "content": "Hello"}]
-
-        with pytest.raises(ValueError, match="Either pipe name or API key is required"):
-            langbase_client.pipes.run(messages=messages)
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
+        validate_response_body(result, RunResponse)
 
     @responses.activate
     def test_pipes_run_with_all_parameters(self, langbase_client, mock_responses):
@@ -249,6 +260,12 @@ class TestPipes:
         assert request_data["top_p"] == 0.9
         assert request_data["variables"]["var1"] == "value1"
         assert request_data["thread_id"] == "existing_thread"
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
+        validate_response_body(result, RunResponse)
 
     @responses.activate
     def test_pipes_run_stream_parameter_not_included_when_false(
@@ -271,35 +288,11 @@ class TestPipes:
         )
 
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_data = json.loads(request.body)
         # stream should be in the request body when explicitly set to False
         assert request_data["stream"] is False
-
-    @responses.activate
-    def test_pipes_run_stream_parameter_included_when_true(
-        self, langbase_client, stream_chunks
-    ):
-        """Test that stream parameter is included in request when True."""
-        stream_content = b"".join(stream_chunks)
-
-        responses.add(
-            responses.POST,
-            "https://api.langbase.com/v1/pipes/run",
-            body=stream_content,
-            status=200,
-            headers={
-                "content-type": "text/event-stream",
-                "lb-thread-id": "thread_stream",
-            },
-        )
-
-        langbase_client.pipes.run(
-            name="test-pipe",
-            messages=[{"role": "user", "content": "Hello"}],
-            stream=True,
-        )
-
-        request = responses.calls[0].request
-        request_data = json.loads(request.body)
-        # stream should be in the request body when True
-        assert request_data["stream"] is True

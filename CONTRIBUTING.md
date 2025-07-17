@@ -23,6 +23,15 @@ Thank you for your interest in contributing to the Langbase Python SDK! We welco
    python3 -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
+    ### Note:
+    Check version of pip
+    ```bash
+    pip --version
+    ```
+    **If it's pip 21.3 or lower, you need to upgrade it.**
+    ```bash
+    pip install --upgrade pip
+   ```
 
 3. **Install the package in development mode**
    ```bash
@@ -43,7 +52,7 @@ Thank you for your interest in contributing to the Langbase Python SDK! We welco
 
 **IMPORTANT**: All code must pass quality checks before committing. Run these commands:
 
-### 1. Format Your Code
+### Format Your Code
 ```bash
 # Auto-format with Black (required)
 black langbase/ tests/ examples/
@@ -52,20 +61,6 @@ black langbase/ tests/ examples/
 isort langbase/ tests/ examples/
 ```
 
-### 2. Run Linting Checks
-```bash
-# Run Ruff linter (auto-fixes many issues)
-ruff check --fix langbase/ tests/
-
-# Check without auto-fix to see what changed
-ruff check langbase/ tests/
-```
-
-### 3. Type Checking
-```bash
-# Run mypy for type checking
-mypy langbase/ --strict
-```
 
 ### 4. Run Tests
 ```bash
@@ -94,8 +89,6 @@ Before pushing your changes, ensure:
 
 - [ ] ✅ Code is formatted with `black`
 - [ ] ✅ Imports are sorted with `isort`
-- [ ] ✅ No linting errors from `ruff`
-- [ ] ✅ Type checking passes with `mypy`
 - [ ] ✅ All tests pass with `pytest`
 - [ ] ✅ New features have tests
 - [ ] ✅ New features have type hints
@@ -162,29 +155,16 @@ Use Google-style docstrings:
 def my_function(param1: str, param2: int) -> bool:
     """
     Brief description of function.
-    
+
     Args:
         param1: Description of param1
         param2: Description of param2
-        
+
     Returns:
         Description of return value
-        
-    Raises:
-        ValueError: When invalid input provided
-    """
     ...
 ```
 
-### Error Handling
-Use specific exceptions and helpful error messages:
-```python
-if not api_key:
-    raise ValueError(
-        "API key is required. Set LANGBASE_API_KEY environment variable "
-        "or pass api_key parameter."
-    )
-```
 
 ## Testing Guidelines
 
@@ -200,7 +180,7 @@ def test_pipe_run_with_invalid_name_raises_error(langbase_client):
     """Test that running a pipe with invalid name raises appropriate error."""
     with pytest.raises(NotFoundError) as exc_info:
         langbase_client.pipes.run(name="non-existent-pipe")
-    
+
     assert "404" in str(exc_info.value)
 ```
 

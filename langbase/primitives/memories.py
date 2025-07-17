@@ -88,10 +88,6 @@ class Documents:
 
         Returns:
             Upload response
-
-        Raises:
-            ValueError: If document type is unsupported
-            APIError: If the upload fails
         """
         try:
             # Get signed URL for upload

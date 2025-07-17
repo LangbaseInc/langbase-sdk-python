@@ -6,6 +6,9 @@ import json
 
 import responses
 
+from langbase.types import ToolCrawlResponse, ToolWebSearchResponse
+from tests.validation_utils import validate_response_body, validate_response_headers
+
 
 class TestTools:
     """Test the Tools API."""
@@ -27,9 +30,17 @@ class TestTools:
 
         # Verify request data
         request = responses.calls[0].request
+        assert request.method == "POST"
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["query"] == "test search"
         assert request_json["service"] == "exa"  # default service
+        for item in result:
+            validate_response_body(item, ToolWebSearchResponse)
 
     @responses.activate
     def test_tools_web_search_with_service(self, langbase_client, mock_responses):
@@ -47,8 +58,15 @@ class TestTools:
 
         # Verify service parameter
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["service"] == "google"
+        for item in result:
+            validate_response_body(item, ToolWebSearchResponse)
 
     @responses.activate
     def test_tools_web_search_with_all_parameters(
@@ -74,6 +92,11 @@ class TestTools:
 
         # Verify all parameters
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["query"] == "comprehensive search"
         assert request_json["service"] == "bing"
@@ -82,6 +105,8 @@ class TestTools:
 
         # Verify API key header
         assert request.headers["LB-WEB-SEARCH-KEY"] == "search-api-key"
+        for item in result:
+            validate_response_body(item, ToolWebSearchResponse)
 
     @responses.activate
     def test_tools_web_search_with_api_key(self, langbase_client, mock_responses):
@@ -101,7 +126,14 @@ class TestTools:
 
         # Verify API key header
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         assert request.headers["LB-WEB-SEARCH-KEY"] == "custom-search-key"
+        for item in result:
+            validate_response_body(item, ToolWebSearchResponse)
 
     @responses.activate
     def test_tools_crawl_basic(self, langbase_client, mock_responses):
@@ -120,8 +152,16 @@ class TestTools:
 
         # Verify request data
         request = responses.calls[0].request
+        assert request.method == "POST"
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["url"] == ["https://example.com"]
+        for item in result:
+            validate_response_body(item, ToolCrawlResponse)
 
     @responses.activate
     def test_tools_crawl_multiple_urls(self, langbase_client, mock_responses):
@@ -141,8 +181,15 @@ class TestTools:
 
         # Verify URLs
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["url"] == urls
+        for item in result:
+            validate_response_body(item, ToolCrawlResponse)
 
     @responses.activate
     def test_tools_crawl_with_max_pages(self, langbase_client, mock_responses):
@@ -160,8 +207,15 @@ class TestTools:
 
         # Verify max_pages parameter
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["maxPages"] == 5
+        for item in result:
+            validate_response_body(item, ToolCrawlResponse)
 
     @responses.activate
     def test_tools_crawl_with_api_key(self, langbase_client, mock_responses):
@@ -181,7 +235,14 @@ class TestTools:
 
         # Verify API key header
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         assert request.headers["LB-CRAWL-KEY"] == "crawl-api-key"
+        for item in result:
+            validate_response_body(item, ToolCrawlResponse)
 
     @responses.activate
     def test_tools_crawl_with_all_parameters(self, langbase_client, mock_responses):
@@ -203,43 +264,14 @@ class TestTools:
 
         # Verify all parameters
         request = responses.calls[0].request
+        expected_headers = {
+            "Authorization": "Bearer test-api-key",
+            "Content-Type": "application/json",
+        }
+        validate_response_headers(request.headers, expected_headers)
         request_json = json.loads(request.body)
         assert request_json["url"] == ["https://example.com", "https://test.com"]
         assert request_json["maxPages"] == 10
         assert request.headers["LB-CRAWL-KEY"] == "comprehensive-crawl-key"
-
-    @responses.activate
-    def test_tools_headers_authentication(self, langbase_client, mock_responses):
-        """Test that tools methods include correct authentication headers."""
-        responses.add(
-            responses.POST,
-            "https://api.langbase.com/v1/tools/web-search",
-            json=mock_responses["tools_web_search"],
-            status=200,
-        )
-
-        langbase_client.tools.web_search(query="auth test")
-
-        request = responses.calls[0].request
-        assert request.headers["Authorization"] == "Bearer test-api-key"
-        assert request.headers["Content-Type"] == "application/json"
-
-    @responses.activate
-    def test_tools_request_format(self, langbase_client, mock_responses):
-        """Test that tools requests are properly formatted."""
-        responses.add(
-            responses.POST,
-            "https://api.langbase.com/v1/tools/crawl",
-            json=mock_responses["tools_crawl"],
-            status=200,
-        )
-
-        langbase_client.tools.crawl(url=["https://example.com"], max_pages=3)
-
-        request = responses.calls[0].request
-        assert request.url == "https://api.langbase.com/v1/tools/crawl"
-
-        # Verify JSON body format
-        request_json = json.loads(request.body)
-        assert isinstance(request_json["url"], list)
-        assert isinstance(request_json["maxPages"], int)
+        for item in result:
+            validate_response_body(item, ToolCrawlResponse)
