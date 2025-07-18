@@ -1,52 +1,46 @@
 """
-Example demonstrating how to run a pipe with streaming in Langbase.
+Example demonstrating how to run a pipe in streaming mode using get_runner in Langbase.
 """
+
 import os
-import json
-from langbase import Langbase
 
-# Get API key from environment variable
-langbase_api_key = os.getenv("LANGBASE_API_KEY")
+from dotenv import load_dotenv
 
-# Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+from langbase import Langbase, get_runner
 
-# Name of the pipe to run
-pipe_name = "my-assistant-pipe"
 
-# Define messages for the conversation
-messages = [
-    {
-        "role": "user",
-        "content": "Write a short story about a robot learning to paint."
-    }
-]
+def main():
+    load_dotenv()
 
-# Run the pipe with streaming enabled
-try:
-    stream_response = lb.pipes.run(
-        name=pipe_name,
-        messages=messages,
-        stream=True
-    )
+    # Get API key from environment variable
+    langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-    print("Thread ID:", stream_response['thread_id'])
+    # Initialize the client
+    lb = Langbase(api_key=langbase_api_key)
 
-    print("STREAMING RESPONSE:")
+    # Name of the pipe to run
+    pipe_name = "summary-agent"  # Replace with your pipe name
 
-    # Process each chunk as it arrives
-    for chunk in stream_response["stream"]:
-        if chunk:
-            try:
-                # Try to decode as JSON
-                chunk_data = json.loads(chunk.decode('utf-8'))
-                if "completion" in chunk_data:
-                    print(chunk_data["completion"], end="", flush=True)
-            except json.JSONDecodeError:
-                # If not JSON, print raw decoded chunk
-                print(chunk.decode('utf-8'), end="", flush=True)
+    try:
+        # Message 1: Tell something to the LLM.
+        print("Stream started \n\n")
+        response1 = lb.pipes.run(
+            name=pipe_name,
+            messages=[{"role": "user", "content": "What is an AI Engineer?"}],
+            stream=True,
+        )
 
-    print("\n\nStream completed")
+        runner1 = get_runner(response1)
 
-except Exception as e:
-    print(f"Error streaming from pipe: {e}")
+        # Use text_generator() to stream content
+        for content in runner1.text_generator():
+            print(content, end="", flush=True)
+
+        print("\n\nStream ended!")  # Add a newline after first response
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+
+if __name__ == "__main__":
+    main()

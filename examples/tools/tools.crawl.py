@@ -4,8 +4,14 @@ Example demonstrating how to use the web crawling tool in Langbase.
 This example crawls specified URLs using spider.cloud service.
 Get your API key from: https://spider.cloud/docs/quickstart
 """
+
 import os
+
+from dotenv import load_dotenv
+
 from langbase import Langbase
+
+load_dotenv()
 
 # Get API keys from environment variables
 langbase_api_key = os.getenv("LANGBASE_API_KEY")
@@ -13,6 +19,7 @@ crawl_api_key = os.getenv("CRAWL_KEY")
 
 # Initialize the client
 lb = Langbase(api_key=langbase_api_key)
+
 
 def main():
     """
@@ -23,7 +30,7 @@ def main():
         results = lb.tools.crawl(
             url=["https://langbase.com", "https://langbase.com/about"],
             max_pages=1,
-            api_key=crawl_api_key
+            api_key=crawl_api_key,
         )
 
         # Print the results
@@ -31,6 +38,7 @@ def main():
 
     except Exception as e:
         print(f"Error performing web crawl: {e}")
+
 
 if __name__ == "__main__":
     main()

@@ -1,52 +1,45 @@
 """
 Example demonstrating how to update thread metadata in Langbase.
 """
+
+import json
 import os
+
+from dotenv import load_dotenv
+
 from langbase import Langbase
-from datetime import datetime
 
-# Get API key from environment variable
-langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-# Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+def main():
+    load_dotenv()
 
-# Thread ID to update
-thread_id = "thread_123456789"  # Replace with your actual thread ID
+    # Get API key from environment variable
+    langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-# New metadata to set for the thread
-updated_metadata = {
-    "status": "resolved",
-    "priority": "high",
-    "last_updated_by": "support_agent_42",
-    "category": "technical_issue",
-    "customer_satisfaction": "high",
-    "resolution_time": "2 hours"
-}
+    # Initialize the client
+    lb = Langbase(api_key=langbase_api_key)
 
-# Update the thread metadata
-try:
-    updated_thread = lb.threads.update(
-        thread_id=thread_id,
-        metadata=updated_metadata
-    )
+    # Thread ID to update
+    thread_id = "thread_123"  # Replace with your actual thread ID
 
-    print(f"Successfully updated thread {updated_thread['id']}")
+    # New metadata to set for the thread
+    updated_metadata = {
+        "company": "langbase",
+        "about": "Langbase is the most powerful serverless platform for building AI agents with memory.",
+    }
 
-    # Convert timestamp to readable date (if available)
-    created_at = updated_thread.get('created_at')
-    if created_at:
-        timestamp = datetime.fromtimestamp(created_at / 1000).strftime('%Y-%m-%d %H:%M:%S')
-        print(f"Created at: {timestamp}")
+    # Update the thread metadata
+    try:
+        updated_thread = lb.threads.update(
+            thread_id=thread_id,
+            metadata=updated_metadata,
+        )
 
-    # Print updated metadata
-    metadata = updated_thread.get('metadata', {})
-    if metadata:
-        print("Updated metadata:")
-        for key, value in metadata.items():
-            print(f"  {key}: {value}")
-    else:
-        print("No metadata available")
+        print(json.dumps(updated_thread, indent=2))
 
-except Exception as e:
-    print(f"Error updating thread: {e}")
+    except Exception as e:
+        print(f"Error updating thread: {e}")
+
+
+if __name__ == "__main__":
+    main()

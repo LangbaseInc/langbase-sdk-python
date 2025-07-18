@@ -1,39 +1,36 @@
 """
-Example demonstrating how to get thread details in Langbase.
+Example demonstrating how to get a specific thread in Langbase.
 """
+
+import json
 import os
+
+from dotenv import load_dotenv
+
 from langbase import Langbase
-from datetime import datetime
 
-# Get API key from environment variable
-langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-# Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+def main():
+    load_dotenv()
 
-# Thread ID to get details for
-thread_id = "thread_123456789"  # Replace with your actual thread ID
+    # Get API key from environment variable
+    langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-# Get thread details
-try:
-    thread = lb.threads.get(thread_id=thread_id)
+    # Initialize the client
+    lb = Langbase(api_key=langbase_api_key)
 
-    print(f"Thread ID: {thread['id']}")
+    # Thread ID to retrieve
+    thread_id = "thread_123"  # Replace with your thread ID
 
-    # Convert timestamp to readable date (if available)
-    created_at = thread.get('created_at')
-    if created_at:
-        timestamp = datetime.fromtimestamp(created_at / 1000).strftime('%Y-%m-%d %H:%M:%S')
-        print(f"Created at: {timestamp}")
+    # Get the specific thread
+    try:
+        thread = lb.threads.get(thread_id=thread_id)
 
-    # Print metadata if available
-    metadata = thread.get('metadata', {})
-    if metadata:
-        print("Metadata:")
-        for key, value in metadata.items():
-            print(f"  {key}: {value}")
-    else:
-        print("No metadata available")
+        print(json.dumps(thread, indent=2))
 
-except Exception as e:
-    print(f"Error getting thread: {e}")
+    except Exception as e:
+        print(f"Error getting thread: {e}")
+
+
+if __name__ == "__main__":
+    main()

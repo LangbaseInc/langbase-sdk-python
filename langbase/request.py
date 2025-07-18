@@ -4,12 +4,13 @@ Request handling for the Langbase SDK.
 This module provides the Request class which handles all HTTP communication
 with the Langbase API, including error handling and response parsing.
 """
+
 import json
-from typing import Dict, Optional, Any, Union, Iterator, List
+from typing import Any, Dict, Iterator, Optional, Union
 
 import requests
 
-from .errors import APIError, APIConnectionError, APIConnectionTimeoutError
+from .errors import APIConnectionError, APIConnectionTimeoutError, APIError
 from .types import GENERATION_ENDPOINTS
 
 
@@ -29,12 +30,10 @@ class Request:
             config: Configuration dictionary containing:
                 - api_key: API key for authentication
                 - base_url: Base URL for the API
-                - timeout: Timeout for requests in seconds (default: 30)
         """
         self.config = config
         self.api_key = config.get("api_key", "")
         self.base_url = config.get("base_url", "")
-        self.timeout = config.get("timeout", 30)
 
     def build_url(self, endpoint: str) -> str:
         """
@@ -47,8 +46,8 @@ class Request:
             Complete URL for the request
         """
         # Ensure the endpoint starts with a slash
-        if not endpoint.startswith('/'):
-            endpoint = f'/{endpoint}'
+        if not endpoint.startswith("/"):
+            endpoint = f"/{endpoint}"
 
         return f"{self.base_url}{endpoint}"
 
@@ -64,7 +63,7 @@ class Request:
         """
         default_headers = {
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}"
+            "Authorization": f"Bearer {self.api_key}",
         }
 
         if headers:
@@ -79,7 +78,7 @@ class Request:
         headers: Dict[str, str],
         body: Optional[Dict[str, Any]] = None,
         stream: bool = False,
-        files: Optional[Dict[str, Any]] = None
+        files: Optional[Dict[str, Any]] = None,
     ) -> requests.Response:
         """
         Make an HTTP request to the API.
@@ -102,13 +101,16 @@ class Request:
         try:
             # If files are provided, don't send JSON body
             if files:
+                # Remove Content-Type header for file uploads (requests will set it automatically)
+                filtered_headers = {
+                    k: v for k, v in headers.items() if k != "Content-Type"
+                }
                 response = requests.request(
                     method=method,
                     url=url,
-                    headers={k: v for k, v in headers.items() if k != 'Content-Type'},
+                    headers=filtered_headers,
                     files=files,
-                    timeout=self.timeout,
-                    stream=stream
+                    stream=stream,
                 )
             else:
                 response = requests.request(
@@ -116,14 +118,13 @@ class Request:
                     url=url,
                     headers=headers,
                     json=body if body else None,
-                    timeout=self.timeout,
-                    stream=stream
+                    stream=stream,
                 )
             return response
         except requests.Timeout as e:
-            raise APIConnectionTimeoutError(str(e))
+            raise APIConnectionTimeoutError(str(e)) from e
         except requests.RequestException as e:
-            raise APIConnectionError(cause=e)
+            raise APIConnectionError(cause=e) from e
 
     def handle_error_response(self, response: requests.Response) -> None:
         """
@@ -141,13 +142,12 @@ class Request:
             error_body = response.text
 
         raise APIError.generate(
-            response.status_code,
-            error_body,
-            response.reason,
-            dict(response.headers)
+            response.status_code, error_body, response.reason, dict(response.headers)
         )
 
-    def handle_stream_response(self, response: requests.Response) -> Dict[str, Union[Iterator[bytes], Optional[str]]]:
+    def handle_stream_response(
+        self, response: requests.Response
+    ) -> Dict[str, Union[Iterator[bytes], Optional[str]]]:
         """
         Handle streaming responses.
 
@@ -159,13 +159,11 @@ class Request:
         """
         return {
             "stream": response.iter_lines(),
-            "thread_id": response.headers.get("lb-thread-id")
+            "thread_id": response.headers.get("lb-thread-id"),
         }
 
     def handle_run_response_stream(
-        self,
-        response: requests.Response,
-        raw_response: bool = False
+        self, response: requests.Response, raw_response: bool = False
     ) -> Dict[str, Any]:
         """
         Handle streaming responses for run endpoints.
@@ -179,17 +177,17 @@ class Request:
         """
         result = {
             "stream": response.iter_lines(),
-            "thread_id": response.headers.get("lb-thread-id")
+            "thread_id": response.headers.get("lb-thread-id"),
         }
 
         if raw_response:
-            result["raw_response"] = {
-                "headers": dict(response.headers)
-            }
+            result["rawResponse"] = {"headers": dict(response.headers)}
 
         return result
 
-    def handle_run_response(self, response, thread_id, raw_response=False):
+    def handle_run_response(
+        self, response, thread_id, raw_response=False, endpoint=None
+    ):
         """
         Handle regular responses for run endpoints.
 
@@ -197,16 +195,22 @@ class Request:
             response: Response object
             thread_id: Thread ID from response headers
             raw_response: Whether to include raw response headers
+            endpoint: The API endpoint being called
 
         Returns:
             Processed response dictionary
         """
         generate_response = response.json()
+        is_agent_run = endpoint == "/v1/agent/run" if endpoint else False
 
         build_response = (
             {
-                "completion": generate_response.get("completion"),
-                **generate_response.get("raw", {})
+                "output"
+                if is_agent_run
+                else "completion": generate_response.get(
+                    "output" if is_agent_run else "completion"
+                ),
+                **generate_response.get("raw", {}),
             }
             if generate_response.get("raw")
             else generate_response
@@ -218,9 +222,7 @@ class Request:
             result["threadId"] = thread_id
 
         if raw_response:
-            result["rawResponse"] = {
-                "headers": dict(response.headers)
-            }
+            result["rawResponse"] = {"headers": dict(response.headers)}
 
         return result
 
@@ -234,7 +236,9 @@ class Request:
         Returns:
             True if the endpoint is a generation endpoint, False otherwise
         """
-        return any(endpoint.startswith(gen_endpoint) for gen_endpoint in GENERATION_ENDPOINTS)
+        return any(
+            endpoint.startswith(gen_endpoint) for gen_endpoint in GENERATION_ENDPOINTS
+        )
 
     def send(
         self,
@@ -243,7 +247,7 @@ class Request:
         headers: Optional[Dict[str, str]] = None,
         body: Optional[Dict[str, Any]] = None,
         stream: bool = False,
-        files: Optional[Dict[str, Any]] = None
+        files: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """
         Send a request to the API and handle the response.
@@ -275,33 +279,36 @@ class Request:
             thread_id = response.headers.get("lb-thread-id")
 
             if not body:
+                raw_response = body.get("raw_response", False) if body else False
                 return self.handle_run_response(
                     response,
                     thread_id=None,
-                    raw_response=body.get("raw_response", False) if body else False
+                    raw_response=raw_response,
+                    endpoint=endpoint,
                 )
 
             if body.get("stream") and "run" in url:
+                raw_response = body.get("raw_response", False)
                 return self.handle_run_response_stream(
-                    response,
-                    raw_response=body.get("raw_response", False)
+                    response, raw_response=raw_response
                 )
 
             if body.get("stream"):
                 return self.handle_stream_response(response)
 
+            raw_response = body.get("raw_response", False)
             return self.handle_run_response(
                 response,
                 thread_id=thread_id,
-                raw_response=body.get("raw_response", False)
+                raw_response=raw_response,
+                endpoint=endpoint,
             )
-        else:
-            # For non-generation endpoints, just return the JSON response
-            try:
-                return response.json()
-            except json.JSONDecodeError:
-                # If the response is not JSON, return the text
-                return {"text": response.text}
+        # For non-generation endpoints, just return the JSON response
+        try:
+            return response.json()
+        except json.JSONDecodeError:
+            # If the response is not JSON, return the text
+            return {"text": response.text}
 
     def post(
         self,
@@ -309,7 +316,7 @@ class Request:
         body: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
         stream: bool = False,
-        files: Optional[Dict[str, Any]] = None
+        document: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """
         Send a POST request to the API.
@@ -324,13 +331,13 @@ class Request:
         Returns:
             Processed API response
         """
-        return self.send(endpoint, "POST", headers, body, stream, files)
+        return self.send(endpoint, "POST", headers, body, stream, document)
 
     def get(
         self,
         endpoint: str,
         headers: Optional[Dict[str, str]] = None,
-        params: Optional[Dict[str, Any]] = None
+        params: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """
         Send a GET request to the API.
@@ -358,7 +365,7 @@ class Request:
         endpoint: str,
         body: Optional[Dict[str, Any]] = None,
         headers: Optional[Dict[str, str]] = None,
-        files: Optional[Dict[str, Any]] = None
+        files: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """
         Send a PUT request to the API.
@@ -374,11 +381,7 @@ class Request:
         """
         return self.send(endpoint, "PUT", headers, body, files=files)
 
-    def delete(
-        self,
-        endpoint: str,
-        headers: Optional[Dict[str, str]] = None
-    ) -> Any:
+    def delete(self, endpoint: str, headers: Optional[Dict[str, str]] = None) -> Any:
         """
         Send a DELETE request to the API.
 
@@ -390,22 +393,3 @@ class Request:
             Processed API response
         """
         return self.send(endpoint, "DELETE", headers)
-
-    def patch(
-        self,
-        endpoint: str,
-        body: Optional[Dict[str, Any]] = None,
-        headers: Optional[Dict[str, str]] = None
-    ) -> Any:
-        """
-        Send a PATCH request to the API.
-
-        Args:
-            endpoint: API endpoint path
-            body: Request body
-            headers: Additional headers
-
-        Returns:
-            Processed API response
-        """
-        return self.send(endpoint, "PATCH", headers, body)

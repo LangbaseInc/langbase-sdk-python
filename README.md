@@ -1,229 +1,224 @@
-# Langbase Python SDK: Setup Guide
+# Langbase Python SDK
 
-This document provides instructions for setting up the development environment, testing the SDK, and publishing it to PyPI.
+[![PyPI version](https://badge.fury.io/py/langbase.svg)](https://badge.fury.io/py/langbase)
+[![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Local Development Setup
+The official Python SDK for [Langbase](https://langbase.com) - Build declarative and composable AI-powered LLM products with ease.
 
-### Prerequisites
+## Documentation
 
-- Python 3.7 or higher
-- pip (Python package installer)
-- virtualenv (recommended)
+Check the [Langbase SDK documentation](https://langbase.com/docs/sdk) for more details.
 
-### Setting Up the Development Environment
+The following examples are for reference only. Prefer docs for the latest information.
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/LangbaseInc/langbase-sdk-python
-   cd langbase-sdk-python
-   ```
+## Features
 
-2. **Create and activate a virtual environment**:
-   ```bash
-   python -m venv venv
+- 🚀 **Simple and intuitive API** - Get started in minutes
+- 🔄 **Streaming support** - Real-time text generation with typed events
+- 🛠️ **Type safety** - Full type hints for better IDE support
+- 📦 **Minimal dependencies** - Only what you need
+- 🐍 **Python 3.7+** - Support for modern Python versions
+- 🔌 **Async ready** - Coming soon!
 
-   # On Unix/macOS
-   source venv/bin/activate
-
-   # On Windows
-   venv\Scripts\activate
-   ```
-
-3. **Install development dependencies**:
-   ```bash
-   pip install -e ".[dev]"
-   # Or
-   pip install -r requirements-dev.txt
-   ```
-
-4. **Create a `.env` file**:
-   ```bash
-   cp .env.example .env
-   ```
-
-   Then edit the `.env` file to include your API keys.
-
-## Running Tests
-
-The SDK uses pytest for testing. To run the tests:
+## Installation
 
 ```bash
-# Run all tests
-pytest
-
-# Run specific tests
-pytest tests/test_client.py
-
-# Run with coverage
-pytest --cov=langbase
+pip install langbase
 ```
 
-## Building the Package
+## Quick Start
 
-To build the package:
+### 1. Set up your API key
 
+Create a `.env` file and add your [Langbase API Key](https://langbase.com/docs/api-reference/api-keys).
 ```bash
-python -m build
+LANGBASE_API_KEY="your-api-key"
 ```
 
-This will create both source distributions and wheel distributions in the `dist/` directory.
+---
 
-## Testing the Package Locally
+### 2. Initialize the client
 
-You can test the package locally without publishing to PyPI:
+```python
+from langbase import Langbase
+import os
+from dotenv import load_dotenv
 
-```bash
-# Install in development mode
-pip install -e .
+load_dotenv()
+
+# Get API key from environment variable
+langbase_api_key = os.getenv("LANGBASE_API_KEY")
+
+# Initialize the client
+lb = Langbase(api_key=langbase_api_key)
 ```
 
-Then you can run examples:
+### 3. Generate text
 
-```
-./venv/bin/python examples/pipes/pipes.run.py
-```
+```python
+# Simple generation
+response = lb.pipes.run(
+    name="ai-agent",
+    messages=[{"role": "user", "content": "Tell me about AI"}],
+)
 
-## Publishing to PyPI
-
-### Prerequisites
-
-- A PyPI account
-- twine package (`pip install twine`)
-
-### Steps to Publish
-
-1. **Make sure your package version is updated**:
-   - Update the version number in `langbase/__init__.py`
-
-2. **Build the package**:
-   ```bash
-   python -m build
-   ```
-
-If it doesn't work, try installing the latest version of `build`:
-
-```bash
-pip install build
+print(response["completion"])
 ```
 
-And then run:
+---
 
-```bash
-./venv/bin/python -m build
+### 4. Stream text (Simple)
+
+```python
+# Stream text as it's generated
+response = lb.pipes.run(
+    name="ai-agent",
+    messages=[{"role": "user", "content": "Tell me about AI"}],
+    stream=True,
+)
+
+for text in stream_text(response["stream"]):
+    print(text, end="", flush=True)
 ```
 
-3. **Check the package**:
-   ```bash
-   twine check dist/*
-   ```
+### 5. Stream with typed events (Advanced) 🆕
 
-4. **Upload to TestPyPI (optional but recommended)**:
-   ```bash
-   twine upload --repository-url https://test.pypi.org/legacy/ dist/*
-   ```
+```python
+from langbase import StreamEventType, get_typed_runner
 
-5. **Test the TestPyPI package**:
-   ```bash
-   pip install --index-url https://test.pypi.org/simple/ langbase
-   ```
+# Get streaming response
+response = lb.pipes.run(
+    name="ai-agent",
+    messages=[{"role": "user", "content": "Tell me about AI"}],
+    stream=True,
+)
 
-6. **Upload to PyPI**:
-   ```bash
-   twine upload dist/*
-   ```
+# Create typed stream processor
+runner = get_typed_runner(response)
 
-## Automating Releases with GitHub Actions
+# Register event handlers
+runner.on(StreamEventType.CONNECT, lambda e:
+    print(f"✓ Connected to thread: {e['threadId']}"))
 
-For automated releases, you can use GitHub Actions. Create a workflow file at `.github/workflows/publish.yml` with the following content:
+runner.on(StreamEventType.CONTENT, lambda e:
+    print(e["content"], end="", flush=True))
 
-```yaml
-name: Publish to PyPI
+runner.on(StreamEventType.TOOL_CALL, lambda e:
+    print(f"\n🔧 Tool: {e['toolCall']['function']['name']}"))
 
-on:
-  release:
-    types: [published]
+runner.on(StreamEventType.END, lambda e:
+    print(f"\n⏱️  Duration: {e['duration']:.2f}s"))
 
-jobs:
-  build-and-publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install build twine
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: |
-          python -m build
-          twine upload dist/*
+# Process the stream
+runner.process()
 ```
 
-## Project Structure
+## Core Features
 
-The project follows this structure:
+### 🔄 Pipes - AI Pipeline Execution
 
+```python
+# List all pipes
+pipes = lb.pipes.list()
+
+# Run a pipe
+response = lb.pipes.run(
+    name="ai-agent",
+    messages=[{"role": "user", "content": "Hello!"}],
+    variables={"style": "friendly"},  # Optional variables
+    stream=True,  # Enable streaming
+)
 ```
-langbase-python/
-├── langbase/                   # Main package
-│   ├── __init__.py             # Package initialization
-│   ├── client.py               # Main client implementation
-│   ├── request.py              # HTTP request handling
-│   ├── errors.py               # Error classes
-│   ├── types.py                # Type definitions
-│   └── utils.py                # Utility functions
-├── tests/                      # Test package
-│   ├── __init__.py             # Test package initialization
-│   ├── test_client.py          # Tests for the client
-│   ├── test_request.py         # Tests for request handling
-│   ├── test_errors.py          # Tests for error classes
-│   └── test_utils.py           # Tests for utility functions
-├── examples/                   # Example scripts
-├── setup.py                    # Package setup script
-├── pyproject.toml              # Project configuration
-├── requirements.txt            # Package dependencies
-├── requirements-dev.txt        # Development dependencies
-├── LICENSE                     # MIT license
-└── README.md                   # Main documentation
+
+### 🧠 Memory - Persistent Context Storage
+
+```python
+# Create a memory
+memory = lb.memories.create(
+    name="product-docs",
+    description="Product documentation",
+)
+
+# Upload documents
+lb.memories.documents.upload(
+    memory_name="product-docs",
+    document_name="guide.pdf",
+    document=open("guide.pdf", "rb"),
+    content_type="application/pdf",
+)
+
+# Retrieve relevant context
+results = lb.memories.retrieve(
+    query="How do I get started?",
+    memory=[{"name": "product-docs"}],
+    top_k=3,
+)
 ```
+
+### 🤖 Agent - LLM Agent Execution
+
+```python
+# Run an agent with tools
+response = lb.agent.run(
+    model="openai:gpt-4",
+    messages=[{"role": "user", "content": "Search for AI news"}],
+    tools=[{"type": "function", "function": {...}}],
+    tool_choice="auto",
+    api_key="your-llm-api-key",
+    stream=True,
+)
+```
+
+### 🔧 Tools - Built-in Utilities
+
+```python
+# Chunk text for processing
+chunks = lb.chunker(
+    content="Long text to split...",
+    chunk_max_length=1024,
+    chunk_overlap=256,
+)
+
+# Generate embeddings
+embeddings = lb.embed(
+    chunks=["Text 1", "Text 2"],
+    embedding_model="openai:text-embedding-3-small",
+)
+
+# Parse documents
+content = lb.parser(
+    document=open("document.pdf", "rb"),
+    document_name="document.pdf",
+    content_type="application/pdf",
+)
+```
+
+## Examples
+
+Explore the [examples](./examples) directory for complete working examples:
+
+- [Generate text](./examples/pipes/pipes.run.py)
+- [Stream text with events](./examples/pipes/pipes.run.typed-stream.py)
+- [Work with memory](./examples/memory/)
+- [Agent with tools](./examples/agent/)
+- [Document processing](./examples/parser/)
+- [Workflow automation](./examples/workflow/)
+
+## API Reference
+
+For detailed API documentation, visit [langbase.com/docs/sdk](https://langbase.com/docs/sdk).
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## Support
 
-## Troubleshooting
+- 📚 [Documentation](https://langbase.com/docs)
+- 💬 [Discord Community](https://langbase.com/discord)
+- 🐛 [Issue Tracker](https://github.com/LangbaseInc/langbase-python-sdk/issues)
 
-### Common Issues
+## License
 
-1. **Package not found after installation**:
-   - Make sure your virtual environment is activated
-   - Try running `pip list` to confirm installation
-
-2. **Build errors**:
-   - Make sure you have the latest `build` package: `pip install --upgrade build`
-   - Check for syntax errors in your code
-
-3. **Test failures**:
-   - Run specific failing tests to get more details
-   - Check for API key issues if integration tests are failing
-
-### Getting Help
-
-If you encounter issues not covered here, please open an issue on GitHub with detailed information about the problem, including:
-
-- Your Python version
-- Your operating system
-- Any error messages
-- Steps to reproduce the issue
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

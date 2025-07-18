@@ -1,39 +1,49 @@
 """
-Example demonstrating how to update an existing pipe in Langbase.
+Example demonstrating how to update a pipe in Langbase.
 """
+
+import json
 import os
+
+from dotenv import load_dotenv
+
 from langbase import Langbase
 
-# Get API key from environment variable
-langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-# Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+def main():
+    load_dotenv()
 
-# Name of the pipe to update
-pipe_name = "my-assistant-pipe"
+    # Get API key from environment variable
+    langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
-# Define update configuration
-update_config = {
-    "name": pipe_name,
-    "description": "An updated assistant that provides more detailed responses",
-    "temperature": 0.8,  # Adjust temperature
-    "max_tokens": 2000,  # Increase output length
-    "messages": [
-        {
-            "role": "system",
-            "content": "You are a helpful assistant that provides detailed, informative responses while still being concise and to the point."
-        }
-    ]
-}
+    # Initialize the client
+    lb = Langbase(api_key=langbase_api_key)
 
-# Update the pipe
-try:
-    updated_pipe = lb.pipes.update(**update_config)
+    # Define updated configuration
+    updates = {
+        "description": "Updated description for the text summarization pipe",
+        "model": "openai:gpt-4",
+    }
 
-    print(f"Successfully updated pipe '{updated_pipe['name']}'")
-    print(f"New description: {updated_pipe.get('description', 'N/A')}")
-    print(f"Status: {updated_pipe.get('status', 'unknown')}")
+    # Update the pipe
+    try:
+        response = lb.pipes.update(
+            name="summary-agent",
+            description="An agent that summarizes text",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful assistant that summarizes text clearly and concisely.",
+                }
+            ],
+        )
 
-except Exception as e:
-    print(f"Error updating pipe: {e}")
+        print("Pipe updated successfully!")
+        print(json.dumps(response, indent=2))
+
+    except Exception as e:
+        print(f"Error updating pipe: {e}")
+
+
+if __name__ == "__main__":
+    main()
