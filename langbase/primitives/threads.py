@@ -126,15 +126,3 @@ class Threads:
         return self.request.post(
             THREAD_MESSAGES_ENDPOINT.format(thread_id=thread_id), options
         )
-
-    def list(self, thread_id: str) -> List[ThreadMessagesBaseResponse]:
-        """
-        List messages in a thread.
-
-        Args:
-            thread_id: ID of the thread
-
-        Returns:
-            List of messages in the thread
-        """
-        return self.request.get(THREAD_MESSAGES_ENDPOINT.format(thread_id=thread_id))
