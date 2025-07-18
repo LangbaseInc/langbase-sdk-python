@@ -22,10 +22,8 @@ def main():
     # Create a thread with metadata and initial messages
     try:
         thread = lb.threads.create(
-            {
-                "metadata": {"company": "langbase"},
-                "messages": [{"role": "user", "content": "Hello, how are you?"}],
-            }
+            metadata={"company": "langbase"},
+            messages=[{"role": "user", "content": "Hello, how are you?"}],
         )
 
         print(json.dumps(thread, indent=2))
