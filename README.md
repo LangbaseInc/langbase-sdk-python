@@ -19,7 +19,6 @@ The following examples are for reference only. Prefer docs for the latest inform
 - 🛠️ **Type safety** - Full type hints for better IDE support
 - 📦 **Minimal dependencies** - Only what you need
 - 🐍 **Python 3.7+** - Support for modern Python versions
-- 🔌 **Async ready** - Coming soon!
 
 ## Installation
 
