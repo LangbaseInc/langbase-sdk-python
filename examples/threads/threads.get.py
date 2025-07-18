@@ -20,7 +20,7 @@ def main():
     lb = Langbase(api_key=langbase_api_key)
 
     # Thread ID to retrieve
-    thread_id = "thread-123"  # Replace with your thread ID
+    thread_id = "thread_123"  # Replace with your thread ID
 
     # Get the specific thread
     try:

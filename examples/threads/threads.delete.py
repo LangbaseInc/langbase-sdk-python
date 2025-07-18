@@ -19,9 +19,7 @@ def main():
     lb = Langbase(api_key=langbase_api_key)
 
     # Thread ID to delete
-    thread_id = (
-        "431bac51-929c-4257-8251-baefcd251d3a"  # Replace with your actual thread ID
-    )
+    thread_id = "thread_123"  # Replace with your actual thread ID
 
     # Delete the thread
     try:

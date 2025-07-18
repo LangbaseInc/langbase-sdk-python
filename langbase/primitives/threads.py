@@ -121,8 +121,6 @@ class Threads:
         Returns:
             List of added messages
         """
-        options = {"messages": messages}
-
         return self.request.post(
-            THREAD_MESSAGES_ENDPOINT.format(thread_id=thread_id), options
+            THREAD_MESSAGES_ENDPOINT.format(thread_id=thread_id), messages
         )

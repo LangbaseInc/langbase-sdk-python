@@ -19,7 +19,7 @@ def main():
     lb = Langbase(api_key=langbase_api_key)
 
     # Thread ID to append messages to
-    thread_id = "thread_123456789"  # Replace with your actual thread ID
+    thread_id = "thread_123"  # Replace with your actual thread ID
 
     # Messages to append
     messages = [

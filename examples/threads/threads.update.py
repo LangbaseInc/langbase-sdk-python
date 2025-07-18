@@ -20,7 +20,7 @@ def main():
     lb = Langbase(api_key=langbase_api_key)
 
     # Thread ID to update
-    thread_id = "thread_123456789"  # Replace with your actual thread ID
+    thread_id = "thread_123"  # Replace with your actual thread ID
 
     # New metadata to set for the thread
     updated_metadata = {
@@ -31,7 +31,8 @@ def main():
     # Update the thread metadata
     try:
         updated_thread = lb.threads.update(
-            {"thread_id": thread_id, "metadata": updated_metadata}
+            thread_id=thread_id,
+            metadata=updated_metadata,
         )
 
         print(json.dumps(updated_thread, indent=2))

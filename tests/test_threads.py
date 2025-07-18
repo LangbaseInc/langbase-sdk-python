@@ -224,7 +224,7 @@ class TestThreads:
         assert len(responses.calls) == 1
         request = responses.calls[0].request
         validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
-        assert json.loads(request.body) == {"messages": request_body["messages"]}
+        assert json.loads(request.body) == request_body["messages"]
         assert (
             request.url
             == f"{BASE_URL}{THREAD_MESSAGES_ENDPOINT.format(thread_id=thread_id)}"
