@@ -4,6 +4,7 @@ Example demonstrating how to chunk text content using Langbase.
 
 import json
 import os
+import pathlib
 
 from dotenv import load_dotenv
 
@@ -23,22 +24,16 @@ def main():
     Chunks text content using Langbase.
     """
     try:
-        # Sample text content to chunk
-        content = """Langbase is the most powerful serverless AI platform for building AI agents with memory.
-        Build, deploy, and scale AI agents with tools and memory (RAG). Simple AI primitives with
-        a world-class developer experience without using any frameworks.
+        # Get the path to the document
+        document_path = pathlib.Path(__file__).parent / "composable-ai.md"
 
-        With Langbase, you can compose multiple models together into pipelines. It's easier to
-        think about, easier to develop for, and each pipe lets you choose which model to use for
-        each task. You can see cost of every step. And allow your customers to hyper-personalize.
-
-        Maybe you want to use a smaller, domain-specific model for one task, and a larger
-        general-purpose model for another task. Langbase makes it easy to use the right primitives
-        and tools for each part of the job and provides developers with a zero-config composable
-        AI infrastructure."""
-
+        # Read the file
+        with open(document_path, "r", encoding="utf-8") as file:
+            document_content = file.read()
         # Chunk the content
-        chunks = lb.chunker(content=content, chunk_max_length=1024, chunk_overlap=256)
+        chunks = lb.chunker(
+            content=document_content, chunk_max_length=1024, chunk_overlap=256
+        )
 
         print(json.dumps(chunks, indent=2))
 
