@@ -21,16 +21,16 @@ def main():
 
     # Memory name and document ID to delete
     memory_name = "product-knowledge"  # Replace with your memory name
-    document_name = "name.txt"  # Replace with the document name you want to delete
+    document_name = "intro.txt"  # Replace with the document name you want to delete
 
     # Delete the document
     try:
         response = lb.memories.documents.delete(
-            memory_name=memory_name, document_name=document_id
+            memory_name=memory_name, document_name=document_name
         )
 
         print(
-            f"Document '{document_id}' deleted successfully from memory '{memory_name}'"
+            f"Document '{document_name}' deleted successfully from memory '{memory_name}'"
         )
         print(json.dumps(response, indent=2))
 

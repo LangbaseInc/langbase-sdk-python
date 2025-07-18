@@ -23,17 +23,16 @@ def main():
 
     # Upload documents to the memory
     try:
-        # Example 1: Upload string content as bytes
-        content1 = "Langbase is a powerful platform for building AI applications with composable AI."
-        response1 = lb.memories.documents.upload(
+        content = "Langbase is a powerful platform for building AI applications with composable AI."
+        response = lb.memories.documents.upload(
             memory_name=memory_name,
             document_name="intro.txt",
-            document=content1.encode("utf-8"),  # Convert string to bytes
+            document=content.encode("utf-8"),  # Convert string to bytes
             content_type="text/plain",
             meta={"source": "documentation", "section": "introduction"},
         )
-        print("Document 1 uploaded successfully!")
-        print(f"Status: {response1.status_code}")
+        print("Document uploaded successfully!")
+        print(f"Status: {response.status_code}")
 
     except Exception as e:
         print(f"Error uploading documents: {e}")
