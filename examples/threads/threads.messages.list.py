@@ -21,7 +21,9 @@ def main():
 
     # List all threads
     try:
-        threads = lb.threads.list()
+        threads = lb.threads.messages.list(
+            thread_id="3a958893-6175-4d96-9053-876ff1b37227"
+        )
 
         print(json.dumps(threads, indent=2))
 
