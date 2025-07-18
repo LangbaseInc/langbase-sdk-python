@@ -32,8 +32,10 @@ pip install langbase
 ### 1. Set up your API key
 
 Create a `.env` file and add your [Langbase API Key](https://langbase.com/docs/api-reference/api-keys).
+
 ```bash
 LANGBASE_API_KEY="your-api-key"
+LLM_API_KEY="your-llm-api-key"
 ```
 
 ---
@@ -49,6 +51,7 @@ load_dotenv()
 
 # Get API key from environment variable
 langbase_api_key = os.getenv("LANGBASE_API_KEY")
+llm_api_key = os.getenv("LLM_API_KEY")
 
 # Initialize the client
 lb = Langbase(api_key=langbase_api_key)
@@ -58,12 +61,13 @@ lb = Langbase(api_key=langbase_api_key)
 
 ```python
 # Simple generation
-response = lb.pipes.run(
-    name="ai-agent",
-    messages=[{"role": "user", "content": "Tell me about AI"}],
+response = lb.agent.run(
+    input=[{"role": "user", "content": "Tell me about AI"}],
+    model="openai:gpt-4.1-mini",
+    api_key=llm_api_key,
 )
 
-print(response["completion"])
+print(response["output"])
 ```
 
 ---
@@ -71,15 +75,20 @@ print(response["completion"])
 ### 4. Stream text (Simple)
 
 ```python
+form langbase import get_runner
+
 # Stream text as it's generated
-response = lb.pipes.run(
-    name="ai-agent",
-    messages=[{"role": "user", "content": "Tell me about AI"}],
+response = langbase.agent.run(
+    input=[{"role": "user", "content": "Tell me about AI"}],
+    model="openai:gpt-4.1-mini",
+    api_key=llm_api_key,
     stream=True,
 )
 
-for text in stream_text(response["stream"]):
-    print(text, end="", flush=True)
+runner = get_runner(response)
+
+for content in runner.text_generator():
+    print(content, end="", flush=True)
 ```
 
 ### 5. Stream with typed events (Advanced) 🆕
@@ -87,10 +96,10 @@ for text in stream_text(response["stream"]):
 ```python
 from langbase import StreamEventType, get_typed_runner
 
-# Get streaming response
-response = lb.pipes.run(
-    name="ai-agent",
-    messages=[{"role": "user", "content": "Tell me about AI"}],
+response = langbase.agent.run(
+    input=[{"role": "user", "content": "What is an AI Engineer?"}],
+    model="openai:gpt-4.1-mini",
+    api_key=llm_api_key,
     stream=True,
 )
 
@@ -98,17 +107,37 @@ response = lb.pipes.run(
 runner = get_typed_runner(response)
 
 # Register event handlers
-runner.on(StreamEventType.CONNECT, lambda e:
-    print(f"✓ Connected to thread: {e['threadId']}"))
+runner.on(
+    StreamEventType.CONNECT,
+    lambda event: print(f"✓ Connected! Thread ID: {event['threadId']}\n"),
+)
 
-runner.on(StreamEventType.CONTENT, lambda e:
-    print(e["content"], end="", flush=True))
+runner.on(
+    StreamEventType.CONTENT,
+    lambda event: print(event["content"], end="", flush=True),
+)
 
-runner.on(StreamEventType.TOOL_CALL, lambda e:
-    print(f"\n🔧 Tool: {e['toolCall']['function']['name']}"))
+runner.on(
+    StreamEventType.TOOL_CALL,
+    lambda event: print(
+        f"\n🔧 Tool call: {event['toolCall']['function']['name']}"
+    ),
+)
 
-runner.on(StreamEventType.END, lambda e:
-    print(f"\n⏱️  Duration: {e['duration']:.2f}s"))
+runner.on(
+    StreamEventType.COMPLETION,
+    lambda event: print(f"\n\n✓ Completed! Reason: {event['reason']}"),
+)
+
+runner.on(
+    StreamEventType.ERROR,
+    lambda event: print(f"\n❌ Error: {event['message']}"),
+)
+
+runner.on(
+    StreamEventType.END,
+    lambda event: print(f"⏱️  Total duration: {event['duration']:.2f}s"),
+)
 
 # Process the stream
 runner.process()
@@ -205,9 +234,9 @@ Explore the [examples](./examples) directory for complete working examples:
 - [Document processing](./examples/parser/)
 - [Workflow automation](./examples/workflow/)
 
-## API Reference
+## SDK Reference
 
-For detailed API documentation, visit [langbase.com/docs/sdk](https://langbase.com/docs/sdk).
+For detailed SDK documentation, visit [langbase.com/docs/sdk](https://langbase.com/docs/sdk).
 
 ## Contributing
 
