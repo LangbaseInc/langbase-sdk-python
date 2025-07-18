@@ -17,9 +17,7 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    search_api_key = os.environ.get(
-        "EXA_API_KEY", "your-exa-key"
-    )  # Optional: search provider API key
+    search_api_key = os.getenv("EXA_API_KEY")
 
     # Initialize the client
     lb = Langbase(api_key=langbase_api_key)
