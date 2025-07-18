@@ -79,11 +79,18 @@ class ToolChoice(TypedDict):
     function: Dict[str, str]
 
 
+class MessageContentItem(TypedDict, total=False):
+    type: str
+    text: Optional[str]
+    image_url: Optional[Dict[str, str]]
+    cache_control: Optional[Dict[str, str]]
+
+
 class Message(TypedDict, total=False):
     """Basic message structure."""
 
     role: Role
-    content: Optional[str]
+    content: Union[str, List[MessageContentItem], None]
     name: Optional[str]
     tool_call_id: Optional[str]
     tool_calls: Optional[List[ToolCall]]

@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Union
 from langbase.constants import PIPE_DETAIL_ENDPOINT, PIPE_RUN_ENDPOINT, PIPES_ENDPOINT
 from langbase.request import Request
 from langbase.types import (
+    Message,
     PipeCreateResponse,
     PipeListResponse,
     PipeUpdateResponse,
@@ -65,9 +66,9 @@ class Pipes:
 
     def run(
         self,
-        name: Optional[str] = None,
+        name: str = None,
         api_key: Optional[str] = None,
-        messages: Optional[List[Dict[str, Any]]] = None,
+        messages: Optional[List[Message]] = None,
         variables: Optional[List[Dict[str, str]]] = None,
         thread_id: Optional[str] = None,
         raw_response: Optional[bool] = None,

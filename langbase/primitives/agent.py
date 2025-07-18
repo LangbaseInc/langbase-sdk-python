@@ -2,10 +2,11 @@
 Agent API client for the Langbase SDK.
 """
 
-from typing import Any, Dict, List, Optional, Union, overload
+from typing import Any, Dict, List, Literal, Optional, Union, overload
 
 from langbase.constants import AGENT_RUN_ENDPOINT
 from langbase.request import Request
+from langbase.types import McpServerSchema, Message, ToolChoice, Tools
 from langbase.utils import clean_null_values
 
 
@@ -17,7 +18,7 @@ class Agent:
     @overload
     def run(
         self,
-        input: Union[str, List[Dict[str, Any]]],
+        input: Union[str, List[Message]],
         model: str,
         api_key: str,
         instructions: Optional[str] = None,
@@ -27,14 +28,14 @@ class Agent:
         presence_penalty: Optional[float] = None,
         frequency_penalty: Optional[float] = None,
         stop: Optional[List[str]] = None,
-        tools: Optional[List[Dict[str, Any]]] = None,
-        tool_choice: Optional[Union[str, Dict[str, Any]]] = None,
+        tools: Optional[List[Tools]] = None,
+        tool_choice: Optional[Union[Literal["auto", "required"], ToolChoice]] = None,
         parallel_tool_calls: Optional[bool] = None,
         reasoning_effort: Optional[str] = None,
         max_completion_tokens: Optional[int] = None,
         response_format: Optional[Dict[str, Any]] = None,
         custom_model_params: Optional[Dict[str, Any]] = None,
-        mcp_servers: Optional[List[Dict[str, Any]]] = None,
+        mcp_servers: List[McpServerSchema] = None,
         *,
         stream: bool = True,
     ) -> Any:
@@ -44,7 +45,7 @@ class Agent:
     @overload
     def run(
         self,
-        input: Union[str, List[Dict[str, Any]]],
+        input: Union[str, List[Message]],
         model: str,
         api_key: str,
         instructions: Optional[str] = None,
@@ -54,14 +55,14 @@ class Agent:
         presence_penalty: Optional[float] = None,
         frequency_penalty: Optional[float] = None,
         stop: Optional[List[str]] = None,
-        tools: Optional[List[Dict[str, Any]]] = None,
-        tool_choice: Optional[Union[str, Dict[str, Any]]] = None,
+        tools: Optional[List[Tools]] = None,
+        tool_choice: Optional[Union[Literal["auto", "required"], ToolChoice]] = None,
         parallel_tool_calls: Optional[bool] = None,
         reasoning_effort: Optional[str] = None,
         max_completion_tokens: Optional[int] = None,
         response_format: Optional[Dict[str, Any]] = None,
         custom_model_params: Optional[Dict[str, Any]] = None,
-        mcp_servers: Optional[List[Dict[str, Any]]] = None,
+        mcp_servers: List[McpServerSchema] = None,
         stream: bool = False,
     ) -> Dict[str, Any]:
         """Non-stream overload - returns dict response when stream=False"""
@@ -69,7 +70,7 @@ class Agent:
 
     def run(
         self,
-        input: Union[str, List[Dict[str, Any]]],
+        input: Union[str, List[Message]],
         model: str,
         api_key: str,
         instructions: Optional[str] = None,
@@ -79,14 +80,14 @@ class Agent:
         presence_penalty: Optional[float] = None,
         frequency_penalty: Optional[float] = None,
         stop: Optional[List[str]] = None,
-        tools: Optional[List[Dict[str, Any]]] = None,
-        tool_choice: Optional[Union[str, Dict[str, Any]]] = None,
+        tools: Optional[List[Tools]] = None,
+        tool_choice: Optional[Union[Literal["auto", "required"], ToolChoice]] = None,
         parallel_tool_calls: Optional[bool] = None,
         reasoning_effort: Optional[str] = None,
         max_completion_tokens: Optional[int] = None,
         response_format: Optional[Dict[str, Any]] = None,
         custom_model_params: Optional[Dict[str, Any]] = None,
-        mcp_servers: Optional[List[Dict[str, Any]]] = None,
+        mcp_servers: List[McpServerSchema] = None,
         stream: bool = False,
     ) -> Union[Dict[str, Any], Any]:
         """

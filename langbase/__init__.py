@@ -45,6 +45,7 @@ from .streaming import StreamEventType, TypedStreamProcessor
 from .types import (
     ChoiceGenerate,
     Message,
+    MessageContentItem,
     PipeBaseOptions,
     PipeBaseResponse,
     PipeCreateOptions,
