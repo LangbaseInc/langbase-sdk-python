@@ -45,7 +45,7 @@ async def process_email(email_content: str):
     langbase = Langbase(api_key=langbase_api_key)
 
     # Create a new workflow
-    workflow = Workflow()
+    workflow = Workflow(debug=True)
 
     try:
         # Steps 1 & 2: Run summary and sentiment analysis in parallel

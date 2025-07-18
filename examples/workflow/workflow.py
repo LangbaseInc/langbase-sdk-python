@@ -24,7 +24,7 @@ async def main():
     async def summarize_step():
         return langbase.agent.run(
             model="openai:gpt-4o-mini",
-            api_key=os.environ.get("OPENAI_API_KEY"),
+            api_key=os.environ.get("LLM_API_KEY"),
             input=[
                 {
                     "role": "system",
