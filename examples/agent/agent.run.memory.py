@@ -5,6 +5,7 @@ This example demonstrates how to retrieve and attach memory to an agent call.
 """
 
 import os
+from io import BytesIO
 
 from dotenv import load_dotenv
 
@@ -59,7 +60,11 @@ def create_memory():
     langbase_api_key = os.environ.get("LANGBASE_API_KEY")
     langbase = Langbase(api_key=langbase_api_key)
 
-    if not langbase.memories.list():
+    memories = langbase.memories.list()
+    memory_names = [memory["name"] for memory in memories]
+    career_advisor_memory_name = "career-advisor-memory"
+
+    if career_advisor_memory_name not in memory_names:
         memory = langbase.memories.create(
             name="career-advisor-memory",
             description="A memory for the career advisor agent",
@@ -67,20 +72,20 @@ def create_memory():
 
         print("Memory created: ", memory)
 
-        content = """
-        An AI Engineer is a software engineer who specializes in building AI systems.
-        """
+    content = """
+    An AI Engineer is a software engineer who specializes in building AI systems.
+    """
 
-        langbase.memories.documents.upload(
-            memory_name="career-advisor-memory",
-            document_name="career-advisor-document",
-            document=content,
-            content_type="text/plain",
-        )
+    content_buffer = BytesIO(content.encode("utf-8"))
 
-        print("Document uploaded")
-    else:
-        print("Memory already exists")
+    langbase.memories.documents.upload(
+        memory_name="career-advisor-memory",
+        document_name="career-advisor-document.txt",
+        document=content_buffer,
+        content_type="text/plain",
+    )
+
+    print("Document uploaded")
 
 
 if __name__ == "__main__":

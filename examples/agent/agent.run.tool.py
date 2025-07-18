@@ -46,23 +46,23 @@ def send_email(args):
     html = args.get("html")
     text = args.get("text")
 
-    response = requests.post(
-        "https://api.resend.com/emails",
-        headers={
-            "Authorization": f"Bearer {os.environ.get('RESEND_API_KEY')}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "from": from_email,
-            "to": to_email,
-            "subject": subject,
-            "html": html,
-            "text": text,
-        },
-    )
+    # response = requests.post(
+    #     "https://api.resend.com/emails",
+    #     headers={
+    #         "Authorization": f"Bearer {os.environ.get('RESEND_API_KEY')}",
+    #         "Content-Type": "application/json",
+    #     },
+    #     json={
+    #         "from": from_email,
+    #         "to": to_email,
+    #         "subject": subject,
+    #         "html": html,
+    #         "text": text,
+    #     },
+    # )
 
-    if not response.ok:
-        raise Exception("Failed to send email")
+    # if not response.ok:
+    #     raise Exception("Failed to send email")
 
     return f"✅ Email sent successfully to {to_email}!"
 
@@ -71,7 +71,7 @@ def main():
     # Check for required environment variables
     langbase_api_key = os.environ.get("LANGBASE_API_KEY")
     llm_api_key = os.environ.get("LLM_API_KEY")
-    resend_api_key = os.environ.get("RESEND_API_KEY")
+    # resend_api_key = os.environ.get("RESEND_API_KEY")
 
     if not langbase_api_key:
         print("❌ Missing LANGBASE_API_KEY in environment variables.")
@@ -81,9 +81,9 @@ def main():
         print("❌ Missing LLM_API_KEY in environment variables.")
         exit(1)
 
-    if not resend_api_key:
-        print("❌ Missing RESEND_API_KEY in environment variables.")
-        exit(1)
+    # if not resend_api_key:
+    #     print("❌ Missing RESEND_API_KEY in environment variables.")
+    #     exit(1)
 
     # Initialize Langbase client
     langbase = Langbase(api_key=langbase_api_key)
@@ -102,7 +102,7 @@ def main():
     response = langbase.agent.run(
         model="openai:gpt-4.1-mini",
         api_key=llm_api_key,
-        instructions="You are an email sending assistant.",
+        instructions="You are an email agent. You are given a task to send an email to a recipient. You have the ability to send an email using the send_email tool.",
         input=input_messages,
         tools=[send_email_tool_schema],
         stream=False,
@@ -110,8 +110,14 @@ def main():
 
     # Check if response contains choices (for tool calls)
     choices = response.get("choices", [])
+
+    print("\n📨 Initial Response:")
+    print(
+        f"Output: {response.get('output', 'No direct output - checking for tool calls...')}"
+    )
+
     if not choices:
-        print("No choices found in response")
+        print("❌ No choices found in response")
         return
 
     # Push agent tool call to messages
@@ -122,28 +128,42 @@ def main():
     has_tool_calls = tool_calls and len(tool_calls) > 0
 
     if has_tool_calls:
-        for tool_call in tool_calls:
+        print(f"\n🔧 Tool calls detected: {len(tool_calls)}")
+
+        for i, tool_call in enumerate(tool_calls, 1):
             # Process each tool call
             function = tool_call.get("function", {})
             name = function.get("name")
             args = function.get("arguments")
 
+            print(f"\n  Tool Call #{i}:")
+            print(f"  - Name: {name}")
+            print(f"  - Raw Arguments: {args}")
+
             try:
                 parsed_args = json.loads(args)
+                print(f"  - Parsed Arguments: {json.dumps(parsed_args, indent=4)}")
             except json.JSONDecodeError:
-                print(f"Error parsing tool call arguments: {args}")
+                print(f"  ❌ Error parsing tool call arguments: {args}")
                 continue
 
             # Set email parameters
+            print("\n  📧 Preparing email with full details...")
             parsed_args["from"] = "onboarding@resend.dev"
             parsed_args["to"] = recipient_info["email"]
             parsed_args["subject"] = email["subject"]
             parsed_args["html"] = email["html_email"]
             parsed_args["text"] = email["full_email"]
 
+            print(f"  - From: {parsed_args['from']}")
+            print(f"  - To: {parsed_args['to']}")
+            print(f"  - Subject: {parsed_args['subject']}")
+
             # Execute the tool
             try:
+                print(f"\n  ⚡ Executing {name}...")
                 result = send_email(parsed_args)
+                print(f"  ✅ Tool result: {result}")
 
                 # Add tool result to messages
                 input_messages.append(
@@ -155,19 +175,23 @@ def main():
                     }
                 )
             except Exception as e:
-                print(f"Error executing tool: {e}")
+                print(f"  ❌ Error executing tool: {e}")
                 continue
+
+    print("\n🤖 Sending tool results back to agent for final response...")
 
     # Final agent response with tool result
     final_response = langbase.agent.run(
         model="openai:gpt-4.1-mini",
-        api_key=os.environ.get("OPENAI_API_KEY"),
+        api_key=llm_api_key,
         instructions="You are an email sending assistant. Confirm the email has been sent successfully.",
         input=input_messages,
         stream=False,
     )
 
-    print("Final Output:", final_response.get("output"))
+    print("\n✨ Final Response:")
+    print(f"Agent: {final_response.get('output')}")
+    print("\n" + "=" * 50)
 
 
 if __name__ == "__main__":

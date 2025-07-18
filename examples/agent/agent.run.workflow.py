@@ -8,7 +8,11 @@ complex multi-step AI operations with retry logic, timeouts, and error handling.
 import asyncio
 import os
 
+from dotenv import load_dotenv
+
 from langbase import Langbase, Workflow
+
+load_dotenv()
 
 
 async def main():
@@ -18,8 +22,20 @@ async def main():
     print("🚀 Langbase Workflow Example")
     print("=" * 50)
 
+    langbase_api_key = os.environ.get("LANGBASE_API_KEY")
+    llm_api_key = os.environ.get("LLM_API_KEY")
+
+    if not langbase_api_key:
+        print("❌ Missing LANGBASE_API_KEY in environment variables.")
+        exit(1)
+
+    if not llm_api_key:
+        print("❌ Missing LLM_API_KEY in environment variables.")
+        print("Please set: export LLM_API_KEY='your_llm_api_key'")
+        exit(1)
+
     # Initialize Langbase client and Workflow
-    lb = Langbase()
+    langbase = Langbase(api_key=langbase_api_key)
     workflow = Workflow(debug=True)  # Enable debug mode for visibility
 
     # Example 1: Basic step execution
@@ -28,16 +44,12 @@ async def main():
 
     async def generate_summary():
         """Generate a summary using Langbase."""
-        response = await lb.pipes.run(
-            name="summary-pipe",  # Replace with your pipe name
-            messages=[
-                {
-                    "role": "user",
-                    "content": "Summarize the benefits of AI in healthcare.",
-                }
-            ],
+        response = langbase.agent.run(
+            input="Summarize the benefits of AI in healthcare.",
+            model="openai:gpt-4o-mini",
+            api_key=os.environ.get("LLM_API_KEY"),
         )
-        return response["completion"]
+        return response["output"]
 
     try:
         summary = await workflow.step(
@@ -53,16 +65,12 @@ async def main():
 
     async def generate_with_timeout():
         """Generate content with potential timeout."""
-        response = await lb.pipes.run(
-            name="creative-pipe",  # Replace with your pipe name
-            messages=[
-                {
-                    "role": "user",
-                    "content": "Write a detailed story about space exploration.",
-                }
-            ],
+        response = langbase.agent.run(
+            input="Write a detailed story about space exploration.",
+            model="openai:gpt-4o-mini",
+            api_key=os.environ.get("LLM_API_KEY"),
         )
-        return response["completion"]
+        return response["output"]
 
     try:
         story = await workflow.step(
@@ -86,16 +94,12 @@ async def main():
 
         # Simulate 70% success rate
         if random.random() < 0.7:
-            response = await lb.pipes.run(
-                name="analysis-pipe",  # Replace with your pipe name
-                messages=[
-                    {
-                        "role": "user",
-                        "content": "Analyze the impact of renewable energy.",
-                    }
-                ],
+            response = langbase.agent.run(
+                input="Analyze the impact of renewable energy.",
+                model="openai:gpt-4o-mini",
+                api_key=os.environ.get("LLM_API_KEY"),
             )
-            return response["completion"]
+            return response["output"]
         raise Exception("Temporary service unavailable")
 
     try:
@@ -121,11 +125,12 @@ async def main():
     # Step 1: Generate research topics
     async def generate_topics():
         """Generate research topics."""
-        response = await lb.pipes.run(
-            name="research-pipe",  # Replace with your pipe name
-            messages=[{"role": "user", "content": "Generate 3 AI research topics."}],
+        response = langbase.agent.run(
+            input="Generate 3 AI research topics.",
+            model="openai:gpt-4o-mini",
+            api_key=os.environ.get("LLM_API_KEY"),
         )
-        return response["completion"]
+        return response["output"]
 
     # Step 2: Expand on each topic (using context from previous step)
     async def expand_topics():
@@ -133,16 +138,12 @@ async def main():
         # Access previous step's output from workflow context
         topics = workflow.context["outputs"].get("research_topics", "")
 
-        response = await lb.pipes.run(
-            name="expansion-pipe",  # Replace with your pipe name
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"Expand on these research topics: {topics}",
-                }
-            ],
+        response = langbase.agent.run(
+            input=f"Expand on these research topics: {topics}",
+            model="openai:gpt-4o-mini",
+            api_key=os.environ.get("LLM_API_KEY"),
         )
-        return response["completion"]
+        return response["output"]
 
     # Step 3: Generate recommendations
     async def generate_recommendations():
@@ -150,14 +151,10 @@ async def main():
         topics = workflow.context["outputs"].get("research_topics", "")
         expansion = workflow.context["outputs"].get("topic_expansion", "")
 
-        response = await lb.pipes.run(
-            name="recommendation-pipe",  # Replace with your pipe name
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"Based on these topics: {topics}\n\nAnd expansion: {expansion}\n\nGenerate research recommendations.",
-                }
-            ],
+        response = langbase.agent.run(
+            input=f"Based on these topics: {topics}\n\nAnd expansion: {expansion}\n\nGenerate research recommendations.",
+            model="openai:gpt-4o-mini",
+            api_key=os.environ.get("LLM_API_KEY"),
         )
         return response["completion"]
 
@@ -200,25 +197,25 @@ async def main():
 
     async def generate_technical_content():
         """Generate technical content."""
-        response = await lb.pipes.run(
-            name="technical-pipe",  # Replace with your pipe name
-            messages=[{"role": "user", "content": "Explain quantum computing basics."}],
+        response = langbase.agent.run(
+            input="Explain quantum computing basics.",
+            model="openai:gpt-4o-mini",
+            api_key=os.environ.get("LLM_API_KEY"),
         )
-        return response["completion"]
+        return response["output"]
 
     async def generate_marketing_content():
         """Generate marketing content."""
-        response = await lb.pipes.run(
-            name="marketing-pipe",  # Replace with your pipe name
-            messages=[
-                {"role": "user", "content": "Write marketing copy for a tech product."}
-            ],
+        response = langbase.agent.run(
+            input="Write marketing copy for a tech product.",
+            model="openai:gpt-4o-mini",
+            api_key=os.environ.get("LLM_API_KEY"),
         )
-        return response["completion"]
+        return response["output"]
 
     # Create separate workflows for parallel execution
-    technical_workflow = Workflow(debug=False)
-    marketing_workflow = Workflow(debug=False)
+    technical_workflow = Workflow(debug=True)
+    marketing_workflow = Workflow(debug=True)
 
     try:
         # Execute steps in parallel
@@ -302,60 +299,44 @@ class AIContentWorkflow:
 
         # Step 1: Generate outline
         async def create_outline():
-            response = await self.lb.pipes.run(
-                name="outline-pipe",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"Create a {target_length} blog post outline about: {topic}",
-                    }
-                ],
+            response = self.lb.agent.run(
+                input=f"Create a {target_length} blog post outline about: {topic}",
+                model="openai:gpt-4o-mini",
+                api_key=os.environ.get("LLM_API_KEY"),
             )
-            return response["completion"]
+            return response["output"]
 
         # Step 2: Generate introduction
         async def write_introduction():
             outline = self.workflow.context["outputs"]["outline"]
-            response = await self.lb.pipes.run(
-                name="intro-pipe",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"Write an engaging introduction for this outline: {outline}. Tone: {tone}",
-                    }
-                ],
+            response = self.lb.agent.run(
+                input=f"Write an engaging introduction for this outline: {outline}. Tone: {tone}",
+                model="openai:gpt-4o-mini",
+                api_key=os.environ.get("LLM_API_KEY"),
             )
-            return response["completion"]
+            return response["output"]
 
         # Step 3: Generate main content
         async def write_main_content():
             outline = self.workflow.context["outputs"]["outline"]
             intro = self.workflow.context["outputs"]["introduction"]
-            response = await self.lb.pipes.run(
-                name="content-pipe",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"Write the main content based on outline: {outline}\nIntroduction: {intro}\nTone: {tone}",
-                    }
-                ],
+            response = self.lb.agent.run(
+                input=f"Write the main content based on outline: {outline}\nIntroduction: {intro}\nTone: {tone}",
+                model="openai:gpt-4o-mini",
+                api_key=os.environ.get("LLM_API_KEY"),
             )
-            return response["completion"]
+            return response["output"]
 
         # Step 4: Generate conclusion
         async def write_conclusion():
             outline = self.workflow.context["outputs"]["outline"]
             content = self.workflow.context["outputs"]["main_content"]
-            response = await self.lb.pipes.run(
-                name="conclusion-pipe",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": f"Write a conclusion for this content: {content[:500]}...",
-                    }
-                ],
+            response = self.lb.agent.run(
+                input=f"Write a conclusion for this content: {content[:500]}...",
+                model="openai:gpt-4o-mini",
+                api_key=os.environ.get("LLM_API_KEY"),
             )
-            return response["completion"]
+            return response["output"]
 
         # Execute the workflow
         try:
@@ -411,7 +392,7 @@ async def advanced_workflow_example():
     print("\n🚀 Advanced Workflow Example")
     print("=" * 50)
 
-    lb = Langbase()
+    lb = Langbase(api_key=os.environ.get("LANGBASE_API_KEY"))
     blog_workflow = AIContentWorkflow(lb, debug=True)
 
     result = await blog_workflow.generate_blog_post(
@@ -440,8 +421,6 @@ if __name__ == "__main__":
         print("   You can get your API key from https://langbase.com/settings")
         exit(1)
 
-    # Run the basic examples
-    asyncio.run(main())
-
+    # asyncio.run(main())
     # Run the advanced example
     asyncio.run(advanced_workflow_example())
