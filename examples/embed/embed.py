@@ -19,7 +19,8 @@ def main():
     """
     response = langbase.embed(
         chunks=[
-            "Langbase is the most powerful serverless platform for building AI agents with memory. Build, scale, and evaluate AI agents with semantic memory (RAG) and world-class developer experience. We process billions of AI messages/tokens daily. Built for every developer, not just AI/ML experts."
+            "Langbase is the most powerful serverless platform for building AI agents with memory. Build, scale, and evaluate AI agents with semantic memory (RAG) and world-class developer experience.",
+            "We process billions of AI messages/tokens daily. Built for every developer, not just AI/ML experts.",
         ],
         embedding_model="openai:text-embedding-3-large",
     )
