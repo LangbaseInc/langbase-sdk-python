@@ -1,7 +1,3 @@
-"""
-Example demonstrating how to parse a document using Langbase.
-"""
-
 import json
 import os
 import pathlib
@@ -16,33 +12,29 @@ load_dotenv()
 langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
 # Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+langbase = Langbase(api_key=langbase_api_key)
 
 
 def main():
     """
-    Parses a document using Langbase.
+    Chunks text content using Langbase.
     """
     try:
         # Get the path to the document
         document_path = pathlib.Path(__file__).parent / "composable-ai.md"
 
         # Read the file
-        with open(document_path, "rb") as file:
+        with open(document_path, "r", encoding="utf-8") as file:
             document_content = file.read()
-
-        # Parse the document
-        results = lb.parser(
-            document=document_content,
-            document_name="composable-ai.md",
-            content_type="text/markdown",
+        # Chunk the content
+        chunks = langbase.chunker(
+            content=document_content, chunk_max_length=1024, chunk_overlap=256
         )
 
-        # Print the results
-        print(json.dumps(results, indent=2))
+        print(json.dumps(chunks, indent=2))
 
     except Exception as e:
-        print(f"Error parsing document: {e}")
+        print(f"Error chunking content: {e}")
 
 
 if __name__ == "__main__":
