@@ -83,6 +83,17 @@ pytest -v
 pre-commit run --all-files
 ```
 
+### 6. Release a new version
+```bash
+python release.py
+```
+
+# 3. Optional: Publish to PyPI
+```
+python -m build
+twine upload dist/*
+```
+
 ## Quick Checklist
 
 Before pushing your changes, ensure:
