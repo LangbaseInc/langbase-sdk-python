@@ -1,0 +1,64 @@
+{
+  "branches": ["main"],
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "releaseRules": [
+          {"type": "📦 NEW", "release": "major"},
+          {"type": "👌 IMPROVE", "release": "patch"},
+          {"type": "🐛 FIX", "release": "patch"},
+          {"type": "🚀 RELEASE", "release": "patch"},
+          {"type": "📖 DOC", "release": false},
+          {"type": "🤖 TEST", "release": false},
+          {"type": "‼️ BREAKING", "release": "major"}
+        ],
+        "parserOpts": {
+          "pattern": "^(📦 NEW|👌 IMPROVE|🐛 FIX|🚀 RELEASE|📖 DOC|🤖 TEST|‼️ BREAKING): (.*)$",
+          "groupCorrespondence": ["type", "subject"]
+        }
+      }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "parserOpts": {
+          "pattern": "^(📦 NEW|👌 IMPROVE|🐛 FIX|🚀 RELEASE|📖 DOC|🤖 TEST|‼️ BREAKING): (.*)$",
+          "groupCorrespondence": ["type", "subject"]
+        },
+        "writerOpts": {
+          "transform": {
+            "hash": false,
+            "committerDate": false,
+            "authorDate": false,
+            "authorName": false,
+            "authorEmail": false,
+            "committerName": false,
+            "committerEmail": false
+          },
+          "groupBy": "type",
+          "commitGroupsSort": ["📦 NEW", "👌 IMPROVE", "🐛 FIX", "‼️ BREAKING", "📖 DOC", "🤖 TEST"],
+          "commitsSort": ["subject"],
+          "noteGroupsSort": "title"
+        }
+      }
+    ],
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": [
+          "CHANGELOG.md",
+          "pyproject.toml",
+          "langbase/__init__.py"
+        ],
+        "message": "🚀 RELEASE: ${nextRelease.version}\n\n${nextRelease.notes}"
+      }
+    ]
+  ]
+}
