@@ -5,7 +5,7 @@
       "@semantic-release/commit-analyzer",
       {
         "releaseRules": [
-          {"type": "📦 NEW", "release": "major"},
+          {"type": "📦 NEW", "release": "minor"},
           {"type": "👌 IMPROVE", "release": "patch"},
           {"type": "🐛 FIX", "release": "patch"},
           {"type": "🚀 RELEASE", "release": "patch"},
