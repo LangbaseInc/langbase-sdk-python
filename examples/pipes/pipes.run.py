@@ -18,11 +18,11 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Run the pipe with explicit stream=False
     try:
-        response = lb.pipes.run(
+        response = langbase.pipes.run(
             name="summary-agent",
             messages=[{"role": "user", "content": "Who is an AI Engineer?"}],
             stream=False,

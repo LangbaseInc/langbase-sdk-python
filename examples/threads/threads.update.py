@@ -17,7 +17,7 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Thread ID to update
     thread_id = "thread_123"  # Replace with your actual thread ID
@@ -30,7 +30,7 @@ def main():
 
     # Update the thread metadata
     try:
-        updated_thread = lb.threads.update(
+        updated_thread = langbase.threads.update(
             thread_id=thread_id,
             metadata=updated_metadata,
         )

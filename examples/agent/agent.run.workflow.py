@@ -279,7 +279,7 @@ class AIContentWorkflow:
             langbase_client: Langbase client instance
             debug: Whether to enable debug mode
         """
-        self.lb = langbase_client
+        self.langbase = langbase_client
         self.workflow = Workflow(debug=debug)
 
     async def generate_blog_post(
@@ -299,7 +299,7 @@ class AIContentWorkflow:
 
         # Step 1: Generate outline
         async def create_outline():
-            response = self.lb.agent.run(
+            response = self.langbase.agent.run(
                 input=f"Create a {target_length} blog post outline about: {topic}",
                 model="openai:gpt-4o-mini",
                 api_key=os.environ.get("LLM_API_KEY"),
@@ -309,7 +309,7 @@ class AIContentWorkflow:
         # Step 2: Generate introduction
         async def write_introduction():
             outline = self.workflow.context["outputs"]["outline"]
-            response = self.lb.agent.run(
+            response = self.langbase.agent.run(
                 input=f"Write an engaging introduction for this outline: {outline}. Tone: {tone}",
                 model="openai:gpt-4o-mini",
                 api_key=os.environ.get("LLM_API_KEY"),
@@ -320,7 +320,7 @@ class AIContentWorkflow:
         async def write_main_content():
             outline = self.workflow.context["outputs"]["outline"]
             intro = self.workflow.context["outputs"]["introduction"]
-            response = self.lb.agent.run(
+            response = self.langbase.agent.run(
                 input=f"Write the main content based on outline: {outline}\nIntroduction: {intro}\nTone: {tone}",
                 model="openai:gpt-4o-mini",
                 api_key=os.environ.get("LLM_API_KEY"),
@@ -331,7 +331,7 @@ class AIContentWorkflow:
         async def write_conclusion():
             outline = self.workflow.context["outputs"]["outline"]
             content = self.workflow.context["outputs"]["main_content"]
-            response = self.lb.agent.run(
+            response = self.langbase.agent.run(
                 input=f"Write a conclusion for this content: {content[:500]}...",
                 model="openai:gpt-4o-mini",
                 api_key=os.environ.get("LLM_API_KEY"),
@@ -392,8 +392,8 @@ async def advanced_workflow_example():
     print("\n🚀 Advanced Workflow Example")
     print("=" * 50)
 
-    lb = Langbase(api_key=os.environ.get("LANGBASE_API_KEY"))
-    blog_workflow = AIContentWorkflow(lb, debug=True)
+    langbase = Langbase(api_key=os.environ.get("LANGBASE_API_KEY"))
+    blog_workflow = AIContentWorkflow(langbase, debug=True)
 
     result = await blog_workflow.generate_blog_post(
         topic="The Future of Artificial Intelligence",

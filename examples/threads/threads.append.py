@@ -16,7 +16,7 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Thread ID to append messages to
     thread_id = "thread_123"  # Replace with your actual thread ID
@@ -28,7 +28,7 @@ def main():
 
     # Append messages to the thread
     try:
-        response = lb.threads.append(thread_id=thread_id, messages=messages)
+        response = langbase.threads.append(thread_id=thread_id, messages=messages)
 
         print(f"Successfully appended {len(response)} messages to thread '{thread_id}'")
 

@@ -17,11 +17,11 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Create a thread with metadata and initial messages
     try:
-        thread = lb.threads.create(
+        thread = langbase.threads.create(
             metadata={"company": "langbase"},
             messages=[{"role": "user", "content": "Hello, how are you?"}],
         )
