@@ -88,7 +88,7 @@ pre-commit run --all-files
 python release.py
 ```
 
-# 3. Optional: Publish to PyPI
+### 3. Optional: Publish to PyPI
 ```
 python -m build
 twine upload dist/*
