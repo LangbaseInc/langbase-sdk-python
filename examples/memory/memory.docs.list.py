@@ -17,14 +17,14 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Memory name to list documents from
     memory_name = "product-knowledge"  # Replace with your memory name
 
     # List documents in the memory
     try:
-        response = lb.memories.documents.list(memory_name=memory_name)
+        response = langbase.memories.documents.list(memory_name=memory_name)
 
         print(f"Documents in memory '{memory_name}':")
         print(json.dumps(response, indent=2))

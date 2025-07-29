@@ -18,7 +18,7 @@ langbase_api_key = os.getenv("LANGBASE_API_KEY")
 crawl_api_key = os.getenv("CRAWL_KEY")
 
 # Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+langbase = Langbase(api_key=langbase_api_key)
 
 
 def main():
@@ -27,7 +27,7 @@ def main():
     """
     try:
         # Perform the web crawl
-        results = lb.tools.crawl(
+        results = langbase.tools.crawl(
             url=["https://langbase.com", "https://langbase.com/about"],
             max_pages=1,
             api_key=crawl_api_key,

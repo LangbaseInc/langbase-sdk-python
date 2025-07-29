@@ -17,11 +17,11 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # List all memories
     try:
-        response = lb.memories.list()
+        response = langbase.memories.list()
 
         print(json.dumps(response, indent=2))
 

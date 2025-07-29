@@ -16,7 +16,7 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Memory name to upload documents to
     memory_name = "product-knowledge"  # Replace with your memory name
@@ -24,7 +24,7 @@ def main():
     # Upload documents to the memory
     try:
         content = "Langbase is a powerful platform for building AI applications with composable AI."
-        response = lb.memories.documents.upload(
+        response = langbase.memories.documents.upload(
             memory_name=memory_name,
             document_name="intro.txt",
             document=content.encode("utf-8"),  # Convert string to bytes

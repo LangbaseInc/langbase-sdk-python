@@ -16,14 +16,14 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Thread ID to delete
     thread_id = "thread_123"  # Replace with your actual thread ID
 
     # Delete the thread
     try:
-        response = lb.threads.delete(thread_id=thread_id)
+        response = langbase.threads.delete(thread_id=thread_id)
 
         if response.get("success", False):
             print(f"Successfully deleted thread {thread_id}")

@@ -53,14 +53,14 @@ langbase_api_key = os.getenv("LANGBASE_API_KEY")
 llm_api_key = os.getenv("LLM_API_KEY")
 
 # Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+langbase = Langbase(api_key=langbase_api_key)
 ```
 
 ### 3. Generate text
 
 ```python
 # Simple generation
-response = lb.agent.run(
+response = langbase.agent.run(
     input=[{"role": "user", "content": "Tell me about AI"}],
     model="openai:gpt-4.1-mini",
     api_key=llm_api_key,
@@ -148,10 +148,10 @@ runner.process()
 
 ```python
 # List all pipes
-pipes = lb.pipes.list()
+pipes = langbase.pipes.list()
 
 # Run a pipe
-response = lb.pipes.run(
+response = langbase.pipes.run(
     name="ai-agent",
     messages=[{"role": "user", "content": "Hello!"}],
     variables={"style": "friendly"},  # Optional variables
@@ -163,13 +163,13 @@ response = lb.pipes.run(
 
 ```python
 # Create a memory
-memory = lb.memories.create(
+memory = langbase.memories.create(
     name="product-docs",
     description="Product documentation",
 )
 
 # Upload documents
-lb.memories.documents.upload(
+langbase.memories.documents.upload(
     memory_name="product-docs",
     document_name="guide.pdf",
     document=open("guide.pdf", "rb"),
@@ -177,7 +177,7 @@ lb.memories.documents.upload(
 )
 
 # Retrieve relevant context
-results = lb.memories.retrieve(
+results = langbase.memories.retrieve(
     query="How do I get started?",
     memory=[{"name": "product-docs"}],
     top_k=3,
@@ -188,7 +188,7 @@ results = lb.memories.retrieve(
 
 ```python
 # Run an agent with tools
-response = lb.agent.run(
+response = langbase.agent.run(
     model="openai:gpt-4",
     messages=[{"role": "user", "content": "Search for AI news"}],
     tools=[{"type": "function", "function": {...}}],
@@ -202,20 +202,20 @@ response = lb.agent.run(
 
 ```python
 # Chunk text for processing
-chunks = lb.chunker(
+chunks = langbase.chunker(
     content="Long text to split...",
     chunk_max_length=1024,
     chunk_overlap=256,
 )
 
 # Generate embeddings
-embeddings = lb.embed(
+embeddings = langbase.embed(
     chunks=["Text 1", "Text 2"],
     embedding_model="openai:text-embedding-3-small",
 )
 
 # Parse documents
-content = lb.parser(
+content = langbase.parser(
     document=open("document.pdf", "rb"),
     document_name="document.pdf",
     content_type="application/pdf",

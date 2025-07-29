@@ -17,7 +17,7 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Define updated configuration
     updates = {
@@ -27,7 +27,7 @@ def main():
 
     # Update the pipe
     try:
-        response = lb.pipes.update(
+        response = langbase.pipes.update(
             name="summary-agent",
             description="An agent that summarizes text",
             messages=[

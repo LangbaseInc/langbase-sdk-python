@@ -17,11 +17,11 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # List all threads
     try:
-        threads = lb.threads.messages.list(thread_id="thread_123")
+        threads = langbase.threads.messages.list(thread_id="thread_123")
 
         print(json.dumps(threads, indent=2))
 

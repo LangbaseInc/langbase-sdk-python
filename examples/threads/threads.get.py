@@ -17,14 +17,14 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Thread ID to retrieve
     thread_id = "thread_123"  # Replace with your thread ID
 
     # Get the specific thread
     try:
-        thread = lb.threads.get(thread_id=thread_id)
+        thread = langbase.threads.get(thread_id=thread_id)
 
         print(json.dumps(thread, indent=2))
 
