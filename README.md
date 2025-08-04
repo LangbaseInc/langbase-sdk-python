@@ -14,11 +14,11 @@ The following examples are for reference only. Prefer docs for the latest inform
 
 ## Features
 
-- 🚀 **Simple and intuitive API** - Get started in minutes
-- 🔄 **Streaming support** - Real-time text generation with typed events
-- 🛠️ **Type safety** - Full type hints for better IDE support
-- 📦 **Minimal dependencies** - Only what you need
-- 🐍 **Python 3.7+** - Support for modern Python versions
+- **Simple and intuitive API** - Get started in minutes
+- **Streaming support** - Real-time text generation with typed events
+- **Type safety** - Full type hints for better IDE support
+- **Minimal dependencies** - Only what you need
+- **Python 3.7+** - Support for modern Python versions
 
 ## Installation
 
@@ -53,14 +53,14 @@ langbase_api_key = os.getenv("LANGBASE_API_KEY")
 llm_api_key = os.getenv("LLM_API_KEY")
 
 # Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+langbase = Langbase(api_key=langbase_api_key)
 ```
 
 ### 3. Generate text
 
 ```python
 # Simple generation
-response = lb.agent.run(
+response = langbase.agent.run(
     input=[{"role": "user", "content": "Tell me about AI"}],
     model="openai:gpt-4.1-mini",
     api_key=llm_api_key,
@@ -90,7 +90,7 @@ for content in runner.text_generator():
     print(content, end="", flush=True)
 ```
 
-### 5. Stream with typed events (Advanced) 🆕
+### 5. Stream with typed events (Advanced)
 
 ```python
 from langbase import StreamEventType, get_typed_runner
@@ -144,14 +144,14 @@ runner.process()
 
 ## Core Features
 
-### 🔄 Pipes - AI Pipeline Execution
+### Pipes - AI Pipeline Execution
 
 ```python
 # List all pipes
-pipes = lb.pipes.list()
+pipes = langbase.pipes.list()
 
 # Run a pipe
-response = lb.pipes.run(
+response = langbase.pipes.run(
     name="ai-agent",
     messages=[{"role": "user", "content": "Hello!"}],
     variables={"style": "friendly"},  # Optional variables
@@ -159,17 +159,17 @@ response = lb.pipes.run(
 )
 ```
 
-### 🧠 Memory - Persistent Context Storage
+### Memory - Persistent Context Storage
 
 ```python
 # Create a memory
-memory = lb.memories.create(
+memory = langbase.memories.create(
     name="product-docs",
     description="Product documentation",
 )
 
 # Upload documents
-lb.memories.documents.upload(
+langbase.memories.documents.upload(
     memory_name="product-docs",
     document_name="guide.pdf",
     document=open("guide.pdf", "rb"),
@@ -177,18 +177,18 @@ lb.memories.documents.upload(
 )
 
 # Retrieve relevant context
-results = lb.memories.retrieve(
+results = langbase.memories.retrieve(
     query="How do I get started?",
     memory=[{"name": "product-docs"}],
     top_k=3,
 )
 ```
 
-### 🤖 Agent - LLM Agent Execution
+### Agent - LLM Agent Execution
 
 ```python
 # Run an agent with tools
-response = lb.agent.run(
+response = langbase.agent.run(
     model="openai:gpt-4",
     messages=[{"role": "user", "content": "Search for AI news"}],
     tools=[{"type": "function", "function": {...}}],
@@ -198,24 +198,24 @@ response = lb.agent.run(
 )
 ```
 
-### 🔧 Tools - Built-in Utilities
+### Tools - Built-in Utilities
 
 ```python
 # Chunk text for processing
-chunks = lb.chunker(
+chunks = langbase.chunker(
     content="Long text to split...",
     chunk_max_length=1024,
     chunk_overlap=256,
 )
 
 # Generate embeddings
-embeddings = lb.embed(
+embeddings = langbase.embed(
     chunks=["Text 1", "Text 2"],
     embedding_model="openai:text-embedding-3-small",
 )
 
 # Parse documents
-content = lb.parser(
+content = langbase.parser(
     document=open("document.pdf", "rb"),
     document_name="document.pdf",
     content_type="application/pdf",
@@ -226,10 +226,9 @@ content = lb.parser(
 
 Explore the [examples](./examples) directory for complete working examples:
 
-- [Generate text](./examples/pipes/pipes.run.py)
-- [Stream text with events](./examples/pipes/pipes.run.typed-stream.py)
-- [Work with memory](./examples/memory/)
 - [Agent with tools](./examples/agent/)
+- [Work with memory](./examples/memory/)
+- [Generate text](./examples/pipes/pipes.run.py)
 - [Document processing](./examples/parser/)
 - [Workflow automation](./examples/workflow/)
 
@@ -243,9 +242,9 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## Support
 
-- 📚 [Documentation](https://langbase.com/docs)
-- 💬 [Discord Community](https://langbase.com/discord)
-- 🐛 [Issue Tracker](https://github.com/LangbaseInc/langbase-python-sdk/issues)
+- [Documentation](https://langbase.com/docs)
+- [Discord Community](https://langbase.com/discord)
+- [Issue Tracker](https://github.com/LangbaseInc/langbase-python-sdk/issues)
 
 ## License
 
