@@ -259,15 +259,43 @@ def main():
             print("❌ Release cancelled")
             return
 
-        # Commit changes
+        # Commit changes - handle pre-commit hooks properly
         commit_message = f"🚀 RELEASE: v{new_version}\n\n{release_message}"
-        success, _ = run_command(
-            f'git add . && git commit -m "{commit_message}"',
-            "Committing version changes",
-        )
-        if not success:
-            print("❌ Failed to commit changes")
-            sys.exit(1)
+
+        # Try to commit with proper pre-commit hook handling
+        max_retries = 3
+        for attempt in range(max_retries):
+            # Stage all changes before each attempt
+            success, _ = run_command(
+                "git add .", f"Staging changes (attempt {attempt + 1})"
+            )
+            if not success:
+                print("❌ Failed to stage changes")
+                sys.exit(1)
+
+            # Try to commit
+            success, output = run_command(
+                f'git commit -m "{commit_message}"',
+                f"Committing version changes (attempt {attempt + 1})",
+            )
+
+            if success:
+                print("✅ Successfully committed changes")
+                break
+
+            # If this was the last attempt, fail
+            if attempt == max_retries - 1:
+                print("❌ Failed to commit changes after multiple attempts")
+                print(f"📤 Last error output: {output}")
+                sys.exit(1)
+
+            # If pre-commit hooks modified files, the next iteration will re-stage them
+            if "files were modified by this hook" in output:
+                print(f"🔄 Pre-commit hooks modified files, will re-stage and retry...")
+            else:
+                print(
+                    f"🔄 Commit failed, retrying... (attempt {attempt + 1}/{max_retries})"
+                )
 
         # Step 8: Ask to push to GitHub
         if not ask_yes_no("Push changes to GitHub?"):
