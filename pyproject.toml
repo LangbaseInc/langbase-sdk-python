@@ -3,13 +3,24 @@ name = "langbase"
 version = "0.0.0"
 description = "Python SDK for the Langbase API"
 readme = "README.md"
-license = {text = "Apache-2.0"}
+license = { text = "Apache-2.0" }
 authors = [
-    { name = "Saqib Ameen", email = "saqib@langbase.com" },
     { name = "Ankit Kumar", email = "ankit@langbase.com" },
+    { name = "Saqib Ameen", email = "saqib@langbase.com" },
+    { name = "Saad Irfan", email = "saad@langbase.com" },
 ]
 requires-python = ">=3.7"
-keywords = ["ai", "langbase", "agent", "memory", "rag", "mcp", "pipes", "workflow", "llms"]
+keywords = [
+    "ai",
+    "langbase",
+    "agent",
+    "memory",
+    "rag",
+    "mcp",
+    "pipes",
+    "workflow",
+    "llms",
+]
 classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
@@ -25,15 +36,10 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = [
-    "requests>=2.25.0",
-    "typing-extensions>=4.0.0",
-]
+dependencies = ["requests>=2.25.0", "typing-extensions>=4.0.0"]
 
 [project.optional-dependencies]
-release = [
-    "python-semantic-release>=8.0.0",
-]
+release = ["python-semantic-release>=8.0.0"]
 
 [project.urls]
 Documentation = "https://docs.langbase.com"
@@ -88,12 +94,7 @@ markers = [
 [tool.coverage.run]
 source = ["langbase"]
 branch = true
-omit = [
-    "*/tests/*",
-    "*/__init__.py",
-    "*/venv/*",
-    "*/.venv/*",
-]
+omit = ["*/tests/*", "*/__init__.py", "*/venv/*", "*/.venv/*"]
 
 [tool.coverage.report]
 exclude_lines = [
@@ -113,16 +114,22 @@ directory = "htmlcov"
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
-version_variables = [
-    "langbase/__init__.py:__version__",
-]
+version_variables = ["langbase/__init__.py:__version__"]
 branch = "main"
 upload_to_PyPI = false
 upload_to_release = false
 build_command = "pip install build && python -m build"
 
 [tool.semantic_release.commit_parser_options]
-allowed_tags = ["📦 NEW", "👌 IMPROVE", "🐛 FIX", "🚀 RELEASE", "📖 DOC", "🤖 TEST", "‼️ BREAKING"]
+allowed_tags = [
+    "📦 NEW",
+    "👌 IMPROVE",
+    "🐛 FIX",
+    "🚀 RELEASE",
+    "📖 DOC",
+    "🤖 TEST",
+    "‼️ BREAKING",
+]
 minor_tags = ["📦 NEW"]
 patch_tags = ["👌 IMPROVE", "🐛 FIX", "🚀 RELEASE"]
 major_tags = ["‼️ BREAKING"]
