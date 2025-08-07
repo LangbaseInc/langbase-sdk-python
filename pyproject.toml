@@ -42,7 +42,6 @@ classifiers = [
 dependencies = ["requests>=2.25.0", "typing-extensions>=4.0.0"]
 
 [project.optional-dependencies]
-release = ["python-semantic-release>=8.0.0"]
 
 [project.urls]
 Documentation = "https://docs.langbase.com"
@@ -114,25 +113,3 @@ precision = 2
 
 [tool.coverage.html]
 directory = "htmlcov"
-
-[tool.semantic_release]
-version_toml = ["pyproject.toml:project.version"]
-version_variables = ["langbase/__init__.py:__version__"]
-branch = "main"
-upload_to_PyPI = false
-upload_to_release = false
-build_command = "pip install build && python -m build"
-
-[tool.semantic_release.commit_parser_options]
-allowed_tags = [
-    "📦 NEW",
-    "👌 IMPROVE",
-    "🐛 FIX",
-    "🚀 RELEASE",
-    "📖 DOC",
-    "🤖 TEST",
-    "‼️ BREAKING",
-]
-minor_tags = ["📦 NEW"]
-patch_tags = ["👌 IMPROVE", "🐛 FIX", "🚀 RELEASE"]
-major_tags = ["‼️ BREAKING"]
