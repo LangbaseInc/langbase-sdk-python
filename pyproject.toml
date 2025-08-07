@@ -1,17 +1,16 @@
 [project]
 name = "langbase"
-version = "0.1.0"
+version = "0.0.0"
 description = "Python SDK for the Langbase API"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 authors = [
-    { name = "Saqib", email = "saqib@langbase.com" },
-    { name = "Ankit", email = "ankit@langbase.com" },
+    { name = "Saqib Ameen", email = "saqib@langbase.com" },
+    { name = "Ankit Kumar", email = "ankit@langbase.com" },
 ]
 requires-python = ">=3.7"
-keywords = ["ai", "langbase", "agent", "memory", "rag", "mcp", "pipes", "workflow"]
+keywords = ["ai", "langbase", "agent", "memory", "rag", "mcp", "pipes", "workflow", "llms"]
 classifiers = [
-    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",

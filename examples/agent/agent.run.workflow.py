@@ -31,7 +31,7 @@ async def main():
 
     if not llm_api_key:
         print("❌ Missing LLM_API_KEY in environment variables.")
-        print("Please set: export LLM_API_KEY='your_llm_api_key'")
+        print("Please set: LLM_API_KEY='your_llm_api_key' in .env file")
         exit(1)
 
     # Initialize Langbase client and Workflow
