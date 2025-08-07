@@ -83,20 +83,28 @@ pytest -v
 pre-commit run --all-files
 ```
 
-### 6. Release a new version
+### 6. Release a New Version
+
+The release process is automated with an interactive script. **Only maintainers should create releases.**
+
 ```bash
 python release.py
 ```
 
-### 3. Optional: Publish to PyPI
-```
-python -m build
-twine upload dist/*
-```
+The script will guide you through:
+- Choosing version bump type (patch/minor/major)
+- Writing release notes
+- Updating version files
+- Committing and pushing changes
+- Building and uploading to PyPI
+
+See the [Release Process](#release-process) section below for detailed instructions.
 
 ## Quick Checklist
 
-Before pushing your changes, ensure:
+### Before Pushing Changes
+
+Ensure your contribution meets these requirements:
 
 - [ ] ✅ Code is formatted with `black`
 - [ ] ✅ Imports are sorted with `isort`
@@ -104,6 +112,19 @@ Before pushing your changes, ensure:
 - [ ] ✅ New features have tests
 - [ ] ✅ New features have type hints
 - [ ] ✅ Documentation is updated if needed
+
+### Before Creating a Release (Maintainers Only)
+
+Before running `python release.py`, ensure:
+
+- [ ] ✅ All tests pass: `pytest`
+- [ ] ✅ Code is properly formatted: `pre-commit run --all-files`
+- [ ] ✅ Working directory is clean: `git status`
+- [ ] ✅ On main branch and up to date: `git pull origin main`
+- [ ] ✅ Have PyPI credentials configured in `~/.pypirc` (see PyPI Configuration section)
+- [ ] ✅ Have dev dependencies installed: `pip install -r requirements-dev.txt`
+- [ ] ✅ Reviewed changes since last release
+- [ ] ✅ Prepared release notes describing changes
 
 ## Making Changes
 
@@ -193,6 +214,146 @@ def test_pipe_run_with_invalid_name_raises_error(langbase_client):
         langbase_client.pipes.run(name="non-existent-pipe")
 
     assert "404" in str(exc_info.value)
+```
+
+## Release Process
+
+**⚠️ Note: Only maintainers with PyPI access should perform releases.**
+
+### Prerequisites for Releases
+
+Before creating a release, ensure you have:
+
+1. **PyPI Account & Access**
+   - Account on [PyPI](https://pypi.org) and [Test PyPI](https://test.pypi.org)
+   - Maintainer access to the `langbase` package
+   - Configured `~/.pypirc` with credentials (see configuration below)
+
+2. **Required Tools**
+
+   These are already installed with dev dependencies:
+   ```bash
+   pip install -r requirements-dev.txt  # Includes build and twine
+   ```
+
+3. **Clean Working Directory**
+   ```bash
+   git status  # Should show no uncommitted changes
+   git pull origin main  # Ensure you're up to date
+   ```
+
+### PyPI Configuration (~/.pypirc)
+
+Create or update your `~/.pypirc` file with your PyPI credentials:
+
+```ini
+[distutils]
+index-servers =
+    pypi
+    testpypi
+
+[pypi]
+username = __token__
+password = pypi-your-api-token-here
+
+[testpypi]
+repository = https://test.pypi.org/legacy/
+username = __token__
+password = pypi-your-test-api-token-here
+```
+
+**To get API tokens:**
+1. **PyPI**: Go to [PyPI Account Settings](https://pypi.org/manage/account/) → API tokens → "Add API token"
+2. **Test PyPI**: Go to [Test PyPI Account Settings](https://test.pypi.org/manage/account/) → API tokens → "Add API token"
+
+**Security Notes:**
+- Use API tokens instead of passwords (more secure)
+- Set appropriate permissions (project-scoped tokens recommended)
+- Keep your `~/.pypirc` file private (chmod 600)
+
+### Release Types
+
+Choose the appropriate version bump:
+
+- **patch** (0.1.0 → 0.1.1): Bug fixes, documentation updates, small improvements
+- **minor** (0.1.0 → 0.2.0): New features, backwards compatible changes
+- **major** (0.1.0 → 1.0.0): Breaking changes, major API updates
+
+### Step-by-Step Release Process
+
+1. **Run the Release Script**
+   ```bash
+   python release.py
+   ```
+
+2. **Follow Interactive Prompts**
+
+   The script will ask you to:
+   - Choose release type (patch/minor/major)
+   - Enter release message describing changes
+   - Confirm version bump
+   - Choose between Test PyPI or Production PyPI
+
+3. **What the Script Does Automatically**
+
+   - Updates version in `pyproject.toml` and `langbase/__init__.py`
+   - Updates `CHANGELOG.md` with release notes
+   - Commits changes with conventional commit message
+   - Pushes to GitHub (optional)
+   - Builds the package (`python -m build`)
+   - Uploads to PyPI/Test PyPI (`twine upload`)
+
+### Test Releases
+
+For testing releases before production:
+
+1. Run `python release.py`
+2. Answer "y" when asked about Test PyPI
+3. This uploads to https://test.pypi.org/project/langbase/
+4. Test install: `pip install --index-url https://test.pypi.org/simple/ langbase`
+
+**Note**: Test releases don't commit to git, so you can reset changes after testing.
+
+### Production Releases
+
+1. Run `python release.py`
+2. Answer "n" when asked about Test PyPI
+3. The package will be uploaded to https://pypi.org/project/langbase/
+4. Changes are committed and pushed to GitHub
+
+### Post-Release Checklist
+
+After a successful release:
+
+- [ ] ✅ Verify the new version appears on [PyPI](https://pypi.org/project/langbase/)
+- [ ] ✅ Test install the new version: `pip install langbase=={version}`
+- [ ] ✅ Check that GitHub has the release commit
+- [ ] ✅ Update any dependent projects or documentation
+- [ ] ✅ Announce the release (Discord, social media, etc.)
+
+### Troubleshooting Releases
+
+**Common Issues:**
+
+1. **PyPI Upload Fails**
+   - Check your `~/.pypirc` configuration
+   - Ensure you have maintainer access
+   - Version might already exist (can't overwrite)
+
+2. **Pre-commit Hooks Fail**
+   - The script retries automatically
+   - Hooks may modify files (formatting, etc.)
+   - Script will re-stage and retry up to 3 times
+
+**Recovery:**
+
+If a release fails partway through:
+```bash
+# Reset version changes (if not yet committed)
+git checkout -- pyproject.toml langbase/__init__.py CHANGELOG.md
+
+# Or if committed but not pushed, reset the last commit
+git reset --soft HEAD~1
 ```
 
 ## Need Help?
