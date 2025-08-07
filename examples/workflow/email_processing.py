@@ -33,12 +33,12 @@ async def process_email(email_content: str):
 
     if not langbase_api_key:
         print("❌ Missing LANGBASE_API_KEY in environment variables.")
-        print("Please set: export LANGBASE_API_KEY='your_langbase_api_key'")
+        print("Please set: LANGBASE_API_KEY='your_langbase_api_key' in .env file")
         exit(1)
 
     if not llm_api_key:
         print("❌ Missing LLM_API_KEY in environment variables.")
-        print("Please set: export LLM_API_KEY='your_llm_api_key'")
+        print("Please set: LLM_API_KEY='your_llm_api_key' in .env file")
         exit(1)
 
     # Initialize Langbase

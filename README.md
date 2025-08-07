@@ -22,8 +22,16 @@ The following examples are for reference only. Prefer docs for the latest inform
 
 ## Installation
 
+Install Langbase SDK:
+
 ```bash
 pip install langbase
+```
+
+Install dotenv:
+
+```bash
+pip install dotenv
 ```
 
 ## Quick Start
@@ -53,6 +61,7 @@ langbase_api_key = os.getenv("LANGBASE_API_KEY")
 llm_api_key = os.getenv("LLM_API_KEY")
 
 # Initialize the client
+langbase = Langbase(api_key=langbase_api_key)
 langbase = Langbase(api_key=langbase_api_key)
 ```
 
@@ -189,6 +198,7 @@ results = langbase.memories.retrieve(
 ```python
 # Run an agent with tools
 response = langbase.agent.run(
+response = langbase.agent.run(
     model="openai:gpt-4",
     messages=[{"role": "user", "content": "Search for AI news"}],
     tools=[{"type": "function", "function": {...}}],
@@ -203,6 +213,7 @@ response = langbase.agent.run(
 ```python
 # Chunk text for processing
 chunks = langbase.chunker(
+chunks = langbase.chunker(
     content="Long text to split...",
     chunk_max_length=1024,
     chunk_overlap=256,
@@ -210,11 +221,13 @@ chunks = langbase.chunker(
 
 # Generate embeddings
 embeddings = langbase.embed(
+embeddings = langbase.embed(
     chunks=["Text 1", "Text 2"],
     embedding_model="openai:text-embedding-3-small",
 )
 
 # Parse documents
+content = langbase.parser(
 content = langbase.parser(
     document=open("document.pdf", "rb"),
     document_name="document.pdf",
@@ -224,13 +237,14 @@ content = langbase.parser(
 
 ## Examples
 
-Explore the [examples](./examples) directory for complete working examples:
+Explore the [examples](https://github.com/LangbaseInc/langbase-python-sdk/tree/main/examples) directory for complete working examples:
 
-- [Agent with tools](./examples/agent/)
-- [Work with memory](./examples/memory/)
-- [Generate text](./examples/pipes/pipes.run.py)
-- [Document processing](./examples/parser/)
-- [Workflow automation](./examples/workflow/)
+- [Generate text](https://github.com/LangbaseInc/langbase-python-sdk/tree/main/examples/agent/agent.run.py)
+- [Stream text](https://github.com/LangbaseInc/langbase-python-sdk/blob/main/examples/agent/agent.run.stream.py)
+- [Work with memory](https://github.com/LangbaseInc/langbase-python-sdk/tree/main/examples/memory/)
+- [Agent with tools](https://github.com/LangbaseInc/langbase-python-sdk/blob/main/examples/agent/agent.run.tool.py)
+- [Document processing](https://github.com/LangbaseInc/langbase-python-sdk/tree/main/examples/parser/)
+- [Workflow automation](https://github.com/LangbaseInc/langbase-python-sdk/tree/main/examples/workflow/)
 
 ## SDK Reference
 
@@ -238,7 +252,7 @@ For detailed SDK documentation, visit [langbase.com/docs/sdk](https://langbase.c
 
 ## Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](https://github.com/LangbaseInc/langbase-python-sdk/tree/main/CONTRIBUTING.md) for details.
 
 ## Support
 
@@ -248,4 +262,4 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+See the [LICENSE](https://github.com/LangbaseInc/langbase-python-sdk/tree/main/LICENSE) file for details.

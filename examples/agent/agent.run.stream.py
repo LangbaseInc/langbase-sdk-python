@@ -20,7 +20,7 @@ def main():
 
     if not langbase_api_key:
         print("❌ Missing LANGBASE_API_KEY in environment variables.")
-        print("Please set: export LANGBASE_API_KEY='your_langbase_api_key'")
+        print("Please set: LANGBASE_API_KEY='your_langbase_api_key' in .env file")
         exit(1)
 
     # Initialize Langbase client

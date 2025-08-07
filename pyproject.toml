@@ -1,30 +1,38 @@
 [project]
 name = "langbase"
-version = "0.1.0"
+version = "0.0.0"
 description = "Python SDK for the Langbase API"
 readme = "README.md"
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 authors = [
-    { name = "Saqib", email = "saqib@langbase.com" },
-    { name = "Ankit", email = "ankit@langbase.com" },
+    { name = "Saqib Ameen", email = "saqib@langbase.com" },
+    { name = "Ankit Kumar", email = "ankit@langbase.com" },
 ]
 requires-python = ">=3.7"
-keywords = ["ai", "langbase", "agent", "memory", "rag", "mcp", "pipes", "workflow"]
+keywords = ["ai", "langbase", "agent", "memory", "rag", "mcp", "pipes", "workflow", "llms"]
 classifiers = [
-    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
     "requests>=2.25.0",
     "typing-extensions>=4.0.0",
+]
+
+[project.optional-dependencies]
+release = [
+    "python-semantic-release>=8.0.0",
 ]
 
 [project.urls]
@@ -102,3 +110,19 @@ precision = 2
 
 [tool.coverage.html]
 directory = "htmlcov"
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+version_variables = [
+    "langbase/__init__.py:__version__",
+]
+branch = "main"
+upload_to_PyPI = false
+upload_to_release = false
+build_command = "pip install build && python -m build"
+
+[tool.semantic_release.commit_parser_options]
+allowed_tags = ["📦 NEW", "👌 IMPROVE", "🐛 FIX", "🚀 RELEASE", "📖 DOC", "🤖 TEST", "‼️ BREAKING"]
+minor_tags = ["📦 NEW"]
+patch_tags = ["👌 IMPROVE", "🐛 FIX", "🚀 RELEASE"]
+major_tags = ["‼️ BREAKING"]
