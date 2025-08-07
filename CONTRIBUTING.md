@@ -50,8 +50,6 @@ Thank you for your interest in contributing to the Langbase Python SDK! We welco
 
 ## Before You Commit
 
-**IMPORTANT**: All code must pass quality checks before committing. Run these commands:
-
 ### Format Your Code
 ```bash
 # Auto-format with Black (required)
@@ -61,8 +59,7 @@ black langbase/ tests/ examples/
 isort langbase/ tests/ examples/
 ```
 
-
-### 4. Run Tests
+### Run Tests
 ```bash
 # Run all tests
 pytest
@@ -77,13 +74,13 @@ pytest tests/test_pipes.py
 pytest -v
 ```
 
-### 5. Run All Checks at Once
+### Run All Checks at Once
 ```bash
 # This runs all pre-commit hooks (black, isort)
 pre-commit run --all-files
 ```
 
-### 6. Release a New Version
+### Release a New Version
 
 The release process is automated with an interactive script. **Only maintainers should create releases.**
 
@@ -159,10 +156,12 @@ git commit -m "📖 DOC: Improved contribution docs"
 ```
 
 Follow conventional commit format:
-- `📦 NEW:` New feature
-- `🐛 BUG:` Bug fix
-- `📖 Docs:` Documentation changes
-- `👌🏻 IMP:` Improvements
+- `📦 NEW:` New feature.
+- `👌IMPROVE:` Improvements.
+- `🐛 BUG:` Bug fix.
+- `📖 Docs:` Documentation changes.
+- `🚀 RELEASE`: Release new version.
+
 
 ### 6. Push and Create PR
 ```bash
