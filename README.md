@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/langbase.svg)](https://badge.fury.io/py/langbase)
 [![Python 3.7+](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 The official Python SDK for [Langbase](https://langbase.com) - Build declarative and composable AI-powered LLM products with ease.
 
@@ -262,4 +262,4 @@ We welcome contributions! Please see our [Contributing Guide](https://github.com
 
 ## License
 
-See the [LICENSE](https://github.com/LangbaseInc/langbase-python-sdk/tree/main/LICENSE) file for details.
+See the [LICENSE](https://github.com/LangbaseInc/langbase-python-sdk/blob/main/LICENCE) file for details.
