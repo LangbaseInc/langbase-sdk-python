@@ -62,7 +62,6 @@ llm_api_key = os.getenv("LLM_API_KEY")
 
 # Initialize the client
 langbase = Langbase(api_key=langbase_api_key)
-langbase = Langbase(api_key=langbase_api_key)
 ```
 
 ### 3. Generate text
