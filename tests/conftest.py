@@ -295,6 +295,97 @@ def mock_responses():
             },
             "system_fingerprint": "fp_agent1234567890",
         },
+        # Agent run response with structured output
+        "agent.run.structured": {
+            "completion": '{"steps": [{"explanation": "Subtract 22 from both sides", "output": "8x = -45"}], "final_answer": "x = -5.625"}',
+            "output": '{"steps": [{"explanation": "Subtract 22 from both sides", "output": "8x = -45"}], "final_answer": "x = -5.625"}',
+            "thread_id": "thread_struct123",
+            "id": "chatcmpl-struct123",
+            "object": "chat.completion",
+            "created": timestamp,
+            "model": "gpt-4",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": '{"steps": [{"explanation": "Subtract 22 from both sides", "output": "8x = -45"}], "final_answer": "x = -5.625"}',
+                    },
+                    "logprobs": None,
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 60,
+                "completion_tokens": 80,
+                "total_tokens": 140,
+            },
+            "system_fingerprint": "fp_struct1234567890",
+        },
+        # Agent run response with tool calls
+        "agent.run.tool": {
+            "completion": None,
+            "output": None,
+            "thread_id": "thread_tool123",
+            "id": "chatcmpl-tool123",
+            "object": "chat.completion",
+            "created": timestamp,
+            "model": "gpt-4-mini",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [
+                            {
+                                "id": "call_123456789",
+                                "type": "function",
+                                "function": {
+                                    "name": "send_email",
+                                    "arguments": '{"from": "onboarding@resend.dev", "to": "sam@example.com", "subject": "Welcome to Langbase!", "html": "Hello Sam! Welcome to Langbase.", "text": "Hello Sam! Welcome to Langbase."}',
+                                },
+                            }
+                        ],
+                    },
+                    "logprobs": None,
+                    "finish_reason": "tool_calls",
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 70,
+                "completion_tokens": 50,
+                "total_tokens": 120,
+            },
+            "system_fingerprint": "fp_tool1234567890",
+        },
+        # Agent run final response after tool execution
+        "agent.run.tool.final": {
+            "completion": "✅ Email sent successfully to sam@example.com!",
+            "output": "✅ Email sent successfully to sam@example.com!",
+            "thread_id": "thread_tool123",
+            "id": "chatcmpl-toolfinal123",
+            "object": "chat.completion",
+            "created": timestamp,
+            "model": "gpt-4-mini",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": "✅ Email sent successfully to sam@example.com!",
+                    },
+                    "logprobs": None,
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {
+                "prompt_tokens": 90,
+                "completion_tokens": 20,
+                "total_tokens": 110,
+            },
+            "system_fingerprint": "fp_toolfinal1234567890",
+        },
         # Error responses
         "error_400": {"error": "Bad request", "message": "Invalid parameters"},
         "error_401": {"error": "Unauthorized", "message": "Invalid API key"},

@@ -251,3 +251,203 @@ class TestUtilities:
         request = responses.calls[0].request
         validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
         assert json.loads(request.body) == request_body
+
+    @responses.activate
+    def test_agent_run_structured_output(self, langbase_client, mock_responses):
+        """Test agent.run method with structured output."""
+        math_reasoning_schema = {
+            "type": "object",
+            "properties": {
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "explanation": {"type": "string"},
+                            "output": {"type": "string"},
+                        },
+                        "required": ["explanation", "output"],
+                    },
+                },
+                "final_answer": {"type": "string"},
+            },
+            "required": ["steps", "final_answer"],
+        }
+
+        request_body = {
+            "input": [{"role": "user", "content": "How can I solve 8x + 22 = -23?"}],
+            "model": "openai:gpt-4.1",
+            "apiKey": "test-openai-key",
+            "instructions": "You are a helpful math tutor. Guide the user through the solution step by step.",
+            "response_format": {
+                "type": "json_schema",
+                "json_schema": {
+                    "name": "math_reasoning",
+                    "schema": math_reasoning_schema,
+                },
+            },
+        }
+
+        responses.add(
+            responses.POST,
+            f"{BASE_URL}{AGENT_RUN_ENDPOINT}",
+            json=mock_responses["agent.run.structured"],
+            status=200,
+        )
+
+        result = langbase_client.agent.run(
+            input=request_body["input"],
+            model=request_body["model"],
+            api_key=request_body["apiKey"],
+            instructions=request_body["instructions"],
+            response_format=request_body["response_format"],
+        )
+
+        assert result == mock_responses["agent.run.structured"]
+        assert len(responses.calls) == 1
+        request = responses.calls[0].request
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
+
+        # Verify structured output format
+        assert "output" in result
+        output_data = json.loads(result["output"])
+        assert "steps" in output_data
+        assert "final_answer" in output_data
+        assert isinstance(output_data["steps"], list)
+        assert len(output_data["steps"]) > 0
+
+    @responses.activate
+    def test_agent_run_tool_call(self, langbase_client, mock_responses):
+        """Test agent.run method with tool calls."""
+        send_email_tool_schema = {
+            "type": "function",
+            "function": {
+                "name": "send_email",
+                "description": "Send an email using Resend API",
+                "parameters": {
+                    "type": "object",
+                    "required": ["from", "to", "subject", "html", "text"],
+                    "properties": {
+                        "from": {"type": "string"},
+                        "to": {"type": "string"},
+                        "subject": {"type": "string"},
+                        "html": {"type": "string"},
+                        "text": {"type": "string"},
+                    },
+                    "additionalProperties": False,
+                },
+            },
+        }
+
+        request_body = {
+            "input": [{"role": "user", "content": "Send a welcome email to Sam."}],
+            "model": "openai:gpt-4.1-mini",
+            "apiKey": "test-openai-key",
+            "instructions": "You are an email agent. You are given a task to send an email to a recipient. You have the ability to send an email using the send_email tool.",
+            "tools": [send_email_tool_schema],
+        }
+
+        responses.add(
+            responses.POST,
+            f"{BASE_URL}{AGENT_RUN_ENDPOINT}",
+            json=mock_responses["agent.run.tool"],
+            status=200,
+        )
+
+        result = langbase_client.agent.run(
+            input=request_body["input"],
+            model=request_body["model"],
+            api_key=request_body["apiKey"],
+            instructions=request_body["instructions"],
+            tools=request_body["tools"],
+            stream=False,
+        )
+
+        assert result == mock_responses["agent.run.tool"]
+        assert len(responses.calls) == 1
+        request = responses.calls[0].request
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
+
+        # Verify tool call structure
+        assert "choices" in result
+        choices = result["choices"]
+        assert len(choices) > 0
+        message = choices[0]["message"]
+        assert "tool_calls" in message
+        tool_calls = message["tool_calls"]
+        assert len(tool_calls) > 0
+
+        tool_call = tool_calls[0]
+        assert tool_call["type"] == "function"
+        assert "function" in tool_call
+        function = tool_call["function"]
+        assert function["name"] == "send_email"
+        assert "arguments" in function
+
+    @responses.activate
+    def test_agent_run_tool_call_final_response(self, langbase_client, mock_responses):
+        """Test agent.run method with tool call final response."""
+        # Simulate messages after tool execution
+        input_messages = [
+            {"role": "user", "content": "Send a welcome email to Sam."},
+            {
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": "call_123456789",
+                        "type": "function",
+                        "function": {
+                            "name": "send_email",
+                            "arguments": '{"from": "onboarding@resend.dev", "to": "sam@example.com", "subject": "Welcome to Langbase!", "html": "Hello Sam! Welcome to Langbase.", "text": "Hello Sam! Welcome to Langbase."}',
+                        },
+                    }
+                ],
+            },
+            {
+                "role": "tool",
+                "tool_call_id": "call_123456789",
+                "name": "send_email",
+                "content": "✅ Email sent successfully to sam@example.com!",
+            },
+        ]
+
+        request_body = {
+            "input": input_messages,
+            "model": "openai:gpt-4.1-mini",
+            "apiKey": "test-openai-key",
+            "instructions": "You are an email sending assistant. Confirm the email has been sent successfully.",
+        }
+
+        responses.add(
+            responses.POST,
+            f"{BASE_URL}{AGENT_RUN_ENDPOINT}",
+            json=mock_responses["agent.run.tool.final"],
+            status=200,
+        )
+
+        result = langbase_client.agent.run(
+            input=request_body["input"],
+            model=request_body["model"],
+            api_key=request_body["apiKey"],
+            instructions=request_body["instructions"],
+            stream=False,
+        )
+
+        assert result == mock_responses["agent.run.tool.final"]
+        assert len(responses.calls) == 1
+        request = responses.calls[0].request
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+        assert json.loads(request.body) == request_body
+
+        # Verify final response structure
+        assert "output" in result
+        assert result["output"] == "✅ Email sent successfully to sam@example.com!"
+        assert "choices" in result
+        choices = result["choices"]
+        assert len(choices) > 0
+        message = choices[0]["message"]
+        assert message["role"] == "assistant"
+        assert message["content"] == "✅ Email sent successfully to sam@example.com!"
