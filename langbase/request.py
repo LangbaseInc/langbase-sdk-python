@@ -6,11 +6,13 @@ with the Langbase API, including error handling and response parsing.
 """
 
 import json
+import time
 from typing import Any, Dict, Iterator, Optional, Union
 
 import requests
 
 from .errors import APIConnectionError, APIConnectionTimeoutError, APIError
+from .resilience import ResilientRequest, RetryConfig, CircuitBreakerConfig
 from .types import GENERATION_ENDPOINTS
 
 
@@ -30,10 +32,25 @@ class Request:
             config: Configuration dictionary containing:
                 - api_key: API key for authentication
                 - base_url: Base URL for the API
+                - retry_config: Optional retry configuration
+                - circuit_breaker_config: Optional circuit breaker configuration
+                - enable_resilience: Whether to enable resilience features (default: True)
         """
         self.config = config
         self.api_key = config.get("api_key", "")
         self.base_url = config.get("base_url", "")
+
+        # Initialize resilience features
+        enable_resilience = config.get("enable_resilience", True)
+        if enable_resilience:
+            retry_config = config.get("retry_config")
+            circuit_breaker_config = config.get("circuit_breaker_config")
+            self.resilient_request = ResilientRequest(
+                retry_config=retry_config,
+                circuit_breaker_config=circuit_breaker_config,
+            )
+        else:
+            self.resilient_request = None
 
     def build_url(self, endpoint: str) -> str:
         """
@@ -125,6 +142,99 @@ class Request:
             raise APIConnectionTimeoutError(str(e)) from e
         except requests.RequestException as e:
             raise APIConnectionError(cause=e) from e
+
+    def make_resilient_request(
+        self,
+        url: str,
+        method: str,
+        headers: Dict[str, str],
+        body: Optional[Dict[str, Any]] = None,
+        stream: bool = False,
+        files: Optional[Dict[str, Any]] = None,
+    ) -> requests.Response:
+        """
+        Make a resilient HTTP request with retry and circuit breaker support.
+
+        Args:
+            url: URL to request
+            method: HTTP method (GET, POST, etc.)
+            headers: HTTP headers
+            body: Request body (for methods like POST)
+            stream: Whether to stream the response
+            files: Files to upload (for multipart/form-data requests)
+
+        Returns:
+            Response object
+
+        Raises:
+            APIConnectionError: If the request fails after all retries
+            APIConnectionTimeoutError: If the request times out
+            APIError: If circuit breaker is open
+        """
+        if not self.resilient_request:
+            # Fallback to regular request if resilience is disabled
+            return self.make_request(url, method, headers, body, stream, files)
+
+        # Check circuit breaker
+        if self.resilient_request.circuit_breaker and not self.resilient_request.circuit_breaker.should_allow_request():
+            raise APIError(message="Circuit breaker is open - service temporarily unavailable")
+
+        last_exception = None
+        last_response = None
+
+        for attempt in range(1, self.resilient_request.retry_config.max_attempts + 1):
+            try:
+                response = self.make_request(url, method, headers, body, stream, files)
+
+                # Check if response indicates failure
+                if response.status_code in self.resilient_request.retry_config.retry_on_status_codes:
+                    last_response = response
+                    if attempt < self.resilient_request.retry_config.max_attempts:
+                        # Calculate delay and wait
+                        retry_after = self.resilient_request.get_retry_after(response)
+                        delay = self.resilient_request.retry_config.calculate_delay(attempt, retry_after)
+                        time.sleep(delay)
+                        continue
+                    else:
+                        # Last attempt failed, record failure and raise
+                        if self.resilient_request.circuit_breaker:
+                            self.resilient_request.circuit_breaker.record_failure(
+                                APIError(status=response.status_code, message="Max retries exceeded")
+                            )
+                        raise APIError(status=response.status_code, message="Max retries exceeded")
+
+                # Success - record it and return
+                if self.resilient_request.circuit_breaker:
+                    self.resilient_request.circuit_breaker.record_success()
+                return response
+
+            except Exception as e:
+                last_exception = e
+
+                # Check if we should retry this exception
+                if not self.resilient_request.should_retry(e, last_response):
+                    # Don't retry, record failure and re-raise
+                    if self.resilient_request.circuit_breaker:
+                        self.resilient_request.circuit_breaker.record_failure(e)
+                    raise
+
+                # Should retry - check if we have attempts left
+                if attempt < self.resilient_request.retry_config.max_attempts:
+                    # Calculate delay and wait
+                    delay = self.resilient_request.retry_config.calculate_delay(attempt)
+                    time.sleep(delay)
+                else:
+                    # Last attempt failed, record failure and raise
+                    if self.resilient_request.circuit_breaker:
+                        self.resilient_request.circuit_breaker.record_failure(e)
+                    raise
+
+        # Should never reach here, but just in case
+        if last_exception:
+            raise last_exception
+        if last_response:
+            raise APIError(status=last_response.status_code, message="Max retries exceeded")
+        raise APIError(message="Unknown error in resilient request")
 
     def handle_error_response(self, response: requests.Response) -> None:
         """
@@ -269,7 +379,11 @@ class Request:
         url = self.build_url(endpoint)
         request_headers = self.build_headers(headers)
 
-        response = self.make_request(url, method, request_headers, body, stream, files)
+        # Use resilient request if available, otherwise fallback to regular request
+        if self.resilient_request:
+            response = self.make_resilient_request(url, method, request_headers, body, stream, files)
+        else:
+            response = self.make_request(url, method, request_headers, body, stream, files)
 
         if not response.ok:
             self.handle_error_response(response)
