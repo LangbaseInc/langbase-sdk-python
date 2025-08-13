@@ -197,7 +197,6 @@ results = langbase.memories.retrieve(
 ```python
 # Run an agent with tools
 response = langbase.agent.run(
-response = langbase.agent.run(
     model="openai:gpt-4",
     messages=[{"role": "user", "content": "Search for AI news"}],
     tools=[{"type": "function", "function": {...}}],
@@ -212,7 +211,6 @@ response = langbase.agent.run(
 ```python
 # Chunk text for processing
 chunks = langbase.chunker(
-chunks = langbase.chunker(
     content="Long text to split...",
     chunk_max_length=1024,
     chunk_overlap=256,
@@ -220,13 +218,11 @@ chunks = langbase.chunker(
 
 # Generate embeddings
 embeddings = langbase.embed(
-embeddings = langbase.embed(
     chunks=["Text 1", "Text 2"],
     embedding_model="openai:text-embedding-3-small",
 )
 
 # Parse documents
-content = langbase.parser(
 content = langbase.parser(
     document=open("document.pdf", "rb"),
     document_name="document.pdf",
