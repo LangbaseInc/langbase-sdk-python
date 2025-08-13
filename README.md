@@ -19,6 +19,7 @@ The following examples are for reference only. Prefer docs for the latest inform
 - **Type safety** - Full type hints for better IDE support
 - **Minimal dependencies** - Only what you need
 - **Python 3.7+** - Support for modern Python versions
+- **Production-ready resilience** - Built-in retry mechanisms and circuit breakers
 
 ## Installation
 
@@ -227,6 +228,34 @@ content = langbase.parser(
     document=open("document.pdf", "rb"),
     document_name="document.pdf",
     content_type="application/pdf",
+)
+```
+
+### Resilience - Production-Ready Error Handling
+
+```python
+from langbase import Langbase, RetryConfig, RetryStrategy
+
+# Configure custom retry behavior
+retry_config = RetryConfig(
+    max_attempts=5,
+    strategy=RetryStrategy.EXPONENTIAL,
+    base_delay=1.0,
+    max_delay=60.0,
+    respect_retry_after=True,
+)
+
+# Initialize client with resilience features
+langbase = Langbase(
+    api_key="your-api-key",
+    retry_config=retry_config
+)
+
+# Requests automatically retry on failures
+response = langbase.agent.run(
+    model="openai:gpt-4o-mini",
+    api_key="your-llm-key",
+    input=[{"role": "user", "content": "Hello!"}]
 )
 ```
 

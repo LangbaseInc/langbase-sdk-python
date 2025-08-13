@@ -16,6 +16,7 @@ from .primitives.pipes import Pipes
 from .primitives.threads import Threads
 from .primitives.tools import Tools
 from .request import Request
+from .resilience import RetryConfig, CircuitBreakerConfig
 
 
 class Langbase:
@@ -26,18 +27,37 @@ class Langbase:
     including pipes, memories, tools, threads, and utilities.
     """
 
-    def __init__(self, api_key: str = "", base_url: str = "https://api.langbase.com"):
+    def __init__(
+        self,
+        api_key: str = "",
+        base_url: str = "https://api.langbase.com",
+        retry_config: Optional[RetryConfig] = None,
+        circuit_breaker_config: Optional[CircuitBreakerConfig] = None,
+        enable_resilience: bool = True
+    ):
         """
         Initialize the Langbase client.
 
         Args:
             api_key: The API key for authentication.
             base_url: The base URL for the API.
+            retry_config: Optional retry configuration for resilient requests.
+            circuit_breaker_config: Optional circuit breaker configuration.
+            enable_resilience: Whether to enable resilience features (default: True).
         """
         self.base_url = base_url
         self.api_key = api_key
 
-        self.request = Request({"api_key": self.api_key, "base_url": self.base_url})
+        # Build request configuration with resilience settings
+        request_config = {
+            "api_key": self.api_key,
+            "base_url": self.base_url,
+            "retry_config": retry_config,
+            "circuit_breaker_config": circuit_breaker_config,
+            "enable_resilience": enable_resilience
+        }
+
+        self.request = Request(request_config)
 
         # Initialize primitive classes
         self.agent = Agent(self)

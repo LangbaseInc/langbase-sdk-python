@@ -41,6 +41,13 @@ from .primitives.memories import Memories
 from .primitives.pipes import Pipes
 from .primitives.threads import Threads
 from .primitives.tools import Tools
+from .resilience import (
+    RetryConfig,
+    CircuitBreakerConfig,
+    RetryStrategy,
+    CircuitState,
+    ResilientRequest,
+)
 from .streaming import StreamEventType, TypedStreamProcessor
 from .types import (
     ChoiceGenerate,
@@ -95,6 +102,12 @@ __all__ = [
     "PipeUpdateResponse",
     "Pipes",
     "RateLimitError",
+    # Resilience
+    "RetryConfig",
+    "CircuitBreakerConfig",
+    "RetryStrategy",
+    "CircuitState",
+    "ResilientRequest",
     "ResponseFormat",
     "RunResponse",
     "RunResponseStream",
