@@ -20,14 +20,14 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Retrieve memories using a query
     memory_name = "product-knowledge"  # Replace with your memory name
     query = "What is Langbase?"
 
     try:
-        response = lb.memories.retrieve(
+        response = langbase.memories.retrieve(
             query=query,
             memory=[{"name": memory_name}],
             top_k=5,  # Number of relevant memories to retrieve

@@ -16,7 +16,7 @@ load_dotenv()
 langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
 # Initialize the client
-lb = Langbase(api_key=langbase_api_key)
+langbase = Langbase(api_key=langbase_api_key)
 
 
 def main():
@@ -31,7 +31,7 @@ def main():
         with open(document_path, "r", encoding="utf-8") as file:
             document_content = file.read()
         # Chunk the content
-        chunks = lb.chunker(
+        chunks = langbase.chunker(
             content=document_content, chunk_max_length=1024, chunk_overlap=256
         )
 

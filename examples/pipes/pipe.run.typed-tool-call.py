@@ -13,14 +13,14 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Name of the pipe to run
     pipe_name = "summary-agent"  # Replace with your pipe name
 
     try:
         # Get streaming response
-        response = lb.pipes.run(
+        response = langbase.pipes.run(
             name=pipe_name,
             messages=[{"role": "user", "content": "What is the weather in Tokyo?"}],
             stream=True,

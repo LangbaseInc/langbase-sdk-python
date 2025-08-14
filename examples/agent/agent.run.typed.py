@@ -1,7 +1,7 @@
 """
-Example demonstrating the new typed streaming interface for pipes.
+Run Agent
 
-This shows how to use event-based streaming with typed events for better developer experience.
+This example demonstrates how to run an agent with a Typed Stream
 """
 
 import os
@@ -10,25 +10,34 @@ from dotenv import load_dotenv
 
 from langbase import Langbase, StreamEventType, get_typed_runner
 
+load_dotenv()
+
 
 def main():
-    load_dotenv()
+    # Check for required environment variables
+    langbase_api_key = os.environ.get("LANGBASE_API_KEY")
+    llm_api_key = os.environ.get("LLM_API_KEY")
 
-    # Get API key from environment variable
-    langbase_api_key = os.getenv("LANGBASE_API_KEY")
+    if not langbase_api_key:
+        print("❌ Missing LANGBASE_API_KEY in environment variables.")
+        print("Please set: export LANGBASE_API_KEY='your_langbase_api_key'")
+        exit(1)
 
-    # Initialize the client
+    if not llm_api_key:
+        print("❌ Missing LLM_API_KEY in environment variables.")
+        print("Please set: export LLM_API_KEY='your_llm_api_key'")
+        exit(1)
+
+    # Initialize Langbase client
     langbase = Langbase(api_key=langbase_api_key)
-
-    # Name of the pipe to run
-    pipe_name = "summary-agent"  # Replace with your pipe name
-
     try:
         # Get streaming response
-        response = langbase.pipes.run(
-            name=pipe_name,
-            messages=[{"role": "user", "content": "What is an AI Engineer?"}],
+        response = langbase.agent.run(
             stream=True,
+            model="openai:gpt-4.1-mini",
+            api_key=llm_api_key,
+            instructions="You are a helpful assistant that help users summarize text.",
+            input=[{"role": "user", "content": "Who is an AI Engineer?"}],
         )
 
         # Create typed stream processor

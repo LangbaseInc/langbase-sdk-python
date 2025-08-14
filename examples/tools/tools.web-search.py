@@ -20,7 +20,7 @@ def main():
     search_api_key = os.getenv("EXA_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Configure the search request
     search_query = "latest advancements in quantum computing 2025"
@@ -30,7 +30,7 @@ def main():
 
     # Perform the web search
     try:
-        search_results = lb.tools.web_search(
+        search_results = langbase.tools.web_search(
             query=search_query,
             service="exa",  # The search service to use
             total_results=5,  # Number of results to return

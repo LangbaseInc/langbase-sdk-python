@@ -16,7 +16,7 @@ def main():
     langbase_api_key = os.getenv("LANGBASE_API_KEY")
 
     # Initialize the client
-    lb = Langbase(api_key=langbase_api_key)
+    langbase = Langbase(api_key=langbase_api_key)
 
     # Name of the pipe to run
     pipe_name = "summary-agent"  # Replace with your pipe name
@@ -24,7 +24,7 @@ def main():
     try:
         # Message 1: Tell something to the LLM.
         print("Stream started \n\n")
-        response1 = lb.pipes.run(
+        response1 = langbase.pipes.run(
             name=pipe_name,
             messages=[{"role": "user", "content": "What is an AI Engineer?"}],
             stream=True,
