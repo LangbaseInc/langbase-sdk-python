@@ -145,7 +145,13 @@ class Workflow:
 
                     if self._debug:
                         print(f"⚠️ Attempt {attempt} failed, retrying in {delay}ms...")
-                        print(f"Error: {error}")
+                        if (
+                            isinstance(error, APIError)
+                            and getattr(error, "status", None) is None
+                        ):
+                            print(f"Error: Unknown Error ({str(error)})")
+                        else:
+                            print(f"Error: {error}")
 
                     await self._sleep(delay / 1000.0)  # Convert to seconds
                     attempt += 1
@@ -154,7 +160,13 @@ class Workflow:
                         elapsed = (time.time() - start_time) * 1000
                         print(f"⏱️ Step {config['id']}: {elapsed:.2f}ms")
                         print(f"❌ Failed step: {config['id']}")
-                        print(f"Error: {error}")
+                        if (
+                            isinstance(error, APIError)
+                            and getattr(error, "status", None) is None
+                        ):
+                            print(f"Error: Unknown Error ({str(error)})")
+                        else:
+                            print(f"Error: {error}")
 
                     if isinstance(last_error, Exception):
                         raise last_error from None
