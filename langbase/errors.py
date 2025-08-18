@@ -82,7 +82,13 @@ class APIError(Exception):
     def _parse_api_error(self) -> Dict[str, Any]:
         """Parse and extract error information from API response."""
         if not self.response_text:
-            return self._create_fallback_error("API request failed")
+            # Use the message from the Exception if available
+            message = (
+                str(super().__str__())
+                if hasattr(self, "args") and self.args
+                else "API request failed"
+            )
+            return self._create_fallback_error(message)
 
         try:
             response_json = json.loads(self.response_text)
