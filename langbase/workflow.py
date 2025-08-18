@@ -147,7 +147,7 @@ class Workflow:
                         print(f"⚠️ Attempt {attempt} failed, retrying in {delay}ms...")
                         if (
                             isinstance(error, APIError)
-                            and getattr(error, "status", None) is None
+                            and getattr(error, "status_code", None) is None
                         ):
                             print(f"Error: Unknown Error ({str(error)})")
                         else:
@@ -162,7 +162,7 @@ class Workflow:
                         print(f"❌ Failed step: {config['id']}")
                         if (
                             isinstance(error, APIError)
-                            and getattr(error, "status", None) is None
+                            and getattr(error, "status_code", None) is None
                         ):
                             print(f"Error: Unknown Error ({str(error)})")
                         else:
