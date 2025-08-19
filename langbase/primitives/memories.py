@@ -2,6 +2,7 @@
 Memories API client for the Langbase SDK.
 """
 
+import json
 from io import BytesIO
 from pathlib import Path
 from typing import Any, BinaryIO, Dict, List, Optional, Union
@@ -17,7 +18,7 @@ from langbase.constants import (
     MEMORY_ENDPOINT,
     MEMORY_RETRIEVE_ENDPOINT,
 )
-from langbase.errors import APIError
+from langbase.errors import APIError, create_api_error
 from langbase.types import (
     ContentType,
     EmbeddingModel,
@@ -128,11 +129,11 @@ class Documents:
             )
 
             if not upload_response.ok:
-                raise APIError(
-                    upload_response.status_code,
-                    upload_response.text,
-                    "Upload failed",
-                    dict(upload_response.headers),
+                # Use API error response directly
+                raise create_api_error(
+                    status_code=upload_response.status_code,
+                    response_text=upload_response.text,
+                    headers=dict(upload_response.headers),
                 )
 
             return upload_response
@@ -140,7 +141,8 @@ class Documents:
         except Exception as e:
             if isinstance(e, APIError):
                 raise e
-            raise APIError(None, str(e), "Error during document upload", None) from e
+            # Wrap other exceptions as APIError
+            raise APIError(message=f"Document upload failed: {str(e)}") from e
 
     class Embeddings:
         def __init__(self, parent):

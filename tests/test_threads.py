@@ -13,7 +13,7 @@ from langbase.constants import (
     THREAD_MESSAGES_ENDPOINT,
     THREADS_ENDPOINT,
 )
-from langbase.errors import NotFoundError
+from langbase.errors import APIError
 from tests.constants import (
     AUTH_AND_JSON_CONTENT_HEADER,
     AUTHORIZATION_HEADER,

@@ -58,6 +58,10 @@ class TimeoutError(APIError):
         self.step_id = step_id
         self.timeout = timeout
 
+    def __str__(self) -> str:
+        """Return plain text message instead of JSON format for workflow errors."""
+        return f'Step "{self.step_id}" timed out after {self.timeout}ms'
+
 
 class Workflow:
     """
@@ -145,7 +149,19 @@ class Workflow:
 
                     if self._debug:
                         print(f"⚠️ Attempt {attempt} failed, retrying in {delay}ms...")
-                        print(f"Error: {error}")
+                        if (
+                            isinstance(error, APIError)
+                            and getattr(error, "status_code", None) is None
+                        ):
+                            # Extract just the message from APIError for debug output
+                            message = (
+                                str(Exception.__str__(error))
+                                if hasattr(error, "args") and error.args
+                                else str(error)
+                            )
+                            print(f"Error: Unknown Error ({message})")
+                        else:
+                            print(f"Error: {error}")
 
                     await self._sleep(delay / 1000.0)  # Convert to seconds
                     attempt += 1
@@ -154,16 +170,28 @@ class Workflow:
                         elapsed = (time.time() - start_time) * 1000
                         print(f"⏱️ Step {config['id']}: {elapsed:.2f}ms")
                         print(f"❌ Failed step: {config['id']}")
-                        print(f"Error: {error}")
+                        if (
+                            isinstance(error, APIError)
+                            and getattr(error, "status_code", None) is None
+                        ):
+                            # Extract just the message from APIError for debug output
+                            message = (
+                                str(Exception.__str__(error))
+                                if hasattr(error, "args") and error.args
+                                else str(error)
+                            )
+                            print(f"Error: Unknown Error ({message})")
+                        else:
+                            print(f"Error: {error}")
 
                     if isinstance(last_error, Exception):
                         raise last_error from None
-                    raise APIError(message=str(last_error)) from None
+                    raise Exception(str(last_error)) from None
 
         # This should never be reached, but just in case
         if last_error:
             raise last_error
-        raise APIError(message="Unknown error occurred")
+        raise Exception("Unknown error occurred")
 
     async def _with_timeout(
         self, promise: Awaitable[T], timeout: int, step_id: str

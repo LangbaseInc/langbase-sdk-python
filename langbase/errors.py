@@ -1,164 +1,105 @@
 """
-Error classes for the Langbase SDK.
+Error handling for the Langbase SDK.
 
-This module defines the exception hierarchy used throughout the SDK.
-All errors inherit from the base APIError class.
+This module provides error classes for handling API responses.
 """
 
+import json
 from typing import Any, Dict, Optional
-
-from .constants import ERROR_MAP, STATUS_CODE_TO_MESSAGE
 
 
 class APIError(Exception):
-    """Base class for all API errors."""
+    """Base API error that holds response information and formats error output."""
 
     def __init__(
         self,
-        status: Optional[int] = None,
+        status_code: Optional[int] = None,
         error: Optional[Dict[str, Any]] = None,
         message: Optional[str] = None,
         headers: Optional[Dict[str, str]] = None,
-        endpoint: Optional[str] = None,
     ):
         """
         Initialize an API error.
 
         Args:
-            status: HTTP status code
-            error: Error response body
-            message: Error message
+            status_code: HTTP status code from the API response
+            error: Parsed error object from API response
+            message: Custom error message (if not using API response)
             headers: HTTP response headers
-            endpoint: API endpoint that was called
         """
-        self.status = status
-        self.headers = headers
-        self.endpoint = endpoint
-        self.request_id = headers.get("lb-request-id") if headers else None
+        if (
+            isinstance(status_code, str)
+            and error is None
+            and headers is None
+            and message is None
+        ):
+            message = status_code
+            status_code = None
 
+        self.status_code = status_code
+        self.error = error
+        self.headers = headers or {}
+        self.request_id = self.headers.get("lb-request-id")
+
+        # Extract additional fields from error object
         if isinstance(error, dict):
-            self.error = error
             self.code = error.get("code")
-            self.status = error.get("status", status)
+            self.param = error.get("param")
+            self.type = error.get("type")
         else:
-            self.error = error
             self.code = None
+            self.param = None
+            self.type = None
 
-        msg = self._make_message(status, error, message, endpoint, self.request_id)
-        super().__init__(msg)
+        error_message = self._make_message(status_code, error, message)
+        super().__init__(error_message)
 
-    @staticmethod
     def _make_message(
-        status: Optional[int],
-        error: Any,
+        self,
+        status_code: Optional[int],
+        error: Optional[Dict[str, Any]],
         message: Optional[str],
-        endpoint: Optional[str] = None,
-        request_id: Optional[str] = None,
     ) -> str:
-        """
-        Create a human-readable error message.
-
-        Args:
-            status: HTTP status code
-            error: Error response body
-            message: Error message
-            endpoint: API endpoint that was called
-            request_id: Request ID from headers
-
-        Returns:
-            Formatted error message string
-        """
-        # Extract the main error message
-        if isinstance(error, dict) and "message" in error:
-            msg = error["message"]
-            if not isinstance(msg, str):
-                msg = str(msg)
-        elif error:
-            msg = str(error)
+        """Create error message from available information."""
+        if error:
+            if isinstance(error, dict) and "message" in error:
+                msg = error["message"]
+                if isinstance(msg, str):
+                    msg = msg
+                else:
+                    msg = json.dumps(msg)
+            else:
+                msg = json.dumps(error)
         else:
             msg = message
 
-        # Build comprehensive error message
-        parts = []
+        if status_code and msg:
+            return f"{status_code} {msg}"
+        elif status_code:
+            return f"{status_code} status code (no body)"
+        elif msg:
+            return msg
+        else:
+            return "API request failed"
 
-        # Status line
-        if status:
-            status_text = STATUS_CODE_TO_MESSAGE.get(status, "Unknown Error")
-            parts.append(f"{status_text} ({status})")
+    def __str__(self) -> str:
+        """String representation of the error in JSON format."""
+        error_data = {
+            "status": self.status_code,
+            "headers": {},
+            "request_id": self.request_id,
+            "error": self.error or {"message": str(super().__str__())},
+            "code": self.code or "API_ERROR",
+        }
 
-        # Error message
-        if msg:
-            parts.append(f"\n  Message: {msg}")
-
-        # API endpoint
-        if endpoint:
-            parts.append(f"\n  Endpoint: {endpoint}")
-
-        # Request ID
-        if request_id:
-            parts.append(f"\n  Request ID: {request_id}")
-
-        # Error details from response
-        if isinstance(error, dict):
-            if "code" in error:
-                parts.append(f"\n  Error Code: {error['code']}")
-            if "details" in error:
-                parts.append(f"\n  Details: {error['details']}")
-
-        # Documentation link
-        if status:
-            parts.append(
-                f"\n  Documentation: https://langbase.com/docs/errors/{status}"
-            )
-
-        return "".join(parts) if parts else "(no error information available)"
-
-    @staticmethod
-    def generate(
-        status: Optional[int],
-        error_response: Any,
-        message: Optional[str],
-        headers: Optional[Dict[str, str]],
-        endpoint: Optional[str] = None,
-    ) -> "APIError":
-        """
-        Generate the appropriate error based on status code.
-
-        Args:
-            status: HTTP status code
-            error_response: Error response body
-            message: Error message
-            headers: HTTP response headers
-            endpoint: API endpoint that was called
-
-        Returns:
-            An instance of the appropriate APIError subclass
-        """
-        if not status:
-            cause = error_response if isinstance(error_response, Exception) else None
-            return APIConnectionError(cause=cause)
-
-        error = (
-            error_response.get("error")
-            if isinstance(error_response, dict)
-            else error_response
-        )
-
-        if status in ERROR_MAP:
-            error_class_name = ERROR_MAP[status]
-            error_class = globals()[error_class_name]
-            return error_class(status, error, message, headers, endpoint)
-
-        if status >= 500:
-            return InternalServerError(status, error, message, headers, endpoint)
-        return APIError(status, error, message, headers, endpoint)
+        return json.dumps(error_data, indent=2)
 
 
 class APIConnectionError(APIError):
-    """Raised when there's a problem connecting to the API."""
+    """Raised when there's a connection problem (not an API error response)."""
 
     def __init__(
-        self, message: Optional[str] = None, cause: Optional[Exception] = None
+        self, message: str = "Connection error.", cause: Optional[Exception] = None
     ):
         """
         Initialize a connection error.
@@ -167,67 +108,104 @@ class APIConnectionError(APIError):
             message: Error message
             cause: The underlying exception that caused this error
         """
-        super().__init__(None, None, message or "Connection error.", None)
+        super().__init__(message=message)
         if cause:
             self.__cause__ = cause
 
 
-class APIConnectionTimeoutError(APIConnectionError):
-    """Raised when a request times out."""
-
-    def __init__(self, message: Optional[str] = None):
-        """
-        Initialize a timeout error.
-
-        Args:
-            message: Error message
-        """
-        super().__init__(message or "Request timed out.")
-
-
 class BadRequestError(APIError):
-    """Raised when the API returns a 400 status code."""
+    """Raised when the API returns a 400 Bad Request error."""
 
     pass
 
 
 class AuthenticationError(APIError):
-    """Raised when the API returns a 401 status code."""
+    """Raised when the API returns a 401 Unauthorized error."""
 
     pass
 
 
 class PermissionDeniedError(APIError):
-    """Raised when the API returns a 403 status code."""
+    """Raised when the API returns a 403 Forbidden error."""
 
     pass
 
 
 class NotFoundError(APIError):
-    """Raised when the API returns a 404 status code."""
+    """Raised when the API returns a 404 Not Found error."""
 
     pass
 
 
 class ConflictError(APIError):
-    """Raised when the API returns a 409 status code."""
+    """Raised when the API returns a 409 Conflict error."""
 
     pass
 
 
 class UnprocessableEntityError(APIError):
-    """Raised when the API returns a 422 status code."""
+    """Raised when the API returns a 422 Unprocessable Entity error."""
 
     pass
 
 
 class RateLimitError(APIError):
-    """Raised when the API returns a 429 status code."""
+    """Raised when the API returns a 429 Too Many Requests error."""
 
     pass
 
 
 class InternalServerError(APIError):
-    """Raised when the API returns a 5xx status code."""
+    """Raised when the API returns a 5xx Internal Server Error."""
 
     pass
+
+
+def create_api_error(
+    status_code: Optional[int] = None,
+    response_text: Optional[str] = None,
+    headers: Optional[Dict[str, str]] = None,
+    message: Optional[str] = None,
+) -> APIError:
+    """
+    Create the appropriate API error based on status code.
+
+    Args:
+        status_code: HTTP status code from the API response
+        response_text: Raw response text from the API
+        headers: HTTP response headers
+        message: Custom error message
+
+    Returns:
+        Appropriate APIError subclass based on status code
+    """
+    if not status_code:
+        return APIConnectionError(message or "Connection error.")
+
+    # Parse error from response text
+    error = None
+    if response_text:
+        try:
+            response_data = json.loads(response_text)
+            if isinstance(response_data, dict) and "error" in response_data:
+                error = response_data["error"]
+        except json.JSONDecodeError:
+            pass
+
+    # Map status codes to specific error classes
+    error_classes = {
+        400: BadRequestError,
+        401: AuthenticationError,
+        403: PermissionDeniedError,
+        404: NotFoundError,
+        409: ConflictError,
+        422: UnprocessableEntityError,
+        429: RateLimitError,
+    }
+
+    if status_code in error_classes:
+        return error_classes[status_code](status_code, error, message, headers)
+    elif status_code >= 500:
+        return InternalServerError(status_code, error, message, headers)
+    else:
+        return APIError(status_code, error, message, headers)

@@ -8,7 +8,6 @@ build and deploy AI-powered applications using Langbase's infrastructure.
 
 from .errors import (
     APIConnectionError,
-    APIConnectionTimeoutError,
     APIError,
     AuthenticationError,
     BadRequestError,
@@ -70,22 +69,23 @@ __description__ = "Python SDK for the Langbase API"
 __all__ = [
     # Errors
     "APIConnectionError",
-    "APIConnectionTimeoutError",
     "APIError",
     "AuthenticationError",
     "BadRequestError",
+    "ConflictError",
+    "InternalServerError",
+    "NotFoundError",
+    "PermissionDeniedError",
+    "RateLimitError",
+    "UnprocessableEntityError",
     # Type definitions
     "ChoiceGenerate",
     # Helper utilities
     "ChunkStream",
-    "ConflictError",
-    "InternalServerError",
     # Main classes
     "Langbase",
     "Memories",
     "Message",
-    "NotFoundError",
-    "PermissionDeniedError",
     "PipeBaseOptions",
     "PipeBaseResponse",
     "PipeCreateOptions",
@@ -94,7 +94,6 @@ __all__ = [
     "PipeUpdateOptions",
     "PipeUpdateResponse",
     "Pipes",
-    "RateLimitError",
     "ResponseFormat",
     "RunResponse",
     "RunResponseStream",
@@ -106,9 +105,7 @@ __all__ = [
     "ToolCall",
     "ToolChoice",
     "Tools",
-    "Tools",
     "TypedStreamProcessor",
-    "UnprocessableEntityError",
     "Usage",
     "Variable",
     "Workflow",

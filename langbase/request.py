@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterator, Optional, Union
 
 import requests
 
-from .errors import APIConnectionError, APIConnectionTimeoutError, APIError
+from .errors import APIConnectionError, create_api_error
 from .types import GENERATION_ENDPOINTS
 
 
@@ -122,7 +122,7 @@ class Request:
                 )
             return response
         except requests.Timeout as e:
-            raise APIConnectionTimeoutError(str(e)) from e
+            raise APIConnectionError("Request timed out.", cause=e) from e
         except requests.RequestException as e:
             raise APIConnectionError(cause=e) from e
 
@@ -134,15 +134,12 @@ class Request:
             response: Error response from the API
 
         Raises:
-            APIError: With appropriate subclass based on status code
+            APIError: With status code and response information
         """
-        try:
-            error_body = response.json()
-        except json.JSONDecodeError:
-            error_body = response.text
-
-        raise APIError.generate(
-            response.status_code, error_body, response.reason, dict(response.headers)
+        raise create_api_error(
+            status_code=response.status_code,
+            response_text=response.text,
+            headers=dict(response.headers),
         )
 
     def handle_stream_response(

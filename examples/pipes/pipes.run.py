@@ -8,7 +8,7 @@ import os
 from dotenv import load_dotenv
 
 from langbase import Langbase
-from langbase.errors import APIError
+from langbase.errors import APIError, AuthenticationError, NotFoundError, RateLimitError
 
 
 def main():
@@ -31,6 +31,12 @@ def main():
         # Print the entire response as is
         print(json.dumps(response, indent=2))
 
+    except AuthenticationError as e:
+        print(f"Authentication Error: Check your API key - {e}")
+    except NotFoundError as e:
+        print(f"Not Found Error: Pipe doesn't exist - {e}")
+    except RateLimitError as e:
+        print(f"Rate Limit Error: Too many requests - {e}")
     except APIError as e:
         print(f"API Error: {e}")
     except Exception as e:

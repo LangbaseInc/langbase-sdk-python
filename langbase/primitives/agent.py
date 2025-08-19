@@ -138,7 +138,7 @@ class Agent:
             "mcp_servers": mcp_servers,
         }
 
-        # Only include stream if it's True (similar to TypeScript removing undefined)
+        # Only include stream if it's True
         if stream:
             options["stream"] = True
 

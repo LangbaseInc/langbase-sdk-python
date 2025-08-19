@@ -1,6 +1,6 @@
 """
 Example demonstrating how to use get_tools_from_run_stream to extract tool calls
-from a streaming response, similar to the TypeScript version.
+from a streaming response.
 """
 
 import itertools
@@ -57,7 +57,7 @@ def main():
         ],
     )
 
-    # Split the stream into two iterators (similar to TypeScript tee())
+    # Split the stream into two iterators
     stream_for_response, stream_for_tool_call = itertools.tee(response["stream"], 2)
 
     # Extract tool calls from the stream
