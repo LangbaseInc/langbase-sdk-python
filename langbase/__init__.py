@@ -6,7 +6,18 @@ build and deploy AI-powered applications using Langbase's infrastructure.
 ```
 """
 
-from .errors import APIConnectionError, APIError
+from .errors import (
+    APIConnectionError,
+    APIError,
+    AuthenticationError,
+    BadRequestError,
+    ConflictError,
+    InternalServerError,
+    NotFoundError,
+    PermissionDeniedError,
+    RateLimitError,
+    UnprocessableEntityError,
+)
 from .helper import (
     ChoiceStream,
     ChunkStream,
@@ -59,6 +70,14 @@ __all__ = [
     # Errors
     "APIConnectionError",
     "APIError",
+    "AuthenticationError",
+    "BadRequestError",
+    "ConflictError",
+    "InternalServerError",
+    "NotFoundError",
+    "PermissionDeniedError",
+    "RateLimitError",
+    "UnprocessableEntityError",
     # Type definitions
     "ChoiceGenerate",
     # Helper utilities

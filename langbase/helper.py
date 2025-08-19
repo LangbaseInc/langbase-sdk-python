@@ -3,10 +3,10 @@ from typing import Any, Dict, Iterator, List, Literal, Optional, Union
 
 from .types import ToolCall
 
-# Type aliases to match TypeScript version
+# Type aliases
 MessageRole = Literal["function", "assistant", "system", "user", "tool"]
 
-# Interface aliases for consistency with TypeScript
+# Interface aliases
 ToolCallResult = ToolCall
 
 
@@ -388,7 +388,6 @@ def get_runner(
     """
     Returns a runner (StreamProcessor) for the given response or stream.
 
-    This is the Python equivalent to TypeScript's getRunner function.
     Provides a high-level interface for processing streaming responses.
 
     Can accept either:

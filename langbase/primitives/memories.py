@@ -18,7 +18,7 @@ from langbase.constants import (
     MEMORY_ENDPOINT,
     MEMORY_RETRIEVE_ENDPOINT,
 )
-from langbase.errors import APIError
+from langbase.errors import APIError, create_api_error
 from langbase.types import (
     ContentType,
     EmbeddingModel,
@@ -130,7 +130,7 @@ class Documents:
 
             if not upload_response.ok:
                 # Use API error response directly
-                raise APIError(
+                raise create_api_error(
                     status_code=upload_response.status_code,
                     response_text=upload_response.text,
                     headers=dict(upload_response.headers),

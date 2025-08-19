@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterator, Optional, Union
 
 import requests
 
-from .errors import APIConnectionError, APIError
+from .errors import APIConnectionError, create_api_error
 from .types import GENERATION_ENDPOINTS
 
 
@@ -136,7 +136,7 @@ class Request:
         Raises:
             APIError: With status code and response information
         """
-        raise APIError(
+        raise create_api_error(
             status_code=response.status_code,
             response_text=response.text,
             headers=dict(response.headers),

@@ -113,8 +113,7 @@ class TypedStreamProcessor:
     """
     Enhanced stream processor with typed events for better developer experience.
 
-    This provides an event-driven interface similar to TypeScript/JavaScript patterns,
-    making it easier to handle different aspects of streaming responses.
+    This provides an event-driven interface making it easier to handle different aspects of streaming responses.
     """
 
     def __init__(

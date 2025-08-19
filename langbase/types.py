@@ -536,7 +536,7 @@ class ThreadMessagesBaseResponse(TypedDict, total=False):
     metadata: Optional[Dict[str, str]]
 
 
-# Pipe types - simplified based on TypeScript SDK
+# Pipe types
 class PipeBaseOptions(TypedDict, total=False):
     """Base options for pipe operations."""
 
@@ -693,29 +693,27 @@ class AgentRunOptionsBase(TypedDict):
     input: Union[str, List[Message]]  # REQUIRED
     model: str  # REQUIRED
     apiKey: str  # REQUIRED
-    instructions: Optional[str]  # OPTIONAL (has ? in TypeScript)
-    top_p: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    max_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
-    temperature: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    presence_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    frequency_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    stop: Optional[List[str]]  # OPTIONAL (has ? in TypeScript)
-    tools: Optional[List[Tools]]  # OPTIONAL (has ? in TypeScript)
-    tool_choice: Optional[
-        Union[Literal["auto", "required"], ToolChoice]
-    ]  # OPTIONAL (has ? in TypeScript)
-    parallel_tool_calls: Optional[bool]  # OPTIONAL (has ? in TypeScript)
-    mcp_servers: Optional[List[McpServerSchema]]  # OPTIONAL (has ? in TypeScript)
-    reasoning_effort: Optional[str]  # OPTIONAL (has ? in TypeScript)
-    max_completion_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
-    response_format: Optional[ResponseFormat]  # OPTIONAL (has ? in TypeScript)
-    customModelParams: Optional[Dict[str, Any]]  # OPTIONAL (has ? in TypeScript)
+    instructions: Optional[str]
+    top_p: Optional[float]
+    max_tokens: Optional[int]
+    temperature: Optional[float]
+    presence_penalty: Optional[float]
+    frequency_penalty: Optional[float]
+    stop: Optional[List[str]]
+    tools: Optional[List[Tools]]
+    tool_choice: Optional[Union[Literal["auto", "required"], ToolChoice]]
+    parallel_tool_calls: Optional[bool]
+    mcp_servers: Optional[List[McpServerSchema]]
+    reasoning_effort: Optional[str]
+    max_completion_tokens: Optional[int]
+    response_format: Optional[ResponseFormat]
+    customModelParams: Optional[Dict[str, Any]]
 
 
 class AgentRunOptionsWithoutMcp(AgentRunOptionsBase):
     """Agent run options without MCP servers."""
 
-    stream: Optional[Literal[False]]  # OPTIONAL (has ? in TypeScript)
+    stream: Optional[Literal[False]]
 
 
 class AgentRunOptionsWithMcp(TypedDict):
@@ -727,22 +725,20 @@ class AgentRunOptionsWithMcp(TypedDict):
     apiKey: str  # REQUIRED
 
     # Optional fields from base
-    instructions: Optional[str]  # OPTIONAL (has ? in TypeScript)
-    top_p: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    max_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
-    temperature: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    presence_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    frequency_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    stop: Optional[List[str]]  # OPTIONAL (has ? in TypeScript)
-    tools: Optional[List[Tools]]  # OPTIONAL (has ? in TypeScript)
-    tool_choice: Optional[
-        Union[Literal["auto", "required"], ToolChoice]
-    ]  # OPTIONAL (has ? in TypeScript)
-    parallel_tool_calls: Optional[bool]  # OPTIONAL (has ? in TypeScript)
-    reasoning_effort: Optional[str]  # OPTIONAL (has ? in TypeScript)
-    max_completion_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
-    response_format: Optional[ResponseFormat]  # OPTIONAL (has ? in TypeScript)
-    customModelParams: Optional[Dict[str, Any]]  # OPTIONAL (has ? in TypeScript)
+    instructions: Optional[str]
+    top_p: Optional[float]
+    max_tokens: Optional[int]
+    temperature: Optional[float]
+    presence_penalty: Optional[float]
+    frequency_penalty: Optional[float]
+    stop: Optional[List[str]]
+    tools: Optional[List[Tools]]
+    tool_choice: Optional[Union[Literal["auto", "required"], ToolChoice]]
+    parallel_tool_calls: Optional[bool]
+    reasoning_effort: Optional[str]
+    max_completion_tokens: Optional[int]
+    response_format: Optional[ResponseFormat]
+    customModelParams: Optional[Dict[str, Any]]
 
     # Overridden fields
     mcp_servers: List[McpServerSchema]  # REQUIRED (overrides optional from base)
@@ -756,22 +752,20 @@ class AgentRunOptionsStreamT(TypedDict):
     model: str  # REQUIRED
     apiKey: str  # REQUIRED
     stream: Literal[True]  # REQUIRED
-    instructions: Optional[str]  # OPTIONAL (has ? in TypeScript)
-    top_p: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    max_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
-    temperature: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    presence_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    frequency_penalty: Optional[float]  # OPTIONAL (has ? in TypeScript)
-    stop: Optional[List[str]]  # OPTIONAL (has ? in TypeScript)
-    tools: Optional[List[Tools]]  # OPTIONAL (has ? in TypeScript)
-    tool_choice: Optional[
-        Union[Literal["auto", "required"], ToolChoice]
-    ]  # OPTIONAL (has ? in TypeScript)
-    parallel_tool_calls: Optional[bool]  # OPTIONAL (has ? in TypeScript)
-    reasoning_effort: Optional[str]  # OPTIONAL (has ? in TypeScript)
-    max_completion_tokens: Optional[int]  # OPTIONAL (has ? in TypeScript)
-    response_format: Optional[ResponseFormat]  # OPTIONAL (has ? in TypeScript)
-    customModelParams: Optional[Dict[str, Any]]  # OPTIONAL (has ? in TypeScript)
+    instructions: Optional[str]
+    top_p: Optional[float]
+    max_tokens: Optional[int]
+    temperature: Optional[float]
+    presence_penalty: Optional[float]
+    frequency_penalty: Optional[float]
+    stop: Optional[List[str]]
+    tools: Optional[List[Tools]]
+    tool_choice: Optional[Union[Literal["auto", "required"], ToolChoice]]
+    parallel_tool_calls: Optional[bool]
+    reasoning_effort: Optional[str]
+    max_completion_tokens: Optional[int]
+    response_format: Optional[ResponseFormat]
+    customModelParams: Optional[Dict[str, Any]]
 
 
 # Union types for agent options

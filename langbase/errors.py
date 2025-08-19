@@ -1,7 +1,7 @@
 """
-Production-ready error handling for the Langbase SDK.
+Error handling for the Langbase SDK.
 
-This module provides simple error classes that match the TypeScript SDK structure.
+This module provides error classes for handling API responses.
 """
 
 import json
@@ -9,28 +9,27 @@ from typing import Any, Dict, Optional
 
 
 class APIError(Exception):
-    """Base API error that holds response information and formats output like TypeScript SDK."""
+    """Base API error that holds response information and formats error output."""
 
     def __init__(
         self,
         status_code: Optional[int] = None,
-        response_text: Optional[str] = None,
-        headers: Optional[Dict[str, str]] = None,
+        error: Optional[Dict[str, Any]] = None,
         message: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
     ):
         """
         Initialize an API error.
 
         Args:
             status_code: HTTP status code from the API response
-            response_text: Raw response text from the API
-            headers: HTTP response headers
+            error: Parsed error object from API response
             message: Custom error message (if not using API response)
+            headers: HTTP response headers
         """
-        # Handle legacy usage: APIError("message") -> APIError(message="message")
         if (
             isinstance(status_code, str)
-            and response_text is None
+            and error is None
             and headers is None
             and message is None
         ):
@@ -38,95 +37,62 @@ class APIError(Exception):
             status_code = None
 
         self.status_code = status_code
-        self.response_text = response_text
+        self.error = error
         self.headers = headers or {}
         self.request_id = self.headers.get("lb-request-id")
 
-        # Use API response message if available, otherwise use custom message
-        error_message = self._extract_error_message() or message or "API request failed"
+        # Extract additional fields from error object
+        if isinstance(error, dict):
+            self.code = error.get("code")
+            self.param = error.get("param")
+            self.type = error.get("type")
+        else:
+            self.code = None
+            self.param = None
+            self.type = None
+
+        error_message = self._make_message(status_code, error, message)
         super().__init__(error_message)
 
-    def _extract_error_message(self) -> Optional[str]:
-        """Extract error message from API response for Exception.__str__()."""
-        if not self.response_text:
-            return None
+    def _make_message(
+        self,
+        status_code: Optional[int],
+        error: Optional[Dict[str, Any]],
+        message: Optional[str],
+    ) -> str:
+        """Create error message from available information."""
+        if error:
+            if isinstance(error, dict) and "message" in error:
+                msg = error["message"]
+                if isinstance(msg, str):
+                    msg = msg
+                else:
+                    msg = json.dumps(msg)
+            else:
+                msg = json.dumps(error)
+        else:
+            msg = message
 
-        try:
-            response_data = json.loads(self.response_text)
-            if isinstance(response_data, dict) and "error" in response_data:
-                error_obj = response_data["error"]
-                if isinstance(error_obj, dict) and "message" in error_obj:
-                    return error_obj["message"]
-            return None
-        except json.JSONDecodeError:
-            return None
+        if status_code and msg:
+            return f"{status_code} {msg}"
+        elif status_code:
+            return f"{status_code} status code (no body)"
+        elif msg:
+            return msg
+        else:
+            return "API request failed"
 
     def __str__(self) -> str:
-        """String representation of the error matching TypeScript SDK format."""
-        # Parse API response once
-        api_error = self._parse_api_error()
-
-        # Build error data structure matching TypeScript SDK
+        """String representation of the error in JSON format."""
         error_data = {
             "status": self.status_code,
             "headers": {},
             "request_id": self.request_id,
-            "error": api_error,
-            "code": api_error.get("code", "API_ERROR")
-            if isinstance(api_error, dict)
-            else "API_ERROR",
+            "error": self.error or {"message": str(super().__str__())},
+            "code": self.code or "API_ERROR",
         }
 
         return json.dumps(error_data, indent=2)
-
-    def _parse_api_error(self) -> Dict[str, Any]:
-        """Parse and extract error information from API response."""
-        if not self.response_text:
-            # Use the message from the Exception if available
-            message = (
-                str(super().__str__())
-                if hasattr(self, "args") and self.args
-                else "API request failed"
-            )
-            return self._create_fallback_error(message)
-
-        try:
-            response_json = json.loads(self.response_text)
-            if isinstance(response_json, dict) and "error" in response_json:
-                return response_json["error"]
-            else:
-                # Response doesn't have expected error structure
-                message = self._extract_simple_message() or "API request failed"
-                return self._create_fallback_error(message)
-        except json.JSONDecodeError:
-            # Invalid JSON response
-            message = (
-                self.response_text
-                if len(self.response_text) < 200
-                else "API request failed"
-            )
-            return self._create_fallback_error(message)
-
-    def _extract_simple_message(self) -> Optional[str]:
-        """Extract a simple message from non-standard API responses."""
-        try:
-            response_data = json.loads(self.response_text)
-            if isinstance(response_data, dict):
-                # Try common message fields
-                for field in ["message", "detail", "description"]:
-                    if field in response_data and isinstance(response_data[field], str):
-                        return response_data[field]
-            return None
-        except json.JSONDecodeError:
-            return None
-
-    def _create_fallback_error(self, message: str) -> Dict[str, Any]:
-        """Create a fallback error structure when API response is malformed."""
-        return {
-            "code": "API_ERROR",
-            "status": self.status_code or 500,
-            "message": message,
-        }
 
 
 class APIConnectionError(APIError):
@@ -145,3 +111,101 @@ class APIConnectionError(APIError):
         super().__init__(message=message)
         if cause:
             self.__cause__ = cause
+
+
+class BadRequestError(APIError):
+    """Raised when the API returns a 400 Bad Request error."""
+
+    pass
+
+
+class AuthenticationError(APIError):
+    """Raised when the API returns a 401 Unauthorized error."""
+
+    pass
+
+
+class PermissionDeniedError(APIError):
+    """Raised when the API returns a 403 Forbidden error."""
+
+    pass
+
+
+class NotFoundError(APIError):
+    """Raised when the API returns a 404 Not Found error."""
+
+    pass
+
+
+class ConflictError(APIError):
+    """Raised when the API returns a 409 Conflict error."""
+
+    pass
+
+
+class UnprocessableEntityError(APIError):
+    """Raised when the API returns a 422 Unprocessable Entity error."""
+
+    pass
+
+
+class RateLimitError(APIError):
+    """Raised when the API returns a 429 Too Many Requests error."""
+
+    pass
+
+
+class InternalServerError(APIError):
+    """Raised when the API returns a 5xx Internal Server Error."""
+
+    pass
+
+
+def create_api_error(
+    status_code: Optional[int] = None,
+    response_text: Optional[str] = None,
+    headers: Optional[Dict[str, str]] = None,
+    message: Optional[str] = None,
+) -> APIError:
+    """
+    Create the appropriate API error based on status code.
+
+    Args:
+        status_code: HTTP status code from the API response
+        response_text: Raw response text from the API
+        headers: HTTP response headers
+        message: Custom error message
+
+    Returns:
+        Appropriate APIError subclass based on status code
+    """
+    if not status_code:
+        return APIConnectionError(message or "Connection error.")
+
+    # Parse error from response text
+    error = None
+    if response_text:
+        try:
+            response_data = json.loads(response_text)
+            if isinstance(response_data, dict) and "error" in response_data:
+                error = response_data["error"]
+        except json.JSONDecodeError:
+            pass
+
+    # Map status codes to specific error classes
+    error_classes = {
+        400: BadRequestError,
+        401: AuthenticationError,
+        403: PermissionDeniedError,
+        404: NotFoundError,
+        409: ConflictError,
+        422: UnprocessableEntityError,
+        429: RateLimitError,
+    }
+
+    if status_code in error_classes:
+        return error_classes[status_code](status_code, error, message, headers)
+    elif status_code >= 500:
+        return InternalServerError(status_code, error, message, headers)
+    else:
+        return APIError(status_code, error, message, headers)
