@@ -1,6 +1,6 @@
 [project]
 name = "langbase"
-version = "0.0.3"
+version = "0.0.4"
 description = "Python SDK for the Langbase API"
 readme = "README.md"
 license = { text = "Apache-2.0" }

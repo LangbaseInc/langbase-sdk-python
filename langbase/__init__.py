@@ -62,7 +62,7 @@ from .types import (
 )
 from .workflow import TimeoutError, Workflow
 
-__version__ = "0.0.3"
+__version__ = "0.0.4"
 __author__ = "LangbaseInc"
 __description__ = "Python SDK for the Langbase API"
 

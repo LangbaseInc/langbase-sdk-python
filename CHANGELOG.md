@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.0.4] - 2025-08-18
+
+🐛 FIX: Error handling
+
+
 ## [0.0.3] - 2025-08-06
 
 DOCS
