@@ -15,8 +15,10 @@ from langbase.constants import (
     MEMORY_DOCUMENTS_UPLOAD_ENDPOINT,
     MEMORY_ENDPOINT,
     MEMORY_RETRIEVE_ENDPOINT,
+    MEMORY_TEXT_ADD_ENDPOINT,
 )
 from langbase.types import (
+    MemoryAddTextResponse,
     MemoryCreateResponse,
     MemoryDeleteResponse,
     MemoryListDocResponse,
@@ -265,3 +267,76 @@ class TestMemoryDocuments:
         assert len(responses.calls) == 1
         request = responses.calls[0].request
         validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+
+    @responses.activate
+    def test_memories_add_text_minimal(self, langbase_client):
+        """Test memories.add method with minimal parameters."""
+        memory_name = "test-memory"
+        text = "This is a test text to add to memory."
+
+        expected_response = {
+            "document_name": "text-2024-08-21T10-30-45.txt",
+            "status": "queued",
+            "memory_name": memory_name,
+            "url": f"https://langbase.com/memory/user/{memory_name}",
+        }
+
+        responses.add(
+            responses.POST,
+            f"{BASE_URL}{MEMORY_TEXT_ADD_ENDPOINT}",
+            json=expected_response,
+            status=200,
+        )
+
+        result = langbase_client.memories.add(memory_name=memory_name, text=text)
+
+        assert result == expected_response
+        assert len(responses.calls) == 1
+        request = responses.calls[0].request
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+
+        request_json = json.loads(request.body)
+        assert request_json["memoryName"] == memory_name
+        assert request_json["text"] == text
+        assert "documentName" not in request_json
+        assert "metadata" not in request_json
+
+    @responses.activate
+    def test_memories_add_text_full(self, langbase_client):
+        """Test memories.add method with all parameters."""
+        memory_name = "test-memory"
+        text = "This is a comprehensive test text with metadata."
+        document_name = "test-document"
+        metadata = {"category": "test", "source": "unit-test", "difficulty": "easy"}
+
+        expected_response = {
+            "document_name": f"{document_name}.txt",
+            "status": "queued",
+            "memory_name": memory_name,
+            "url": f"https://langbase.com/memory/user/{memory_name}",
+        }
+
+        responses.add(
+            responses.POST,
+            f"{BASE_URL}{MEMORY_TEXT_ADD_ENDPOINT}",
+            json=expected_response,
+            status=200,
+        )
+
+        result = langbase_client.memories.add(
+            memory_name=memory_name,
+            text=text,
+            document_name=document_name,
+            metadata=metadata,
+        )
+
+        assert result == expected_response
+        assert len(responses.calls) == 1
+        request = responses.calls[0].request
+        validate_response_headers(request.headers, AUTH_AND_JSON_CONTENT_HEADER)
+
+        request_json = json.loads(request.body)
+        assert request_json["memoryName"] == memory_name
+        assert request_json["text"] == text
+        assert request_json["documentName"] == document_name
+        assert request_json["metadata"] == metadata

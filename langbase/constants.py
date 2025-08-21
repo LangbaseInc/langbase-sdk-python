@@ -38,6 +38,7 @@ MEMORY_RETRIEVE_ENDPOINT = "/v1/memory/retrieve"
 MEMORY_DOCUMENTS_ENDPOINT = "/v1/memory/{memory_name}/documents"
 MEMORY_DOCUMENT_DETAIL_ENDPOINT = "/v1/memory/{memory_name}/documents/{document_name}"
 MEMORY_DOCUMENTS_UPLOAD_ENDPOINT = "/v1/memory/documents"
+MEMORY_TEXT_ADD_ENDPOINT = "/v1/memory/text"
 MEMORY_DOCUMENT_EMBEDDINGS_RETRY_ENDPOINT = (
     "/v1/memory/{memory_name}/documents/{document_name}/embeddings/retry"
 )

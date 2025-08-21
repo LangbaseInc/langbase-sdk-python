@@ -371,6 +371,15 @@ class MemoryRetryDocEmbedResponse(BaseDeleteResponse):
     pass
 
 
+class MemoryAddTextResponse(TypedDict):
+    """Response from adding text to memory."""
+
+    document_name: str
+    status: Literal["queued"]
+    memory_name: str
+    url: str
+
+
 class MemoryRetrieveResponse(TypedDict):
     """Response from retrieving from memory."""
 

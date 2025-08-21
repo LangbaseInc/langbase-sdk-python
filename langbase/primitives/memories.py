@@ -17,11 +17,13 @@ from langbase.constants import (
     MEMORY_DOCUMENTS_UPLOAD_ENDPOINT,
     MEMORY_ENDPOINT,
     MEMORY_RETRIEVE_ENDPOINT,
+    MEMORY_TEXT_ADD_ENDPOINT,
 )
 from langbase.errors import APIError, create_api_error
 from langbase.types import (
     ContentType,
     EmbeddingModel,
+    MemoryAddTextResponse,
     MemoryCreateResponse,
     MemoryDeleteDocResponse,
     MemoryDeleteResponse,
@@ -250,3 +252,30 @@ class Memories:
             List of memory objects
         """
         return self.request.get(MEMORY_ENDPOINT)
+
+    def add(
+        self,
+        memory_name: str,
+        text: str,
+        document_name: Optional[str] = None,
+        metadata: Optional[Dict[str, str]] = None,
+    ) -> MemoryAddTextResponse:
+        """
+        Add text directly to a memory without file upload.
+
+        Args:
+            memory_name: Name of the memory to add text to
+            text: Text content to add to the memory
+            document_name: Optional custom document name
+            metadata: Optional metadata for the text document
+
+        Returns:
+            Text addition response
+        """
+        options = {
+            "memoryName": memory_name,
+            "text": text,
+            "documentName": document_name,
+            "metadata": metadata,
+        }
+        return self.request.post(MEMORY_TEXT_ADD_ENDPOINT, clean_null_values(options))
